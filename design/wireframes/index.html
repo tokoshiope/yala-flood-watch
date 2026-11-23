@@ -1,0 +1,864 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>แอพน้ำท่วม จ.ยะลา — Wireframe lo-fi (คลิกข้ามจอได้)</title>
+<style>
+:root{
+  --ink:#1c1c1c; --g9:#2b2b2b; --g7:#4c4c4c; --g5:#8b8b8b; --g4:#a9a9a9;
+  --g3:#cfcfcf; --g2:#e6e6e6; --g1:#f3f3f3; --dash:#7d7d7d;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:#e9e9e9; color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Thonburi","Leelawadee UI","Segoe UI",Tahoma,sans-serif;
+  font-size:14px; line-height:1.45;
+}
+a{color:inherit}
+.topbar{
+  position:sticky; top:0; z-index:60; background:#fff; border-bottom:2px solid var(--g9);
+  padding:10px 16px; display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; justify-content:space-between;
+}
+.brand{display:flex; gap:10px; align-items:center}
+.logo{width:34px;height:34px;border:2px solid var(--g9);border-radius:9px;flex:0 0 34px;
+  background:linear-gradient(135deg,#fff 0 45%,var(--g2) 45% 60%,var(--g4) 60% 75%,var(--g9) 75%)}
+.brand h1{font-size:15.5px;margin:0;line-height:1.25}
+.brand p{margin:0;font-size:11px;color:var(--g5)}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:flex;border:1.5px solid var(--g9);border-radius:10px;overflow:hidden}
+.segbtn{border:0;background:#fff;padding:7px 12px;font-size:12.5px;font-weight:700;color:var(--g7);cursor:pointer;font-family:inherit}
+.segbtn.active{background:var(--g9);color:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chipnav{border:1px solid var(--g3);background:#fff;border-radius:999px;padding:5px 10px;font-size:11.5px;cursor:pointer;color:var(--g7);font-family:inherit}
+.chipnav.active{background:var(--g9);color:#fff;border-color:var(--g9)}
+
+#stage{padding:20px;display:grid;gap:24px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));align-items:start}
+.wrap{zoom:.42}
+body[data-mode="single"] #stage{grid-template-columns:1fr;justify-items:center}
+body[data-mode="single"] .wrap{display:none}
+body[data-mode="single"] .wrap.active{display:block;zoom:1}
+.wtitle{display:flex;gap:8px;align-items:baseline;margin:0 0 8px;font-size:13px;color:var(--g5)}
+.wtitle b{color:var(--ink);font-size:13.5px;white-space:nowrap}
+
+.phone{width:390px;height:800px;background:#fff;border:2px solid var(--g9);border-radius:34px;overflow:hidden;
+  position:relative;display:flex;flex-direction:column;box-shadow:0 12px 26px rgba(0,0,0,.16)}
+.statusbar{flex:0 0 40px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;
+  font-size:12px;font-weight:800;border-bottom:1px solid var(--g2)}
+.sicons{display:flex;gap:5px;align-items:center}
+.sicons i{display:block;background:var(--g4)}
+.sicons i:nth-child(1){width:4px;height:10px}
+.sicons i:nth-child(2){width:4px;height:14px}
+.sicons i:nth-child(3){width:16px;height:9px;border-radius:2px}
+.screen{flex:1;overflow-y:auto;overflow-x:hidden;background:#fff}
+.screen::-webkit-scrollbar{width:0;height:0}
+.homeind{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:120px;height:4px;border-radius:2px;background:var(--g3)}
+
+.appbar{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1.5px solid var(--g2);background:#fff}
+.appbar .t{font-size:16.5px;font-weight:800;line-height:1.2}
+.appbar .sub{font-size:11px;color:var(--g5)}
+.back{flex:0 0 30px;width:30px;height:30px;border:1.5px solid var(--g4);border-radius:50%;display:grid;place-items:center;
+  color:var(--g7);font-size:17px;cursor:pointer;text-decoration:none;line-height:1}
+.pill{font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:999px;border:1.5px solid var(--g3);color:var(--g7);white-space:nowrap;position:relative}
+.pill.dark{background:var(--g9);border-color:var(--g9);color:#fff}
+.body{padding:14px}
+.sect{font-size:12px;font-weight:800;color:var(--g5);margin:16px 0 8px}
+.sub{font-size:11.5px;color:var(--g5)}
+.fine{font-size:11px;color:var(--g5);text-align:center;margin:10px 0 0}
+.center{text-align:center}
+
+.btn{display:block;width:100%;padding:13px 14px;border-radius:12px;border:2px solid var(--g9);background:#fff;color:var(--ink);
+  font-size:15px;font-weight:700;text-align:center;cursor:pointer;text-decoration:none;font-family:inherit;position:relative}
+.btn.pri{background:var(--g9);color:#fff}
+.btn.gho{border-color:var(--g3);color:var(--g7);font-weight:600}
+.btn.sm{padding:9px 12px;font-size:13px;width:auto;display:inline-block}
+.btnrow{display:flex;gap:10px}
+.btnrow .btn{flex:1}
+
+.card{border:1.5px solid var(--g2);border-radius:12px;padding:12px;margin-bottom:10px;background:#fff}
+.ph{border:1.5px dashed var(--g4);background:var(--g1);display:grid;place-items:center;color:var(--g5);font-size:11px;border-radius:12px}
+.hero{height:190px;margin:14px 14px 0}
+.appicon{width:64px;height:64px;margin:0 auto 10px}
+.ticks{list-style:none;padding:0;margin:14px 0;text-align:left}
+.ticks li{position:relative;padding:6px 0 6px 26px;font-size:12.5px;color:var(--g7)}
+.ticks li::before{content:"";position:absolute;left:2px;top:9px;width:11px;height:11px;border-radius:3px;background:var(--g3)}
+.lnk{font-size:12px;text-decoration:underline;color:var(--g7);display:inline-block;margin-top:8px;cursor:pointer;position:relative}
+.perm{text-align:center;padding:16px}
+.perm h3{margin:8px 0 6px;font-size:15px}
+
+.hs{position:relative;outline:1.5px dashed var(--dash);outline-offset:2px;border-radius:10px;cursor:pointer;transition:background .15s}
+.hs:hover{background:#f2f2f2}
+.hs .n{position:absolute;top:-10px;left:-10px;width:20px;height:20px;border-radius:50%;background:var(--g7);color:#fff;
+  font-size:11px;font-weight:800;display:grid;place-items:center;outline:2px solid #fff;z-index:3}
+
+.note{margin-top:10px;border:1.5px dashed var(--g4);background:#f6f6f6;border-radius:10px;padding:8px 10px;font-size:11.5px;color:var(--g7)}
+.note b{color:var(--ink)}
+
+.field,.input,.select{width:100%;border:1.5px solid var(--g3);border-radius:10px;padding:11px 12px;font-size:13.5px;color:var(--g7);background:#fff;margin:6px 0 10px;font-family:inherit}
+.input.tall{min-height:64px}
+label{font-size:11.5px;font-weight:700;color:var(--g7)}
+.switchrow{display:flex;justify-content:space-between;align-items:center;margin:10px 0}
+.switch{position:relative;display:inline-block;width:42px;height:24px;flex:0 0 42px}
+.switch input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.switch span{position:absolute;inset:0;background:var(--g3);border-radius:999px;transition:.15s}
+.switch span::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.switch input:checked+span{background:var(--g9)}
+.switch input:checked+span::after{transform:translateX(18px)}
+
+.chip{font-size:11px;border:1px solid var(--g3);border-radius:999px;padding:5px 10px;color:var(--g7);background:#fff}
+.chip.on{background:var(--g9);color:#fff;border-color:var(--g9)}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+
+.homebar{padding:10px 14px}
+.loc{flex:1}
+.loc .t{font-size:16px;font-weight:800}
+.caret{color:var(--g4)}
+.statusline{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;color:var(--g5);padding:10px 14px 8px}
+.linklike{text-decoration:underline;cursor:pointer;color:var(--g7);font-weight:700}
+
+.map{position:relative;height:290px;background:var(--g1);border:1.5px solid var(--g3);border-radius:14px;overflow:hidden;margin-bottom:8px}
+.map .gridbg{position:absolute;inset:0;background-image:linear-gradient(var(--g2) 1px,transparent 1px),linear-gradient(90deg,var(--g2) 1px,transparent 1px);background-size:34px 34px}
+.map .river{position:absolute;left:-12%;top:52%;width:124%;height:30px;background:#dedede;border-radius:50%;transform:rotate(-7deg)}
+.mapbadge{position:absolute;top:8px;left:8px;background:#fff;border:1px solid var(--g3);border-radius:6px;font-size:10px;color:var(--g5);padding:2px 7px;z-index:2}
+.mapcache{position:absolute;top:8px;right:8px;background:var(--g9);color:#fff;border-radius:6px;font-size:10px;padding:2px 7px;z-index:2}
+.dot{position:absolute;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:9px;font-weight:800;
+  transform:translate(-50%,-50%);color:#fff;z-index:2}
+.dot.ok{background:#c6c6c6;color:#3a3a3a}
+.dot.watch{background:#7a7a7a}
+.dot.crit{background:#161616}
+.homepin{position:absolute;width:16px;height:16px;background:#fff;border:3px solid var(--g9);border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 3px #fff;z-index:2}
+.legend{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:10.5px;color:var(--g7);margin:2px 2px 10px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.legend .ok{background:#c6c6c6}.legend .watch{background:#7a7a7a}.legend .crit{background:#161616}
+
+.qa{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:4px 0 12px}
+.qa-i{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:10.5px;color:var(--g7);text-decoration:none;
+  border:1.5px dashed var(--dash);border-radius:10px;padding:9px 4px;text-align:center}
+.qi{width:26px;height:26px;border-radius:8px;background:var(--g3)}
+
+.banner{display:flex;gap:8px;align-items:center;border:1.5px solid var(--g3);background:var(--g1);border-radius:10px;
+  padding:10px 12px;font-size:12.5px;color:var(--g7);margin:8px 0}
+.banner::before{content:"!";flex:0 0 18px;width:18px;height:18px;border-radius:50%;background:var(--g7);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:800}
+
+.srow{display:flex;align-items:center;gap:10px;border:1.5px solid var(--g2);border-radius:12px;padding:10px 12px;margin-bottom:8px;background:#fff}
+.srow .dot{position:static;transform:none;flex:0 0 18px}
+.sg{flex:1;display:flex;flex-direction:column;min-width:0}
+.arr{color:var(--g4);font-size:18px}
+
+.bignum{display:flex;flex-direction:column;align-items:center;margin:4px 0 12px}
+.bignum .lv{font-size:40px;font-weight:800;line-height:1}
+.bignum .lv span{font-size:16px;color:var(--g5)}
+.delta{font-size:12px;color:var(--g7);font-weight:700;margin-top:4px}
+.chartcard{padding:12px;margin-bottom:10px}
+.cardhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.chart{width:100%;height:auto;display:block}
+.chartleg{display:flex;gap:14px;font-size:10.5px;color:var(--g7);margin-top:6px;flex-wrap:wrap}
+.ln{display:inline-block;width:16px;height:0;border-top:2.5px solid var(--g7);vertical-align:middle;margin-right:5px}
+.ln.dash{border-top-style:dashed;border-top-color:var(--ink)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.stat{border:1.5px solid var(--g2);border-radius:10px;padding:9px;text-align:center;display:flex;flex-direction:column;gap:2px}
+.stat b{font-size:14px}
+
+.acard{display:flex;gap:10px;align-items:center;border:1.5px solid var(--g2);border-left:5px solid var(--g4);border-radius:12px;padding:11px 12px;margin-bottom:8px;background:#fff}
+.lv{flex:0 0 34px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:15px;color:#fff;background:#c6c6c6}
+.lv2{background:#a9a9a9}.lv3{background:#7a7a7a}.lv4{background:#4c4c4c}.lv5{background:#161616}
+.amain{flex:1;display:flex;flex-direction:column;min-width:0}
+.time{font-size:10.5px;color:var(--g5)}
+
+.sosgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.stile{display:flex;flex-direction:column;gap:8px;border:1.5px dashed var(--dash);border-radius:12px;padding:14px 8px;font-size:12px;
+  color:var(--g7);text-decoration:none;text-align:center;align-items:center}
+.si{width:30px;height:30px;border-radius:9px;background:var(--g3)}
+.spin{width:56px;height:56px;border-radius:50%;border:5px solid var(--g2);border-top-color:var(--g9);margin:18px auto 14px;animation:rot 1s linear infinite;cursor:pointer}
+@keyframes rot{to{transform:rotate(360deg)}}
+.steps{display:flex;flex-direction:column;gap:8px;margin:14px 0;text-align:left}
+.step{display:flex;gap:10px;align-items:center;font-size:12.5px;color:var(--g5)}
+.sic{width:18px;height:18px;border-radius:50%;border:2px solid var(--g3);flex:0 0 18px}
+.step.done{color:var(--ink);font-weight:700}
+.step.done .sic{background:var(--g9);border-color:var(--g9)}
+.step.now{color:var(--ink);font-weight:700}
+.step.now .sic{border-color:var(--g9);border-top-color:transparent;animation:rot 1s linear infinite}
+
+.okcircle{width:64px;height:64px;border-radius:50%;background:var(--g9);color:#fff;display:grid;place-items:center;font-size:30px;margin:14px auto 10px}
+.contact{margin:12px 0}
+.crow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--g2)}
+.crow:last-child{border-bottom:0}
+.ci{width:34px;height:34px;border-radius:10px;background:var(--g3);flex:0 0 34px}
+.cmain{flex:1;display:flex;flex-direction:column}
+.timeline{margin:14px 0;display:flex;flex-direction:column}
+.trow{display:flex;gap:10px;position:relative;padding:0 0 14px}
+.trow .tic{width:18px;height:18px;border-radius:50%;border:2px solid var(--g3);flex:0 0 18px;background:#fff}
+.trow.done .tic{background:var(--g9);border-color:var(--g9)}
+.trow.now .tic{border-color:var(--g9)}
+.trow::before{content:"";position:absolute;left:8px;top:18px;bottom:0;width:2px;background:var(--g2)}
+.trow:last-child::before{display:none}
+
+.shcard{border:1.5px solid var(--g2);border-radius:12px;padding:12px;margin-bottom:10px;background:#fff}
+.shhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;gap:8px}
+.dist{font-size:12px;font-weight:800;color:var(--g7);white-space:nowrap}
+.bar{height:8px;border-radius:999px;background:var(--g2);overflow:hidden;margin-bottom:8px}
+.bar i{display:block;height:100%;background:var(--g7)}
+.shmeta{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11.5px;color:var(--g7)}
+.lnk2{font-weight:700;text-decoration:underline;cursor:pointer;white-space:nowrap}
+
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,.28);display:none;align-items:flex-end;z-index:20}
+.overlay.open{display:flex}
+.sheet{background:#fff;width:100%;border-radius:18px 18px 0 0;padding:14px;max-height:88%;overflow:auto}
+.sheethead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px}
+.close{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--g3);display:grid;place-items:center;font-size:13px;cursor:pointer;color:var(--g7);flex:0 0 28px}
+.routemap{position:relative;height:180px;background:var(--g1);border:1.5px solid var(--g3);border-radius:12px;margin-bottom:10px;overflow:hidden}
+.rpath{position:absolute;left:22px;top:140px;width:300px;border-top:3px dashed var(--g7);transform:rotate(-10deg);transform-origin:left center}
+.rpin{position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid var(--g9);transform:translate(-50%,-50%)}
+.rinfo{display:flex;flex-direction:column;margin-bottom:10px}
+
+.frow{display:flex;align-items:center;gap:10px;border:1.5px solid var(--g2);border-radius:12px;padding:10px 12px;margin-bottom:8px;background:#fff}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--g3);display:grid;place-items:center;font-weight:800;color:var(--g7);flex:0 0 36px}
+.fmain{flex:1;display:flex;flex-direction:column;min-width:0}
+.st{font-size:10.5px;font-weight:700;padding:4px 9px;border-radius:999px;white-space:nowrap}
+.st-ok{background:#e2e2e2;color:#3a3a3a}
+.st-warn{background:#7a7a7a;color:#fff}
+.st-bad{background:#161616;color:#fff}
+.smbtn{border:1.5px solid var(--g9);border-radius:9px;padding:5px 10px;font-size:11.5px;font-weight:700;text-decoration:none;cursor:pointer;white-space:nowrap}
+
+.srow2{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;font-size:12.5px;border-bottom:1px solid var(--g2)}
+.srow2:last-child{border-bottom:0}
+.slider{position:relative;height:26px;margin:6px 0}
+.slider::before{content:"";position:absolute;left:0;right:0;top:12px;height:4px;border-radius:2px;background:var(--g2)}
+.slider i{position:absolute;top:6px;width:16px;height:16px;border-radius:50%;background:var(--g9);transform:translateX(-50%)}
+.seg2{display:flex;border:1.5px solid var(--g9);border-radius:10px;overflow:hidden;margin-bottom:10px}
+.seg2 label{flex:1;text-align:center;padding:10px;font-size:13px;font-weight:700;color:var(--g7);cursor:pointer}
+.seg2 label.on{background:var(--g9);color:#fff}
+.seg2 input{display:none}
+
+.offbanner{background:var(--g9);color:#fff;font-size:12px;font-weight:700;padding:9px 14px;display:flex;gap:8px;align-items:center;flex:0 0 auto}
+.offbanner::before{content:"!";flex:0 0 16px;width:16px;height:16px;border-radius:50%;background:#fff;color:var(--g9);display:grid;place-items:center;font-size:10px;font-weight:800}
+.offline .screen{filter:grayscale(1)}
+.offtag{font-size:9px;border:1px solid var(--g4);border-radius:5px;padding:1px 5px;color:var(--g5);margin-left:6px;vertical-align:1px}
+
+.foot{text-align:center;color:var(--g5);font-size:11.5px;padding:18px 12px 26px}
+</style>
+</head>
+<body data-mode="overview">
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo"></div>
+    <div>
+      <h1>แอพน้ำท่วม จ.ยะลา — Wireframe lo-fi</h1>
+      <p>390px · grayscale · คลิก hotspot (ขอบประ) เพื่อข้ามจอ · ข้อมูลจำลองทั้งหมด</p>
+    </div>
+  </div>
+  <div class="controls">
+    <div class="seg">
+      <button id="btn-overview" class="segbtn active" type="button">ทุกจอ</button>
+      <button id="btn-single" class="segbtn" type="button">จอเดียว</button>
+    </div>
+    <div id="chips" class="chips" style="display:none"></div>
+  </div>
+</header>
+
+<main id="stage">
+
+<!-- ============ 01 Onboarding: ความเป็นส่วนตัว ============ -->
+<section class="wrap" data-screen="onb1">
+  <div class="wtitle"><b>01</b><span>Onboarding — ความเป็นส่วนตัว</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>09:41</span><span class="sicons"><i></i><i></i><i></i></span></div>
+    <div class="screen">
+      <div class="ph hero">รูปประกอบ (placeholder)</div>
+      <div class="body center">
+        <h2 style="margin:6px 0 8px;font-size:19px">ความเป็นส่วนตัวของคุณสำคัญ</h2>
+        <p class="sub" style="margin:0 0 4px">เราใช้ตำแหน่งเฉพาะเพื่อแจ้งเตือนและส่งความช่วยเหลือ<br>ไม่ติดตามเรียลไทม์ · ไม่แชร์ข้อมูลกับบุคคลที่สาม</p>
+        <ul class="ticks">
+          <li>ตำแหน่งคร่าว ๆ ระดับตำบล</li>
+          <li>เข้ารหัสข้อมูลทั้งหมด</li>
+          <li>ลบข้อมูลได้ทุกเมื่อ</li>
+        </ul>
+        <a class="btn pri hs" data-go="onb2"><span class="n">1</span>ยอมรับและดำเนินการต่อ</a>
+        <a class="btn gho hs" data-go="home" style="margin-top:10px"><span class="n">2</span>ข้ามและดูก่อน</a>
+        <a class="lnk hs" data-go="onb2"><span class="n">3</span>อ่านนโยบายความเป็นส่วนตัว</a>
+      </div>
+    </div>
+    <div class="homeind"></div>
+  </div>
+  <div class="note"><b>Annotation:</b> ① ปุ่มหลัก → จอ 02 · ② ปุ่มรอง / ลิงก์ → จอ 04 (ดูก่อน) · ขอบประ = hotspot ทุกจุดที่คลิกได้</div>
+</section>
+
+<!-- ============ 02 Onboarding: ขอสิทธิ์ตำแหน่ง ============ -->
+<section class="wrap" data-screen="onb2">
+  <div class="wtitle"><b>02</b><span>Onboarding — ขอสิทธิ์ตำแหน่ง</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>09:41</span><span class="sicons"><i></i><i></i><i></i></span></div>
+    <div class="screen">
+      <div class="body">
+        <div class="card perm">
+          <div class="ph appicon">ไอคอนแอป</div>
+          <h3>"Yala Flood" ต้องการเข้าถึงตำแหน่งของคุณ</h3>
+          <p class="sub" style="margin:6px 0 0">เพื่อแจ้งเตือนและช่วยเหลือเมื่อน้ำท่วมในพื้นที่ของคุณ</p>
+        </div>
+        <div style="height:14px"></div>
+        <a class="btn pri hs" data-go="onb3"><span class="n">1</span>อนุญาตตลอดเวลา</a>
+        <a class="btn hs" data-go="onb3" style="margin-top:10px"><span class="n">2</span>อนุญาตขณะใช้แอป</a>
+        <a class="btn gho hs" data-go="onb3" style="margin-top:10px"><span class="n">3</span>ไม่อนุญาต (เลือกตำแหน่งเอง)</a>
+        <p class="fine">หากเลือกไม่อนุญาต แอปจะให้เลือกอำเภอ/ตำบลเองในจอถัดไป</p>
+      </div>
+    </div>
+    <div class="homeind"></div>
+  </div>
+  <div class="note"><b>Annotation:</b> ①–③ ทุกตัวเลือก → จอ 03 · ในระบบจริงจะเป็น system dialog แต่ wireframe จำลองเป็นปุ่ม</div>
+</section>
+
+<!-- ============ 03 Onboarding: เลือกอำเภอ/ตำบล ============ -->
+<section class="wrap" data-screen="onb3">
+  <div class="wtitle"><b>03</b><span>Onboarding — เลือกอำเภอ/ตำบล</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>09:41</span><span class="sicons"><i></i><i></i><i></i></span></div>
+    <div class="appbar"><span class="back hs" data-go="onb2">‹</span><span class="t">เลือกพื้นที่ของคุณ</span></div>
+    <div class="screen">
+      <div class="body">
+        <div class="field">ค้นหาอำเภอ / ตำบล</div>
+        <label>อำเภอ</label>
+        <div class="select">เมืองยะลา &nbsp;▾</div>
+        <label>ตำบล</label>
+        <div class="select">ในเมือง &nbsp;▾</div>
+        <div class="switchrow"><span style="font-size:12.5px">ใช้ตำแหน่งปัจจุบัน</span><label class="switch"><input type="checkbox" checked><span></span></label></div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 14px">
+          <span class="chip on">เมืองยะลา</span><span class="chip">เบตง</span><span class="chip">บันนังสตา</span><span class="chip">ธารโต</span>
+          <span class="chip">ยะหา</span><span class="chip">รามัน</span><span class="chip">กาบัง</span><span class="chip">กรงปินัง</span>
+        </div>
+        <a class="btn pri hs" data-go="home"><span class="n">1</span>เริ่มใช้งาน</a>
+        <p class="fine">อำเภอ 8 อำเภอ ของจังหวัดยะลา</p>
+      </div>
+    </div>
+    <div class="homeind"></div>
+  </div>
+  <div class="note"><b>Annotation:</b> ① ปุ่ม "เริ่มใช้งาน" → จอ 04 (Home) · ช่องค้นหา / ตัวเลือก / chip อำเภอ เป็น placeholder จำลอง</div>
+</section>
+
+<!-- ============ 04 Home ============ -->
+<section class="wrap" data-screen="home">
+  <div class="wtitle"><b>04</b><span>Home — แผนที่ยะลา + สถานี 14 แห่ง</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>09:41</span><span class="sicons"><i></i><i></i><i></i></span></div>
+    <div class="appbar homebar">
+      <div class="loc"><div class="t">ยะลา <span class="caret">▾</span></div><div class="sub">ต.ในเมือง อ.เมืองยะลา</div></div>
+      <span class="pill dark hs" data-go="alerts"><span class="n">1</span>เฝ้าระวัง</span>
+    </div>
+    <div class="screen">
+      <div class="statusline"><span>สถานการณ์น้ำท่วม · 23 พ.ย. 2569 09:41 น.</span><span class="linklike hs" data-go="alerts">ดูประวัติ</span></div>
+      <div class="body" style="padding-top:6px">
+        <div class="map">
+          <div class="gridbg"></div><div class="river"></div>
+          <div class="mapbadge">แผนที่จำลอง</div>
+          <span class="homepin" style="left:46%;top:50%"></span>
+          <span class="dot ok" style="left:32%;top:58%">1</span>
+          <span class="dot watch" style="left:44%;top:47%">2</span>
+          <span class="dot watch hs" data-go="std" style="left:38%;top:66%"><span class="n">2</span>3</span>
+          <span class="dot ok" style="left:60%;top:70%">4</span>
+          <span class="dot watch" style="left:52%;top:62%">5</span>
+          <span class="dot crit" style="left:66%;top:44%">6</span>
+          <span class="dot crit" style="left:74%;top:58%">7</span>
+          <span class="dot ok" style="left:80%;top:36%">8</span>
+          <span class="dot ok" style="left:58%;top:30%">9</span>
+          <span class="dot ok" style="left:84%;top:20%">10</span>
+          <span class="dot watch" style="left:76%;top:14%">11</span>
+          <span class="dot ok" style="left:90%;top:34%">12</span>
+          <span class="dot ok" style="left:70%;top:78%">13</span>
+          <span class="dot watch" style="left:48%;top:82%">14</span>
+        </div>
+        <div class="legend">
+          <span><i class="ok"></i>ปกติ</span><span><i class="watch"></i>เฝ้าระวัง</span><span><i class="crit"></i>เกินตลิ่ง</span><span class="sub">14 สถานี</span>
+        </div>
+        <div class="qa">
+          <a class="qa-i hs" data-go="shelter"><span class="qi"></span>จุดอพยพ</a>
+          <a class="qa-i hs" data-go="family"><span class="qi"></span>ครอบครัว</a>
+          <a class="qa-i hs" data-go="alerts"><span class="qi"></span>แจ้งเตือน</a>
+          <a class="qa-i hs" data-go="sos1"><span class="qi"></span>SOS</a>
+        </div>
+        <div class="banner hs" data-go="alerts"><span>ระดับน้ำสูงขึ้น 2 สถานี · ดูรายละเอียด</span></div>
+        <div class="sect">สถานีใกล้ฉัน</div>
+        <div class="srow hs" data-go="std"><span class="dot watch"></span><div class="sg"><b>สถานีห้วยสะเตง</b><span class="sub">2.90 ม. · ห่าง 1.2 กม.</span></div><span class="arr">›</span></div>
+        <div class="srow hs" data-go="std"><span class="dot ok"></span><div class="sg"><b>สถานีสะเตง</b><span class="sub">1.80 ม. · ห่าง 2.0 กม.</span></div><span class="arr">›</span></div>
+        <div class="srow hs" data-go="std"><span class="dot crit"></span><div class="sg"><b>สถานีรามัน</b><span class="sub">3.20 ม. · ห่าง 9.4 กม.</span></div><span class="arr">›</span></div>
+      </div>
+    </div>
+    <nav class="bnav">
+      <a class="tab active"><span class="ic"></span><span>หน้าหลัก</span></a>
+      <a class="tab hs" data-go="alerts"><span class="ic"></span><span>แจ้งเตือน</span></a>
+      <a class="tab hs" data-go="sos1"><span class="ic sos"></span><span>SOS</span></a>
+      <a class="tab hs" data-go="settings"><span class="ic"></span><span>เมนู</span></a>
+    </nav>
+  </div>
+  <div class="note"><b>Annotation:</b> ① แถบสถานะ "เฝ้าระวัง" → จอ 06 · ② จุดสถานีห้วยสะเตง (3) → จอ 05 · ③ Quick actions → จุดอพยพ / ครอบครัว / SOS · ④ Bottom nav 4 แท็บ · สถานะสถานีใช้เทา 3 ระดับ</div>
+</section>
+
+<!-- ============ 05 Station detail ============ -->
+<section class="wrap" data-screen="std">
+  <div class="wtitle"><b>05</b><span>Station detail — กราฟ 24 ชม. + ตลิ่ง</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>09:41</span><span class="sicons"><i></i><i></i><i></i></span></div>
+    <div class="appbar">
+      <span class="back hs" data-go="home">‹</span>
+      <div style="flex:1"><div class="t">สถานีห้วยสะเตง</div><div class="sub">ต.สะเตง อ.เมืองยะลา</div></div>
+      <span class="pill dark">เฝ้าระวัง</span>
+    </div>
+    <div class="screen">
+      <div class="body">
+        <div class="bignum">
+          <div class="lv">2.90 <span>ม.</span></div>
+          <div class="delta">▲ 0.12 ม. / 1 ชั่วโมง</div>
+          <div class="sub">อัปเดตล่าสุด 09:30 น.</div>
+        </div>
+        <div class="card chartcard">
+          <div class="cardhead"><b style="font-size:13px">ระดับน้ำ 24 ชั่วโมง</b><span class="sub">หน่วย: เมตร</span></div>
+          <svg class="chart" viewBox="0 0 340 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="กราฟระดับน้ำ 24 ชั่วโมง">
+            <rect x="0" y="0" width="340" height="170" fill="#fafafa"/>
+            <line x1="34" y1="80" x2="330" y2="80" stroke="#ececec"/>
+            <line x1="34" y1="120" x2="330" y2="120" stroke="#ececec"/>
+            <path d="M34,124 L58,120 L82,116 L106,112 L129,106 L153,100 L177,94 L201,88 L224,80 L248,72 L272,62 L296,52 L320,44 L320,140 L34,140 Z" fill="#e8e8e8" opacity="0.8"/>
+            <polyline points="34,124 58,120 82,116 106,112 129,106 153,100 177,94 201,88 224,80 248,72 272,62 296,52 320,44" fill="none" stroke="#4c4c4c" stroke-width="2.5" stroke-linejoin="round"/>
+            <line x1="34" y1="40" x2="330" y2="40" stroke="#1c1c1c" stroke-width="1.5" stroke-dasharray="6 5"/>
+            <text x="330" y="34" text-anchor="end" font-size="10" fill="#1c1c1c" font-weight="700">ตลิ่ง 3.00 ม.</text>
+            <text x="8" y="23" font-size="9" fill="#8b8b8b">3.5</text>
+            <text x="8" y="43" font-size="9" fill="#8b8b8b">3.0</text>
+            <text x="8" y="63" font-size="9" fill="#8b8b8b">2.5</text>
+            <text x="8" y="83" font-size="9" fill="#8b8b8b">2.0</text>
+            <text x="8" y="103" font-size="9" fill="#8b8b8b">1.5</text>
+            <text x="8" y="123" font-size="9" fill="#8b8b8b">1.0</text>
+            <text x="34" y="158" font-size="9" fill="#8b8b8b">00</text>
+            <text x="106" y="158" font-size="9" fill="#8b8b8b">06</text>
+            <text x="177" y="158" font-size="9" fill="#8b8b8b">12</text>
+            <text x="248" y="158" font-size="9" fill="#8b8b8b">18</text>
+            <text x="314" y="158" font-size="9" fill="#8b8b8b">24</text>
+          </svg>
+          <div class="chartleg"><span><i class="ln"></i>ระดับน้ำ</span><span><i class="ln dash"></i>ตลิ่ง 3.00 ม.</span></div>
+        </div>
+        <div class="stats">
+          <div class="stat"><span class="sub">ตลิ่ง</span><b>3.00 ม.</b></div>
+          <div class="stat"><span class="sub">ห่างจากบ้าน</span><b>1.2 กม.</b></div>
+          <div class="stat"><span class="sub">ความเข้ม</span><b>0.8 ม./ชม.</b></div>
+        </div>
+        <div class="banner hs" data-go="alerts"><span>ระดับน้ำใกล้ตลิ่งใน 6 ชั่วโมง · ดูแจ้งเตือน</span></div>
+        <div class="btnrow">
+          <a class="btn hs" data-go="alerts"><span class="n">1</span>แจ้งเตือนของสถานี</a>
+          <a class="btn gho hs" data-go="settings"><span class="n">2</span>ตั้งเกณฑ์</a>
+        </div>
+      </div>
+    </div>
+    <div class="homeind"></div>
+  </div>
+  <div class="note"><b>Annotation:</b> ① แถบเตือน / ปุ่มแจ้งเตือน → จอ 06 · ② ปุ่ม "ตั้งเกณฑ์" → จอ 13 · กราฟเป็น SVG placeholder เส้นประ = ระดับตลิ่ง</div>
+</section>
+
+<!-- ============ 06 Alerts ============ -->
+<section class="wrap" data-screen="alerts">
+  <div class="wtitle"><b>06</b><span>Alerts — การ์ดแจ้งเตือนระดับ 1–5</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>09:41</span><span class="sicons"><i></i><i></i><i></i></span></div>
+    <div class="appbar"><span class="back hs" data-go="home">‹</span><span class="t">การแจ้งเตือน</span><span class="pill">5 รายการ</span></div>
+    <div class="screen">
+      <div class="body">
+        <div class="filters">
+          <span class="chip on">ทั้งหมด</span><span class="chip">ระดับ 4–5</span><span class="chip">สถานีของฉัน</span><span class="chip">ยะหา</span>
+        </div>
+        <div class="acard hs" data-go="std" style="border-left-color:#161616">
+          <span class="lv lv5">5</span>
+          <div class="amain"><b>น้ำท่วมแล้ว</b><span class="sub">สถานีรามัน · เกินตลิ่ง 0.20 ม.</span><span class="time">09:35 น.</span></div>
+          <span class="arr">›</span>
+        </div>
+        <div class="acard hs" data-go="std" style="border-left-color:#4c4c4c">
+          <span class="lv lv4">4</span>
+          <div class="amain"><b>ระดับน้ำสูงมาก</b><span class="sub">สถานีห้วยสะเตง · ใกล้ตลิ่ง</span><span class="time">08:10 น.</span></div>
+          <span class="arr">›</span>
+        </div>
+        <div class="acard hs" data-go="std" style="border-left-color:#7a7a7a">
+          <span class="lv lv3">3</span>
+          <div class="amain"><b>ระดับน้ำสูงขึ้น</b><span class="sub">สถานียะหา · เฝ้าระวัง</span><span class="time">07:00 น.</span></div>
+          <span class="arr">›</span>
+        </div>
+        <div class="acard hs" data-go="std" style="border-left-color:#a9a9a9">
+          <span class="lv lv2">2</span>
+          <div class="amain"><b>เฝ้าระวัง</b><span class="sub">สถานีบันนังสตา · ปกติ</span><span class="time">06:15 น.</span></div>
+          <span class="arr">›</span>
+        </div>
+        <div class="acard hs" data-go="std" style="border-left-color:#c6c6c6">
+          <span class="lv">1</span>
+          <div class="amain"><b>ปกติ</b><span class="sub">สถานีสะเตง · ไม่มีเหตุการณ์</span><span class="time">05:00 น.</span></div>
+          <span class="arr">›</span>
+        </div>
+        <p class="fine">ระดับ 1–5 = ความรุนแรง ใช้ความเข้มเทาเพื่อความสม่ำเสมอแบบ grayscale</p>
+      </div>
+    </div>
+    <div class="homeind"></div>
+  </div>
+  <div class="note"><b>Annotation:</b> ① การ์ดแจ้งเตือน → จอ 05 (รายละเอียดสถานี) · chip กรองเป็น placeholder · เวลาแสดงตามลำดับเหตุการณ์</div>
+</section>
+
+<!-- ============ 07 SOS 1 ============ -->
+<section class="wrap" data-screen="sos1">
+  <div class="wtitle"><b>07</b><span>SOS 1 — เลือกประเภทความช่วยเหลือ</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>09:41</span><span class="sicons"><i></i><i></i><i></i></span></div>
+    <div class="appbar"><span class="back hs" data-go="home">‹</span><span class="t">ขอความช่วยเหลือฉุกเฉิน</span></div>
+    <div class="screen">
+      <div class="body">
+        <p class="sub center" style="margin:2px 0 0">เลือกประเภทความช่วยเหลือที่ต้องการ</p>
+        <div class="sosgrid">
+          <a class="stile hs" data-go="sos2"><span class="n">1</span><span class="si"></span>ติดอยู่ในน้ำท่วม</a>
+          <a class="stile hs" data-go="sos2"><span class="n">2</span><span class="si"></span>ต้องการอพยพ</a>
+          <a class="stile hs" data-go="sos2"><span class="n">3</span><span class="si"></span>เส้นทางถูกตัด</a>
+          <a class="stile hs" data-go="sos2"><span class="n">4</span><span class="si"></span>อาหาร / น้ำดิบ</a>
+          <a class="stile hs" data-go="sos2"><span class="n">5</span><span class="si"></span>การแพทย์</a>
+          <a class="stile hs" data-go="sos2"><span class="n">6</span><span class="si"></span>อื่น ๆ</a>
+        </div>
+        <a class="btn pri hs" data-go="sos2"><span class="n">7</span>ขอความช่วยเหลือทันที (ทุกประเภท)</a>
+        <p class="fine">หรือโทรตรง: <b>1677</b> · <b>199</b> (ตัวเลขแสดงในจอ 10)</p>
+      </div>
+    </div>
+    <div class="homeind"></div>
+  </div>
+  <div class="note"><b>Annotation:</b> ①–⑥ tile ประเภท → จอ 08 · ⑦ ปุ่มทันที → จอ 08 · เบอร์ 1677 / 199 คงไว้ใน flow</div>
+</section>
+
+<!-- ============ 08 SOS 2 ============ -->
+<section class="wrap" data-screen="sos2">
+  <div class="wtitle"><b>08</b><span>SOS 2 — ยืนยันพิกัด + ข้อมูล</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>09:41</span><span class="sicons"><i></i><i></i><i></i></span></div>
+    <div class="appbar"><span class="back hs" data-go="sos1">‹</span><span class="t">ยืนยันพิกัดและข้อมูล</span></div>
+    <div class="screen">
+      <div class="body">
+        <div class="map" style="height:150px;margin-bottom:12px">
+          <div class="gridbg"></div><div class="river"></div>
+          <div class="mapbadge">พิกัดจำลอง</div>
+          <span class="homepin" style="left:52%;top:48%"></span>
+          <div style="position:absolute;left:52%;top:70%;transform:translateX(-50%);font-size:10.5px;color:var(--g7);background:#fff;border:1px solid var(--g3);border-radius:6px;padding:2px 7px">ต.ในเมือง อ.เมืองยะลา</div>
+        </div>
+        <div class="btnrow" style="margin-bottom:10px">
+          <a class="btn gho sm hs" data-go="sos2"><span class="n">1</span>แก้ไขตำแหน่ง</a>
+          <a class="btn gho sm hs" data-go="sos2">แนบรูปถ่าย</a>
+        </div>
+        <label>ประเภท</label>
+        <div class="select">ติดอยู่ในน้ำท่วม &nbsp;▾</div>
+        <label>ชื่อ–นามสกุล</label>
+        <div class="input">สมชาย ใจดี</div>
+        <label>เบอร์โทร</label>
+        <div class="input">08x-xxx-xxxx</div>
+        <label>จำนวนผู้ติดค้าง</label>
+        <div class="input">4 คน (รวมสัตว์เลี้ยง 2 ตัว)</div>
+        <label>หมายเหตุ</label>
+        <div class="input tall">น้ำท่วมที่ชั้น 1 · มีผู้สูงอายุ 1 คน</div>
+        <a class="btn pri hs" data-go="sos3"><span class="n">2</span>ส่งคำขอช่วยเหลือ</a>
+        <p class="fine">พิกัดแนบไปกับคำขอ · ส่งให้ศูนย์ 1677</p>
+      </div>
+    </div>
+    <div class="homeind"></div>
+  </div>
+  <div class="note"><b>Annotation:</b> ① แก้ไขตำแหน่ง (placeholder) · ② ปุ่ม "ส่งคำขอ" → จอ 09 · ช่องข้อมูลเป็น placeholder text</div>
+</section>
+
+<!-- ============ 09 SOS 3 ============ -->
+<section class="wrap" data-screen="sos3">
+  <div class="wtitle"><b>09</b><span>SOS 3 — กำลังขอความช่วยเหลือ</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>09:41</span><span class="sicons"><i></i><i></i><i></i></span></div>
+    <div class="appbar"><span class="t">ส่งคำขอช่วยเหลือ</span></div>
+    <div class="screen">
+      <div class="body center">
+        <div class="spin hs" data-go="sos4"><span class="n">1</span></div>
+        <h2 style="margin:0 0 6px;font-size:19px">กำลังส่งคำขอ</h2>
+        <p class="sub" style="margin:0">กรุณารอสักครู่ · กำลังเชื่อมต่อศูนย์รับเรื่อง 1677</p>
+        <div class="steps">
+          <div class="step done"><span class="sic"></span>ส่งข้อมูลแล้ว</div>
+          <div class="step now"><span class="sic"></span>กำลังตรวจสอบ</div>
+          <div class="step"><span class="sic"></span>เรียกเข้าศูนย์</div>
+        </div>
+        <a class="btn gho hs" data-go="sos1"><span class="n">2</span>ยกเลิกคำขอ</a>
+        <p class="fine">จำลอง: คลิกวงล้อหมุน → จอ 10</p>
+      </div>
+    </div>
+    <div class="homeind"></div>
+  </div>
+  <div class="note"><b>Annotation:</b> ① คลิกวงล้อหมุน (จำลองส่งสำเร็จ) → จอ 10 · ② ยกเลิก → จอ 07 · แอนิเมชัน spinner ด้วย CSS</div>
+</section>
+
+<!-- ============ 10 SOS 4 ============ -->
+<section class="wrap" data-screen="sos4">
+  <div class="wtitle"><b>10</b><span>SOS 4 — ศูนย์รับเรื่องแล้ว</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>09:42</span><span class="sicons"><i></i><i></i><i></i></span></div>
+    <div class="screen">
+      <div class="body center">
+        <div class="okcircle">✓</div>
+        <h2 style="margin:0 0 6px;font-size:19px">ศูนย์รับเรื่องแล้ว</h2>
+        <p class="sub" style="margin:0">รหัสคำขอ <b>YAL-2569-0042</b> · รับเรื่อง 09:42 น.</p>
+        <div class="card contact">
+          <div class="crow"><span class="ci"></span><div class="cmain"><b>โทร 1677</b><span class="sub">ศูนย์ประสานงานน้ำท่วม</span></div><span class="arr">›</span></div>
+          <div class="crow"><span class="ci"></span><div class="cmain"><b>โทร 199</b><span class="sub">กู้ภัย / หน่วยกู้ชีพ</span></div><span class="arr">›</span></div>
+        </div>
+        <div class="timeline">
+          <div class="trow done"><span class="tic"></span><div><b>รับเรื่องแล้ว</b><span class="sub">09:42 น.</span></div></div>
+          <div class="trow now"><span class="tic"></span><div><b>กำลังจัดกำลัง</b><span class="sub">เร่งด่วน</span></div></div>
+          <div class="trow"><span class="tic"></span><div><b>ถึงจุดหมาย</b><span class="sub">—</span></div></div>
+        </div>
+        <a class="btn pri hs" data-go="home"><span class="n">1</span>กลับหน้าหลัก</a>
+        <a class="btn gho hs" data-go="shelter" style="margin-top:10px"><span class="n">2</span>ดูจุดอพยพใกล้ฉัน</a>
+      </div>
+    </div>
+    <div class="homeind"></div>
+  </div>
+  <div class="note"><b>Annotation:</b> ① ปุ่มหลัก → จอ 04 · ② ปุ่มรอง → จอ 11 · เบอร์ 1677 / 199 พร้อมโทร · timeline แสดงความคืบหน้า</div>
+</section>
+
+<!-- ============ 11 Shelter ============ -->
+<section class="wrap" data-screen="shelter">
+  <div class="wtitle"><b>11</b><span>Shelter finder — จุดอพยพ + เส้นทาง</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>09:41</span><span class="sicons"><i></i><i></i><i></i></span></div>
+    <div class="appbar"><span class="back hs" data-go="home">‹</span><span class="t">จุดอพยพ</span><span class="pill">4 แห่ง</span></div>
+    <div class="screen">
+      <div class="body">
+        <div class="filters"><span class="chip on">ทั้งหมด</span><span class="chip">รับได้</span><span class="chip">ใกล้ฉัน</span></div>
+        <div class="shcard hs" data-modal="route-modal">
+          <div class="shhead"><b>โรงเรียนสะเตง</b><span class="dist">1.2 กม.</span></div>
+          <div class="bar"><i style="width:80%"></i></div>
+          <div class="shmeta"><span>ที่ว่าง 80%</span><span class="sub">รับได้ ~160 คน</span><span class="lnk2">เส้นทาง ›</span></div>
+        </div>
+        <div class="shcard hs" data-modal="route-modal">
+          <div class="shhead"><b>ศาลาอเนกประสงค์เทศบาล</b><span class="dist">2.0 กม.</span></div>
+          <div class="bar"><i style="width:45%"></i></div>
+          <div class="shmeta"><span>ที่ว่าง 45%</span><span class="sub">รับได้ ~90 คน</span><span class="lnk2">เส้นทาง ›</span></div>
+        </div>
+        <div class="shcard hs" data-modal="route-modal">
+          <div class="shhead"><b>โรงเรียนบันนังสตา</b><span class="dist">8.5 กม.</span></div>
+          <div class="bar"><i style="width:10%"></i></div>
+          <div class="shmeta"><span>ที่ว่าง 10%</span><span class="sub">รับได้ ~20 คน</span><span class="lnk2">เส้นทาง ›</span></div>
+        </div>
+        <div class="shcard hs" data-modal="route-modal">
+          <div class="shhead"><b>วัดลำพะยา</b><span class="dist">5.1 กม.</span></div>
+          <div class="bar"><i style="width:100%"></i></div>
+          <div class="shmeta"><span>เต็ม</span><span class="sub">รับเพิ่มไม่ได้</span><span class="lnk2">เส้นทาง ›</span></div>
+        </div>
+        <div class="banner hs" data-go="family"><span>แจ้งสถานะครอบครัวเมื่อไปจุดอพยพ</span></div>
+      </div>
+    </div>
+    <div class="homeind"></div>
+    <div class="overlay" id="route-modal">
+      <div class="sheet">
+        <div class="sheethead"><b>เส้นทางไปจุดอพยพ</b><span class="close" data-close>✕</span></div>
+        <div class="routemap">
+          <div class="gridbg"></div>
+          <div class="rpath"></div>
+          <span class="rpin" style="left:22px;top:140px"></span>
+          <span class="rpin" style="left:300px;top:108px"></span>
+        </div>
+        <div class="rinfo"><b>โรงเรียนสะเตง</b><span class="sub">1.2 กม. · เดินทาง ~15 นาที · เส้นทางของจำลอง</span></div>
+        <a class="btn pri" data-close>ปิด</a>
+      </div>
+    </div>
+  </div>
+  <div class="note"><b>Annotation:</b> ① การ์ดจุดอพยพ → เปิด modal เส้นทาง (bottom sheet) · ② แถบเตือน → จอ 12 · แถบที่ว่าง = เทาชนิดหนึ่ง</div>
+</section>
+
+<!-- ============ 12 Family ============ -->
+<section class="wrap" data-screen="family">
+  <div class="wtitle"><b>12</b><span>Family tracking — สถานะปลอดภัย</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>09:41</span><span class="sicons"><i></i><i></i><i></i></span></div>
+    <div class="appbar"><span class="back hs" data-go="home">‹</span><span class="t">ครอบครัวของฉัน</span><a class="smbtn hs" data-modal="fam-modal"><span class="n">1</span>+ เพิ่ม</a></div>
+    <div class="screen">
+      <div class="body">
+        <div class="banner"><span>สถานะอัปเดตจากข้อความ check-in · ล่าสุด 09:20 น.</span></div>
+        <div class="frow hs" data-go="family">
+          <span class="avatar">ช</span>
+          <div class="fmain"><b>สมชาย ใจดี (พ่อ)</b><span class="sub">บ้าน · 09:20 น.</span></div>
+          <span class="st st-ok">ปลอดภัย</span>
+        </div>
+        <div class="frow hs" data-go="family">
+          <span class="avatar">ม</span>
+          <div class="fmain"><b>สมหญิง ใจดี (แม่)</b><span class="sub">ตลาด · 09:05 น.</span></div>
+          <span class="st st-ok">ปลอดภัย</span>
+        </div>
+        <div class="frow hs" data-go="family">
+          <span class="avatar">น</span>
+          <div class="fmain"><b>น้องสาว (นางสาว)</b><span class="sub">โรงเรียน · 08:40 น.</span></div>
+          <span class="st st-warn">ติดเขต</span>
+        </div>
+        <div class="frow hs" data-go="family">
+          <span class="avatar">ป</span>
+          <div class="fmain"><b>ป้าสมศรี</b><span class="sub">ไม่มี check-in 3 ชม.</span></div>
+          <span class="st st-bad">ต้องติดตาม</span>
+        </div>
+        <a class="btn pri hs" data-go="alerts"><span class="n">2</span>แจ้งเตือนทุกคนให้ check-in</a>
+        <a class="btn gho hs" data-go="shelter" style="margin-top:10px"><span class="n">3</span>ส่งที่อยู่จุดอพยพให้ครอบครัว</a>
+      </div>
+    </div>
+    <div class="homeind"></div>
+    <div class="overlay" id="fam-modal">
+      <div class="sheet">
+        <div class="sheethead"><b>เพิ่มสมาชิกในครอบครัว</b><span class="close" data-close>✕</span></div>
+        <label>ชื่อ–นามสกุล</label><div class="input"></div>
+        <label>ความสัมพันธ์</label><div class="select">บิดา / มารดา &nbsp;▾</div>
+        <label>เบอร์โทร</label><div class="input"></div>
+        <a class="btn pri" data-close style="margin-top:8px">บันทึก</a>
+      </div>
+    </div>
+  </div>
+  <div class="note"><b>Annotation:</b> ① ปุ่ม + → modal เพิ่มสมาชิก · ② แถบเตือน check-in → จอ 06 · ③ ส่งจุดอพยพ → จอ 11 · สถานะ 3 ระดับเทา</div>
+</section>
+
+<!-- ============ 13 Settings ============ -->
+<section class="wrap" data-screen="settings">
+  <div class="wtitle"><b>13</b><span>Settings — เกณฑ์/ภาษา/โหมดเงียบ/ข้อมูล</span></div>
+  <div class="phone">
+    <div class="statusbar"><span>09:41</span><span class="sicons"><i></i><i></i><i></i></span></div>
+    <div class="appbar"><span class="back hs" data-go="home">‹</span><span class="t">ตั้งค่า</span></div>
+    <div class="screen">
+      <div class="body">
+        <div class="sect" style="margin-top:2px">เกณฑ์แจ้งเตือน</div>
+        <div class="card">
+          <div class="srow2"><span>สถานีที่ติดตาม</span><span class="sub">ห้วยสะเตง, สะเตง ▾</span></div>
+          <div class="srow2"><span>แจ้งเตือนเมื่อถึงระดับ</span><span class="sub">ระดับ 3 ขึ้นไป</span></div>
+          <div class="slider"><i style="left:60%"></i></div>
+          <div class="srow2"><span>เสียงแจ้งเตือน</span><label class="switch"><input type="checkbox" checked><span></span></label></div>
+        </div>
+        <div class="sect">ภาษา</div>
+        <div class="seg2">
+          <label class="on"><input type="radio" name="lang" checked> ไทย</label>
+          <label><input type="radio" name="lang"> ยาลอ (Yawi)</label>
+        </div>
+        <div class="sect">โหมดเงียบ</div>
+        <div class="card">
+          <div class="srow2"><span>ปิดเสียง / สั่น</span><label class="switch"><input type="checkbox"><span></span></label></div>
+          <div class="srow2"><span>ช่วงเวลา</span><span class="sub">22:00–06:00 น.</span></div>
+        </div>
+        <div class="sect">ข้อมูลส่วนตัว</div>
+        <div class="card">
+          <div class="srow2"><span>ชื่อ</span><span class="sub">สมชาย ใจดี</span></div>
+          <div class="srow2"><span>เบอร์โทร</span><span class="sub">08x-xxx-xxxx</span></div>
+          <a class="btn gho sm hs" data-go="settings"><span class="n">1</span>แก้ไขข้อมูล</a>
+        </div>
+        <div class="sect">ข้อมูลแคช</div>
+        <div class="card">
+          <div class="srow2"><span>แคชล่าสุด</span><span class="sub">23 พ.ย. 2569 08:15 น.</span></div>
+          <a class="btn gho sm hs" data-go="off"><span class="n">2</span>ดูหน้าสถานนะออฟไลน์</a>
+        </div>
+        <p class="fine">Yala Flood v0.1 (wireframe) · ข้อมูลจำลอง</p>
+      </div>
+    </div>
+    <div class="homeind"></div>
+  </div>
+  <div class="note"><b>Annotation:</b> ① Switch / segment ภาษา กดสลับได้จริง (CSS) · ② "ดูหน้าสถานนะออฟไลน์" → จอ 14 · เกณฑ์แจ้งเตือน 1–5</div>
+</section>
+
+<!-- ============ 14 Offline ============ -->
+<section class="wrap" data-screen="off">
+  <div class="wtitle"><b>14</b><span>Offline — ข้อมูลแคชล่าสุด</span></div>
+  <div class="phone offline">
+    <div class="statusbar"><span>09:41</span><span class="sicons"><i></i><i></i><i></i></span></div>
+    <div class="offbanner"><span>ไม่มีสัญญาณ — แสดงข้อมูลแคชล่าสุด 08:15 น.</span></div>
+    <div class="appbar homebar">
+      <div class="loc"><div class="t">ยะลา</div><div class="sub">ต.ในเมือง อ.เมืองยะลา</div></div>
+      <span class="pill">ออฟไลน์</span>
+    </div>
+    <div class="screen">
+      <div class="body" style="padding-top:8px">
+        <div class="map">
+          <div class="gridbg"></div><div class="river"></div>
+          <div class="mapbadge">แผนที่แคช</div>
+          <div class="mapcache">แคช 08:15</div>
+          <span class="homepin" style="left:46%;top:50%"></span>
+          <span class="dot ok" style="left:32%;top:58%">1</span>
+          <span class="dot watch" style="left:44%;top:47%">2</span>
+          <span class="dot watch hs" data-go="std" style="left:38%;top:66%"><span class="n">1</span>3</span>
+          <span class="dot ok" style="left:60%;top:70%">4</span>
+          <span class="dot watch" style="left:52%;top:62%">5</span>
+          <span class="dot crit" style="left:66%;top:44%">6</span>
+          <span class="dot crit" style="left:74%;top:58%">7</span>
+          <span class="dot ok" style="left:80%;top:36%">8</span>
+          <span class="dot ok" style="left:58%;top:30%">9</span>
+          <span class="dot ok" style="left:84%;top:20%">10</span>
+          <span class="dot watch" style="left:76%;top:14%">11</span>
+          <span class="dot ok" style="left:90%;top:34%">12</span>
+          <span class="dot ok" style="left:70%;top:78%">13</span>
+          <span class="dot watch" style="left:48%;top:82%">14</span>
+        </div>
+        <div class="legend">
+          <span><i class="ok"></i>ปกติ</span><span><i class="watch"></i>เฝ้าระวัง</span><span><i class="crit"></i>เกินตลิ่ง</span><span class="sub">14 สถานี (แคช)</span>
+        </div>
+        <div class="banner"><span>ข้อมูลล่าสุด 08:15 น. · อาจไม่ตรงกับสถานการณ์ปัจจุบัน</span></div>
+        <div class="sect">สถานีใกล้ฉัน (แคช)</div>
+        <div class="srow hs" data-go="std"><span class="dot watch"></span><div class="sg"><b>สถานีห้วยสะเตง<span class="offtag">แคช</span></b><span class="sub">2.90 ม. · 08:15 น.</span></div><span class="arr">›</span></div>
+        <div class="srow hs" data-go="std"><span class="dot crit"></span><div class="sg"><b>สถานีรามัน<span class="offtag">แคช</span></b><span class="sub">3.20 ม. · 08:15 น.</span></div><span class="arr">›</span></div>
+        <a class="btn pri hs" data-go="home"><span class="n">2</span>ลองเชื่อมต่ออีกครั้ง</a>
+        <a class="btn gho hs" data-go="shelter" style="margin-top:10px"><span class="n">3</span>จุดอพยพที่บันทึกไว้</a>
+      </div>
+    </div>
+    <nav class="bnav">
+      <a class="tab active"><span class="ic"></span><span>หน้าหลัก</span></a>
+      <a class="tab hs" data-go="alerts"><span class="ic"></span><span>แจ้งเตือน</span></a>
+      <a class="tab hs" data-go="sos1"><span class="ic sos"></span><span>SOS</span></a>
+      <a class="tab hs" data-go="settings"><span class="ic"></span><span>เมนู</span></a>
+    </nav>
+  </div>
+  <div class="note"><b>Annotation:</b> ① จุดสถานี → จอ 05 (ข้อมูลแคช) · ② "ลองเชื่อมต่ออีกครั้ง" → จอ 04 · ③ จุดอพยพที่บันทึกไว้ → จอ 11 · ทั้งจอเป็น grayscale</div>
+</section>
+
+</main>
+
+<footer class="foot">สร้างเป็น wireframe ระดับ low-fi สำหรับเทสต์การใช้งาน · แอพน้ำท่วม จ.ยะลา · 14 จอ · คลิก hotspot ข้ามจอได้</footer>
+
+<script>
+const SCREENS=[
+  ["onb1","01 Onboarding · ความเป็นส่วนตัว"],
+  ["onb2","02 Onboarding · สิทธิ์ตำแหน่ง"],
+  ["onb3","03 Onboarding · เลือกอำเภอ/ตำบล"],
+  ["home","04 Home · แผนที่ 14 สถานี"],
+  ["std","05 Station detail · กราฟ 24 ชม."],
+  ["alerts","06 Alerts · ระดับ 1–5"],
+  ["sos1","07 SOS 1 · เลือกประเภท"],
+  ["sos2","08 SOS 2 · ยืนยันพิกัด"],
+  ["sos3","09 SOS 3 · กำลังส่ง"],
+  ["sos4","10 SOS 4 · ศูนย์รับเรื่อง"],
+  ["shelter","11 Shelter · จุดอพยพ"],
+  ["family","12 Family · ติดตามครอบครัว"],
+  ["settings","13 Settings · ตั้งค่า"],
+  ["off","14 Offline · ข้อมูลแคช"]
+];
+const chipsBox=document.getElementById('chips');
+SCREENS.forEach(([id,label])=>{
+  const b=document.createElement('button');
+  b.className='chipnav';b.textContent=label;b.dataset.go=id;b.type='button';
+  chipsBox.appendChild(b);
+});
+function setMode(m){
+  document.body.dataset.mode=m;
+  document.getElementById('btn-overview').classList.toggle('active',m==='overview');
+  document.getElementById('btn-single').classList.toggle('active',m==='single');
+  chipsBox.style.display=(m==='single')?'flex':'none';
+}
+function show(id){
+  document.querySelectorAll('.wrap').forEach(w=>w.classList.toggle('active',w.dataset.screen===id));
+  document.querySelectorAll('.chipnav').forEach(c=>c.classList.toggle('active',c.dataset.go===id));
+  setMode('single');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.getElementById('btn-overview').addEventListener('click',()=>{setMode('overview');window.scrollTo({top:0,behavior:'smooth'});});
+document.getElementById('btn-single').addEventListener('click',()=>{
+  const cur=document.querySelector('.wrap.active');
+  show(cur?cur.dataset.screen:'home');
+});
+document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-go]');
+  if(g){show(g.dataset.go);return;}
+  const mo=e.target.closest('[data-modal]');
+  if(mo){const ov=document.getElementById(mo.dataset.modal);if(ov)ov.classList.add('open');return;}
+  const cl=e.target.closest('[data-close]');
+  if(cl){const ov=cl.closest('.overlay');if(ov)ov.classList.remove('open');return;}
+});
+setMode('overview');
+</script>
+</body>
+</html>

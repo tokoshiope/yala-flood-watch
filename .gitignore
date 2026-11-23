@@ -1,0 +1,29 @@
+# Flutter
+mobile/app/.dart_tool/
+mobile/app/build/
+mobile/app/.flutter-plugins*
+*.iml
+.gradle/
+/local.properties
+ios/Pods/
+ios/.symlinks/
+android/.gradle/
+android/app/src/main/gen/
+
+# Secrets
+.env
+.env.*
+!.env.example
+**/google-services.json
+**/GoogleService-Info.plist
+**/key.properties
+*.jks
+*.keystore
+
+# Supabase
+supabase/.temp/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/

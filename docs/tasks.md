@@ -1,0 +1,46 @@
+# Yala Flood App — Task Board (Living File)
+
+> อัปเดตทุกครั้งที่จบงาน · Status: TODO / IN PROGRESS / IN QA / WAITING FOUNDER / DONE / BLOCKED
+
+## Phase 0 — Inception & Baseline Docs  `[IN PROGRESS]`
+- [x] A. Dashboard ข้อมูลจริง 14 สถานี — DONE (tools/dashboard) ตรวจสอบแล้ว
+- [x] B. Prototype Flutter 6 หน้า + tests 30/30 — DONE (mobile/app) ตรวจสอบ flutter analyze/test แล้ว
+- [x] C. PRD 1,011 บรรทัด — DONE (docs/PRD-yala-flood-app.md)
+- [x] D. Wireframe 14 จอ — DONE (design/wireframes)
+- [ ] ย้ายโปรเจกต์ทั้งหมดไป `~/Documents/yala-flood-app/` — DONE (2026-11-23)
+- [x] เอกสารฐาน 01–04 + AGENTS.md + tasks/decisions/specs — DONE (257/217/323/327 = 1,124 บรรทัด ตรวจ wc -l แล้ว)
+- [x] แก้ PRD §9.6 test vectors ให้ตรงสูตร (87.5 / 2.5 / 20.5) — DONE 23 พ.ย. 2568
+- [ ] **Gate 1 (Spec & Scope) + Gate 2 (Architecture/Billing/Legal)** — WAITING FOUNDER ⛔
+
+## Phase 1 — Core Data / Backend Foundation
+- [ ] สถาปัตยกรรม pipeline: ThaiWater + TMD cron → normalize → snapshot JSON (+ manifest hash)
+- [ ] Validation gates (fail-closed เมื่อต้นทางล่ม) + unit tests
+- [ ] Station/Shelter/Contact registry (dynamic, ไม่ hardcode)
+
+## Phase 2 — Cloud Bridge, CI/CD, Legal Web
+- [ ] GitHub repo private + workflows + Supabase/Storage free tier
+- [ ] web/ index + privacy + terms → GitHub Pages (HTTP 200)
+
+## Phase 3 — Mobile MVP
+- [ ] ตัดสินใจ Stack (Flutter เดิม vs Expo RN) — รอ Gate 2
+- [ ] Android/iOS platform folders + รันบน emulator จริง + screenshot
+- [ ] Push notifications (FCM) + alert engine ตามสูตร
+
+## Phase 4 — QA Audit & Beta
+- [ ] Independent QA audit (context แยก) → re-audit PASS
+- [ ] Real-device test: SOS, offline, push
+
+## Phase 5 — Store & Launch
+- [ ] Accounts 15% tier, assets, listing pack, submit
+
+## Backlog / ค้างจาก prototype
+- [ ] ฐานเบอร์โทรหน่วยงาน 8 อำเภอ + webhook ศูนย์ปภ.ยะลา (SOS ตอนนี้จำลอง)
+- [ ] จุดอพยพเป็นข้อมูลตัวอย่าง — ต้องใช้ข้อมูลจริงจาก ปภ.ยะลา
+- [ ] TMD rainfall/rain forecast endpoint จริง (ตอนนี้เป็น model เฉพาะ)
+- [ ] i18n ภาษายาลอ (ตัวอย่างข้อความ)
+
+## Backlog / พบจาก Data Audit (23 พ.ย. 2568)
+- [ ] 5 สถานีไม่มี `situation_level` → ใช้ fallback `W = situation/4` หรือฟัง `left_bank` (ดู docs/04 §2.1)
+- [ ] 2 สถานีไม่มีตลิ่ง (`left_bank = 0`: เขื่อนบางลาง, ฝายละแอ) → ต้องนิยาม W แยก (situation/4)
+- [ ] cadence ข้อมูลจริง ~10–30 นาที (ไม่ใช่ 15 นาทีทุกสถานี) — pipeline ต้อง fail-closed เมื่อเกิน 30 นาที
+- [ ] git init ยังไม่ทำ (Phase 0 เหลือข้อเดียว)

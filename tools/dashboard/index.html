@@ -1,0 +1,62 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🌊 YALA FLOOD DASHBOARD — ข้อมูลจริง ThaiWater API</title>
+<style>
+:root{--bg:#0b1220;--card:#111a2e;--fg:#e8eefc;--muted:#8fa3c8;--accent:#38bdf8;--red:#ef4444;--orange:#f97316;--yellow:#facc15;--green:#22c55e}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font-family:"Sarabun","Noto Sans Thai",system-ui,sans-serif;padding:20px}
+h1{font-size:22px;margin:0 0 4px}.sub{color:var(--muted);font-size:13px;margin-bottom:16px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--card);border:1px solid #1e2a47;border-radius:12px;padding:14px}.kpi .n{font-size:26px;font-weight:700}.kpi .l{font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid #1e2a47;border-radius:12px;padding:14px}
+.st{border-bottom:1px solid #1c2740;padding:10px 0;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.st:last-child{border-bottom:0}.badge{padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700;color:#0b1220}
+.b4{background:var(--red)}.b3{background:var(--orange)}.b2{background:var(--yellow)}.b1{background:var(--green)}.bn{background:#334155;color:#cbd5e1}
+.bar{height:8px;background:#1c2740;border-radius:6px;overflow:hidden;margin-top:6px;width:100%}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,#22c55e,#facc15,#f97316,#ef4444)}
+svg{width:100%;height:auto;background:#0e1730;border-radius:10px}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:8px;flex-wrap:wrap}
+.note{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.7}
+</style></head><body>
+<h1>🌊 YALA FLOOD DASHBOARD</h1>
+<div class="sub">แหล่งข้อมูล: ThaiWater API (<code>province_code=95</code>) · ดึงเมื่อ 23 พ.ย. 2568 20:10 น. · อัปเดตทุก 10 นาที</div>
+<div class="kpis" id="kpis"></div>
+<div class="grid">
+  <div class="panel"><div style="font-weight:700;margin-bottom:6px">สถานีวัดระดับน้ำ (พิกัดจริง)</div>
+  <svg id="map" viewBox="0 0 400 520"></svg>
+  <div class="legend"><span>🟢 ปกติ</span><span>🟡 เฝ้าระวัง</span><span>🟠 เตือนภัย</span><span>🔴 อันตราย</span><span>⚪ ไม่มีข้อมูล</span></div></div>
+  <div class="panel"><div style="font-weight:700;margin-bottom:6px">รายการสถานี</div><div id="list"></div></div>
+</div>
+<div class="panel" style="margin-top:16px"><div style="font-weight:700;margin-bottom:6px">📌 วิธีใช้ข้อมูลตัดสินใจ</div>
+<div class="note">• <b>situation_level</b>: 1=ปกติ 2=เฝ้าระวัง 3=เตือนภัย 4=อันตราย (ตามเกณฑ์กรมทรัพยากรน้ำ)<br>
+• <b>ระดับน้ำ / ตลิ่ง</b>: ระดับน้ำ (ม.รทก.) เทียบ left_bank — ยิ่งต่ำกว่าตลิ่งมาก = ยังมีพื้นที่รองรับ<br>
+• <b>% ความจุ</b> ของเขื่อน/อ่างเก็บ (storage_percent) ใช้ตัดสินใจเรื่องการระบายน้ำ<br>
+• <b>หมายเหตุ</b>: ยะลามีน้ำท่วมฉับพลันจากฝนภูเขา — ระดับน้ำสถานีอาจยังปกติ แต่ฝนในเขตบันนังสตา/กาบังอาจทำให้น้ำท่วมใน 2–4 ชม.</div></div>
+<script>
+const DATA = {"fetched": "2026-11-23T20:10+07:00", "count": 14, "stations": [{"id": 1345491088, "name": "เมืองยะลา", "oldcode": "PAT002", "lat": 6.67525, "lon": 101.286354, "river": "เขื่อนปัตตานี", "amphoe": "เมืองยะลา", "tumbon": "ตาเซะ", "level": 13.0, "prev": "13.00", "situation": 4, "bank": 13.85, "storage": "92.98", "diff": "0.85", "agency": "สสน.", "time": "2026-11-23 20:10", "type": "tele_waterlevel"}, {"id": 1345491087, "name": "บันนังสตา", "oldcode": "PAT001", "lat": 6.262041, "lon": 101.268036, "river": "แม่น้ำปัตตานี", "amphoe": "บันนังสตา", "tumbon": "บันนังสตา", "level": 34.97, "prev": "34.79", "situation": 4, "bank": 38.678, "storage": "81.80", "diff": "3.38", "agency": "สสน.", "time": "2026-11-23 20:10", "type": "tele_waterlevel"}, {"id": 1345488679, "name": "สะพานท่าสาป อ.เมือง จ.ยะลา", "oldcode": "BLGTD03", "lat": 6.552715, "lon": 101.266197, "river": "แม่น้ำปัตตานี", "amphoe": "เมืองยะลา", "tumbon": "สะเตง", "level": 13.2, "prev": "13.26", "situation": 3, "bank": 17.29, "storage": "43.19", "diff": "4.09", "agency": "กฟผ.", "time": "2026-11-23 20:00", "type": "tele_waterlevel"}, {"id": 1345488677, "name": "สะพานท้ายเขื่อนบางลาง อ.บันนังสตา จ.ยะลา", "oldcode": "BLGTD01", "lat": 6.160477, "lon": 101.276104, "river": "แม่น้ำปัตตานี", "amphoe": "บันนังสตา", "tumbon": "บาเจาะ", "level": 43.87, "prev": "43.82", "situation": 3, "bank": 48.678, "storage": "42.69", "diff": "4.81", "agency": "กฟผ.", "time": "2026-11-23 20:00", "type": "tele_waterlevel"}, {"id": 1345489502, "name": "อาคารสูบน้ำดิบ กปภ. อ.ยะหา จ.ยะลา", "oldcode": "BLGTD04", "lat": 6.47481, "lon": 101.139521, "river": "คลองเล็ก", "amphoe": "ยะหา", "tumbon": "บาโร๊ะ", "level": 23.67, "prev": "23.68", "situation": 3, "bank": 31.55, "storage": "30.98", "diff": "3.23", "agency": "กฟผ.", "time": "2026-11-23 20:00", "type": "tele_waterlevel"}, {"id": 1345488675, "name": "สะพานบ้าน กม.29 อ.เบตง จ.ยะลา", "oldcode": "BLGTU02", "lat": 5.920578, "lon": 101.182086, "river": "แม่น้ำปัตตานี", "amphoe": "เบตง", "tumbon": "อัยเยอร์เวง", "level": 117.13, "prev": "117.13", "situation": 2, "bank": 120.37, "storage": "28.61", "diff": "3.24", "agency": "กฟผ.", "time": "2026-11-23 20:00", "type": "tele_waterlevel"}, {"id": 1345489491, "name": "สะพานหัวสะพาน อ.บันนังสตา จ.ยะลา", "oldcode": "BLGTD02", "lat": 6.262132, "lon": 101.268237, "river": "แม่น้ำปัตตานี", "amphoe": "บันนังสตา", "tumbon": "บาเจาะ", "level": 35.65, "prev": "35.06", "situation": 2, "bank": 40.71, "storage": "20.84", "diff": "4.65", "agency": "กฟผ.", "time": "2026-11-23 20:00", "type": "tele_waterlevel"}, {"id": 1345482967, "name": "คลองเบตง (ชุมชนกุนุงจนอง)", "oldcode": "MOU454", "lat": 5.785312, "lon": 101.058685, "river": "คลองตาโล๊ะ", "amphoe": "เบตง", "tumbon": "เบตง", "level": 282.05, "prev": "282.04", "situation": 1, "bank": 286.432, "storage": "8.42", "diff": "4.38", "agency": "พพภ", "time": "2026-11-23 19:50", "type": "tele_waterlevel"}, {"id": 1345490567, "name": "สะพานข้ามแม่น้ำปัตตานี", "oldcode": "FOP045", "lat": 6.411704, "lon": 101.27776, "river": "แม่น้ำปัตตานี", "amphoe": "กรงปินัง", "tumbon": "กรงปินัง", "level": 5.89, "prev": "5.89", "situation": 1, "bank": 25.128, "storage": "-0.31", "diff": "19.24", "agency": "พพภ", "time": "2026-11-23 20:10", "type": "tele_waterlevel"}, {"id": 1345489507, "name": "ฝายละแอ อ.บันนังสตา จ.ยะลา", "oldcode": "BLGTU06", "lat": 6.143055, "lon": 101.309167, "river": "คลองละแอ", "amphoe": "บันนังสตา", "tumbon": "เขื่อนบางลาง", "level": 331.69, "prev": "331.70", "situation": null, "bank": 0, "storage": null, "diff": "331.69", "agency": "กฟผ.", "time": "2026-11-23 20:00", "type": "tele_waterlevel"}, {"id": 1345473963, "name": "บ้านหัวสะพาน", "oldcode": "X.77", "lat": 6.1525, "lon": 101.080902, "river": "คลองใหญ่", "amphoe": "ธารโต", "tumbon": "คีรีเขต", "level": 35.02, "prev": "35.03", "situation": null, "bank": 40.2999992370605, "storage": null, "diff": "4.68", "agency": "ชป.", "time": "2026-11-23 19:00", "type": "tele_waterlevel"}, {"id": 1345489510, "name": "เขื่อนบางลาง อ.บันนังสตา จ.ยะลา", "oldcode": "BLGTU05", "lat": 6.153667, "lon": 101.273116, "river": "แม่น้ำปัตตานี", "amphoe": "บันนังสตา", "tumbon": "เขื่อนบางลาง", "level": 100.74, "prev": "100.75", "situation": null, "bank": 0, "storage": null, "diff": "100.74", "agency": "กฟผ.", "time": "2026-11-23 20:00", "type": "tele_waterlevel"}, {"id": 1345473980, "name": "บ้านปายอยือนิ ", "oldcode": "X.273", "lat": 6.47977, "lon": 101.44474, "river": "แม่น้ำสายบุรี", "amphoe": "รามัน", "tumbon": "ตะโล๊ะหะลอ", "level": 12.27, "prev": "12.30", "situation": null, "bank": 16.5, "storage": null, "diff": "4.23", "agency": "ชป.", "time": "2026-11-23 19:00", "type": "tele_waterlevel"}, {"id": 1345473942, "name": "บ้านท่าสาป", "oldcode": "X.40A", "lat": 6.54053, "lon": 101.249763, "river": "แม่น้ำปัตตานี", "amphoe": "เมืองยะลา", "tumbon": "สะเตง", "level": 13.25, "prev": "13.31", "situation": null, "bank": 16.5, "storage": null, "diff": "3.25", "agency": "ชป.", "time": "2026-11-23 19:00", "type": "tele_waterlevel"}]};
+const colors={4:"#ef4444",3:"#f97316",2:"#facc15",1:"#22c55e"};
+const k=document.getElementById("kpis");
+const lv4=DATA.stations.filter(s=>s.situation===4).length, lv3=DATA.stations.filter(s=>s.situation===3).length;
+k.innerHTML=`<div class="kpi"><div class="n">${DATA.count}</div><div class="l">สถานีในจ.ยะลา</div></div>
+<div class="kpi"><div class="n" style="color:#ef4444">${lv4}</div><div class="l">อันตราย (ระดับ 4)</div></div>
+<div class="kpi"><div class="n" style="color:#f97316">${lv3}</div><div class="l">เตือนภัย (ระดับ 3)</div></div>
+<div class="kpi"><div class="n" style="color:#38bdf8">${new Set(DATA.stations.map(s=>s.amphoe)).size}</div><div class="l">อำเภอที่มีสถานี</div></div>`;
+// map: scale lat/lon to svg
+const lats=DATA.stations.map(s=>s.lat), lons=DATA.stations.map(s=>s.lon);
+const la0=Math.min(...lats)-0.05, la1=Math.max(...lats)+0.05, lo0=Math.min(...lons)-0.05, lo1=Math.max(...lons)+0.05;
+const X=lo=>40+(lo-lo0)/(lo1-lo0)*320, Y=la=>480-(la-la0)/(la1-la0)*440;
+let svg="";
+for(let i=0;i<DATA.stations.length;i++){const s=DATA.stations[i];
+ const c=colors[s.situation]||"#94a3b8";
+ svg+=`<circle cx="${X(s.lon).toFixed(1)}" cy="${Y(s.lat).toFixed(1)}" r="9" fill="${c}" stroke="#0b1220" stroke-width="2"/>`;
+ svg+=`<text x="${(X(s.lon)+12).toFixed(1)}" y="${(Y(s.lat)+4).toFixed(1)}" fill="#e8eefc" font-size="10">${s.name||s.oldcode||s.id}</text>`;}
+document.getElementById("map").innerHTML=svg;
+const list=document.getElementById("list");
+for(const s of DATA.stations){
+ const b=s.situation?`<span class="badge b${s.situation}">${["","ปกติ","เฝ้าระวัง","เตือนภัย","อันตราย"][s.situation]}</span>`:`<span class="badge bn">ไม่มีข้อมูล</span>`;
+ const pct=s.level&&s.bank?Math.max(0,Math.min(100,Math.round((s.bank-s.level)/s.bank*100))):null;
+ list.innerHTML+=`<div class="st"><div><b>${s.name||s.oldcode||"-"}</b> <span style="color:#8fa3c8;font-size:12px">${s.river||""} · ${s.amphoe}</span>
+ <div style="font-size:12px;color:#8fa3c8;margin-top:2px">ระดับ ${s.level??"-"} ม.รทก. / ตลิ่ง ${s.bank??"-"} · ${s.time||""}</div>
+ ${pct!=null?`<div class="bar"><i style="width:${pct}%"></i></div>`:''}</div>${b}</div>`;
+}
+</script></body></html>

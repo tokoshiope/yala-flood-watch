@@ -1,0 +1,33 @@
+# Decisions Log (Living File)
+
+## DEC-001 — ขอบเขตภูมิศาสตร์: เฉพาะจังหวัดยะลาก่อน
+- **วันที่:** 2026-11-23
+- **ตัดสินใจ:** MVP แรกเฉพาะ จ.ยะลา (8 อำเภอเป้าหมาย: เมืองยะลา รามัน ยะหา กรงปินัง เบตง บันนังสตา ธารโต กาบัง) ขยายภาคใต้ต่อใน Phase 6
+- **เหตุผล:** ข้อมูลยะลาครบ (14 สถานี), มีภัยจริง (พ.ย. 2568), ทดสอบและวัดผลได้เร็ว
+- **กระทบ:** ทุกเอกสาร baseline, dashboard, wireframe, tasks
+
+## DEC-002 — โมเดลราคา: ฟรีทั้งหมด ไม่มี IAP
+- **วันที่:** 2026-11-23
+- **ตัดสินใจ:** ไม่มี paywall/IAP/subscription ตามคำร้องขอของ Founder (แอพสาธารณประโยชน์)
+- **เหตุผล:** ผู้ใช้คือประชาชนในพื้นที่เสี่ยง; เสนอต่อทุนจากภาครัฐ/มูลนิธิ/ESG
+- **กระทบ:** playbook เดิมที่ออกแบบไว้สำหรับ Freemium ต้องตัดส่วน Billing/IAP ออกจาก roadmap; docs/launch ไม่ต้องมี paywall assets
+- **สถานะ:** ยืนยันแล้วโดย Founder
+
+## DEC-003 — สูตรคะแนนเตือนภัย (Alert Score)
+- **วันที่:** 2026-11-23
+- **ตัดสินใจ:** `Score = 0.5×W(ระดับน้ำ) + 0.25×R(ฝนจริง) + 0.15×F(พยากรณ์ฝน) + 0.10×C(รายงานชุมชน)` ระดับ 1–5
+- **เหตุผล:** ระดับน้ำเป็นตัวทำนายที่น่าเชื่อถือที่สุด; ฝนอย่างเดียวไม่ push
+- **กระทบ:** `mobile/app/lib/services/alert_engine.dart`, `docs/04-core-methodology.md` (formula_version)
+- **สถานะ:** Draft — รอ Gate 2 ยืนยันน้ำหนัก/เกณฑ์
+
+## DEC-004 — Tech Stack: รอตัดสินใจ Gate 2
+- **วันที่:** 2026-11-23
+- **ตัวเลือก A:** คง Flutter (`mobile/app`) — prototype พร้อม 31 ไฟล์, tests 30/30, ใช้ API จริงได้
+- **ตัวเลือก B:** ย้าย Expo + React Native + TS ตาม Playbook (EAS Build ผ่านตรง, ecosystem การเงิน/IAP ครบถ้วน)
+- **คำแนะนำของ Main Agent:** คง Flutter (ประหยัด ~2 สัปดาห์ ไม่เขียนใหม่) แล้วใช้ Codemagic/GitHub Actions สำหรับ build; แต่หากต้องการเป็นไปตาม Playbook 100% ให้ย้าย Expo
+- **สถานะ:** WAITING FOUNDER ⛔ (Gate 2)
+
+## DEC-005 — โครงสร้าง Repository มาตรฐาน + โฟลเดอร์เดียวใน Documents
+- **วันที่:** 2026-11-23
+- **ตัดสินใจ:** ใช้โครงสร้าง Playbook §6.1 ทั้งหมด รวมไฟล์เดิมทั้งหมดไว้ที่ `~/Documents/yala-flood-app/` (mobile/app, tools/dashboard, design/wireframes)
+- **กระทบ:** path ทั้งหมดใน docs/tasks, README
