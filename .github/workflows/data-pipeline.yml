@@ -5,6 +5,11 @@ on:
     - cron: "*/15 * * * *"   # ทุก 15 นาที
   workflow_dispatch:
 
+# กัน run ซ้อน (B-2): run ใหม่จะไม่ถูก cancel แต่รอคิว ป้องกันเขียน output ทับกัน
+concurrency:
+  group: yala-flood-data-pipeline
+  cancel-in-progress: false
+
 jobs:
   fetch-snapshot:
     runs-on: ubuntu-latest
@@ -17,6 +22,9 @@ jobs:
           cache: pip
       - name: Install deps
         run: pip install -r backend/requirements.txt
+      - name: Unit tests
+        run: pytest -q backend/tests
+        working-directory: .
       - name: Run pipeline (fail-closed)
         run: python backend/pipeline.py
       - name: Upload snapshot artifacts

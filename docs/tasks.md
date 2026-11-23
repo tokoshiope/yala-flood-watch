@@ -13,11 +13,13 @@
 - [x] git init + baseline commit c583f93 — DONE
 - [x] **Gate 1 + Gate 2** — ✅ Founder อนุมัติทั้ง 5 ข้อ (DEC-006)
 
-## Phase 1 — Core Data / Backend Foundation  `[IN PROGRESS]`
-- [ ] สถาปัตยกรรม pipeline: ThaiWater + TMD cron → normalize → snapshot JSON (+ manifest hash) — IN PROGRESS (`backend/pipeline.py`, registry, workflow เขียนแล้ว; รอรัน pytest/pipeline ยืนยัน)
-- [ ] Validation gates (fail-closed เมื่อต้นทางล่ม) + unit tests — IN PROGRESS (tests 8 ข้อ, ผ่าน 7 ก่อนแก้ default-arg bug, รอ re-run)
-- [x] Station/Shelter/Contact registry (dynamic, ไม่ hardcode) — DONE (`backend/registry/*.yaml` 14 สถานี 7 flash/5 riverine/2 dam)
-- [ ] spec-data-pipeline.md — DONE (docs/specs/)
+## Phase 1 — Core Data / Backend Foundation  `[IN QA]`
+- [x] สถาปัตยกรรม pipeline: ThaiWater + TMD cron → normalize → snapshot JSON (+ manifest hash) — DONE (`backend/pipeline.py` + workflow) รันจริงได้ 14 สถานี hash=1d8bd901
+- [x] Validation gates (fail-closed) + unit tests — DONE **pytest 8/8 passed** (exit 0)
+- [x] Station/Shelter/Contact registry (dynamic) — DONE (14 สถานี 7 flash/5 riverine/2 dam)
+- [x] spec-data-pipeline.md — DONE
+- [x] commit `d45ff10` — DONE
+- [ ] **Independent QA audit** (context แยก) ของ pipeline + alert_engine.dart ก่อน Gate 3 — IN PROGRESS
 
 ## Phase 2 — Cloud Bridge, CI/CD, Legal Web
 - [ ] GitHub repo private + workflows + Supabase/Storage free tier

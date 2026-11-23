@@ -5,9 +5,9 @@ emergency:
   rescue_1669: '1669'
   police_191: '191'
 provincial_center:
-  name: ศูนย์ปภ.จังหวัดยะลา
-  phone: '1677'
-  note: ต้องเปลี่ยนเป็นเบอร์ตรงของ ปภ.ยะลา (ขอข้อมูล Founder)
+  name: ศูนย์ป้องกันและบรรเทาสาธารณภัยจังหวัดยะลา (ปภ.ยะลา)
+  phone: null
+  note: ยังไม่มีเบอร์ตรง (ขอข้อมูล Founder) — ห้ามใช้ 1677 แทนเพราะ 1677 คือเบอร์ DDPM กลาง
   status: placeholder
 amphoe_centers:
 - amphoe: เมืองยะลา
