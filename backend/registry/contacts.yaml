@@ -1,0 +1,28 @@
+version: 1
+emergency:
+  ddpm_1677: '1677'
+  disaster_199: '199'
+  rescue_1669: '1669'
+  police_191: '191'
+provincial_center:
+  name: ศูนย์ปภ.จังหวัดยะลา
+  phone: '1677'
+  note: ต้องเปลี่ยนเป็นเบอร์ตรงของ ปภ.ยะลา (ขอข้อมูล Founder)
+  status: placeholder
+amphoe_centers:
+- amphoe: เมืองยะลา
+  phone: null
+- amphoe: รามัน
+  phone: null
+- amphoe: ยะหา
+  phone: null
+- amphoe: กรงปินัง
+  phone: null
+- amphoe: เบตง
+  phone: null
+- amphoe: บันนังสตา
+  phone: null
+- amphoe: ธารโต
+  phone: null
+- amphoe: กาบัง
+  phone: null

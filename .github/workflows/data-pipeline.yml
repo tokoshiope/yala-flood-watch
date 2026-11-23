@@ -1,0 +1,30 @@
+name: yala-flood-data-pipeline
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # ทุก 15 นาที
+  workflow_dispatch:
+
+jobs:
+  fetch-snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install deps
+        run: pip install -r backend/requirements.txt
+      - name: Run pipeline (fail-closed)
+        run: python backend/pipeline.py
+      - name: Upload snapshot artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yala-flood-snapshot
+          path: |
+            backend/output/latest.json
+            backend/output/manifest.json
+          retention-days: 7

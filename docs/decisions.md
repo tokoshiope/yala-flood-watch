@@ -25,7 +25,19 @@
 - **ตัวเลือก A:** คง Flutter (`mobile/app`) — prototype พร้อม 31 ไฟล์, tests 30/30, ใช้ API จริงได้
 - **ตัวเลือก B:** ย้าย Expo + React Native + TS ตาม Playbook (EAS Build ผ่านตรง, ecosystem การเงิน/IAP ครบถ้วน)
 - **คำแนะนำของ Main Agent:** คง Flutter (ประหยัด ~2 สัปดาห์ ไม่เขียนใหม่) แล้วใช้ Codemagic/GitHub Actions สำหรับ build; แต่หากต้องการเป็นไปตาม Playbook 100% ให้ย้าย Expo
-- **สถานะ:** WAITING FOUNDER ⛔ (Gate 2)
+- **สถานะ:** ✅ ยืนยันแล้ว (Gate 2 ผ่าน 23 พ.ย. 2568)
+
+## DEC-006 — Gate 1 & Gate 2 ผ่านทั้ง 5 ข้อ (2026-11-23)
+- **ตัดสินใจ:** Founder อนุมัติ: (1) MVP เฉพาะยะลา (2) ฟรีทั้งหมด (3) **คง Flutter** (4) pipeline snapshot/CDN + FCM (5) Alert Score ตาม DEC-003
+- **ผล:** Phase 1 เริ่มได้ทันที
+
+## DEC-007 — Registry แยกจาก API (Phase 1)
+- **ตัดสินใจ:** `backend/registry/stations.yaml` generate จาก API จริงแต่เก็บใน repo (metadata: risk_zone/left_bank/agency) เพื่อลด coupling; สถานีใหม่ไม่ใช่ registry ได้ risk_zone เริ่มต้น
+- **กระทบ:** backend/pipeline.py load_registry()
+
+## DEC-008 — Fail-closed + MAX_STALE_MINUTES=30
+- **ตัดสินใจ:** pipeline exit(1) และ **ไม่เขียนทับ** snapshot เมื่อ API ว่าง/ล่ม, ทุกสถานีเก่า >30 นาที, พิกัดนอกขอบเขต, ระดับน้ำว่าง+เก่า
+- **เหตุผล:** ข้อมูลเสียทับข้อมูลดีอันตรายกว่าขาดข้อมูล (docs/03, docs/04 §2.1)
 
 ## DEC-005 — โครงสร้าง Repository มาตรฐาน + โฟลเดอร์เดียวใน Documents
 - **วันที่:** 2026-11-23

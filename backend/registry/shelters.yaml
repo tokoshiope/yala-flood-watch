@@ -1,0 +1,23 @@
+version: 1
+status: sample_data_must_replace
+items:
+- name: โรงเรียนบ้านตาเซะ
+  amphoe: เมืองยะลา
+  lat: 6.676
+  lon: 101.288
+  capacity: 200
+- name: วัดสะเตง
+  amphoe: เมืองยะลา
+  lat: 6.553
+  lon: 101.266
+  capacity: 150
+- name: โรงเรียนบ้านบันนังสตา
+  amphoe: บันนังสตา
+  lat: 6.262
+  lon: 101.268
+  capacity: 120
+- name: วัดบ้านกุนุงจนอง
+  amphoe: เบตง
+  lat: 5.785
+  lon: 101.059
+  capacity: 100

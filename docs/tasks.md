@@ -2,20 +2,22 @@
 
 > อัปเดตทุกครั้งที่จบงาน · Status: TODO / IN PROGRESS / IN QA / WAITING FOUNDER / DONE / BLOCKED
 
-## Phase 0 — Inception & Baseline Docs  `[IN PROGRESS]`
+## Phase 0 — Inception & Baseline Docs  `[DONE]`
 - [x] A. Dashboard ข้อมูลจริง 14 สถานี — DONE (tools/dashboard) ตรวจสอบแล้ว
 - [x] B. Prototype Flutter 6 หน้า + tests 30/30 — DONE (mobile/app) ตรวจสอบ flutter analyze/test แล้ว
 - [x] C. PRD 1,011 บรรทัด — DONE (docs/PRD-yala-flood-app.md)
 - [x] D. Wireframe 14 จอ — DONE (design/wireframes)
-- [ ] ย้ายโปรเจกต์ทั้งหมดไป `~/Documents/yala-flood-app/` — DONE (2026-11-23)
+- [x] ย้ายโปรเจกต์ทั้งหมดไป `~/Documents/yala-flood-app/` — DONE (2026-11-23)
 - [x] เอกสารฐาน 01–04 + AGENTS.md + tasks/decisions/specs — DONE (257/217/323/327 = 1,124 บรรทัด ตรวจ wc -l แล้ว)
 - [x] แก้ PRD §9.6 test vectors ให้ตรงสูตร (87.5 / 2.5 / 20.5) — DONE 23 พ.ย. 2568
-- [ ] **Gate 1 (Spec & Scope) + Gate 2 (Architecture/Billing/Legal)** — WAITING FOUNDER ⛔
+- [x] git init + baseline commit c583f93 — DONE
+- [x] **Gate 1 + Gate 2** — ✅ Founder อนุมัติทั้ง 5 ข้อ (DEC-006)
 
-## Phase 1 — Core Data / Backend Foundation
-- [ ] สถาปัตยกรรม pipeline: ThaiWater + TMD cron → normalize → snapshot JSON (+ manifest hash)
-- [ ] Validation gates (fail-closed เมื่อต้นทางล่ม) + unit tests
-- [ ] Station/Shelter/Contact registry (dynamic, ไม่ hardcode)
+## Phase 1 — Core Data / Backend Foundation  `[IN PROGRESS]`
+- [ ] สถาปัตยกรรม pipeline: ThaiWater + TMD cron → normalize → snapshot JSON (+ manifest hash) — IN PROGRESS (`backend/pipeline.py`, registry, workflow เขียนแล้ว; รอรัน pytest/pipeline ยืนยัน)
+- [ ] Validation gates (fail-closed เมื่อต้นทางล่ม) + unit tests — IN PROGRESS (tests 8 ข้อ, ผ่าน 7 ก่อนแก้ default-arg bug, รอ re-run)
+- [x] Station/Shelter/Contact registry (dynamic, ไม่ hardcode) — DONE (`backend/registry/*.yaml` 14 สถานี 7 flash/5 riverine/2 dam)
+- [ ] spec-data-pipeline.md — DONE (docs/specs/)
 
 ## Phase 2 — Cloud Bridge, CI/CD, Legal Web
 - [ ] GitHub repo private + workflows + Supabase/Storage free tier
@@ -42,5 +44,5 @@
 ## Backlog / พบจาก Data Audit (23 พ.ย. 2568)
 - [ ] 5 สถานีไม่มี `situation_level` → ใช้ fallback `W = situation/4` หรือฟัง `left_bank` (ดู docs/04 §2.1)
 - [ ] 2 สถานีไม่มีตลิ่ง (`left_bank = 0`: เขื่อนบางลาง, ฝายละแอ) → ต้องนิยาม W แยก (situation/4)
-- [ ] cadence ข้อมูลจริง ~10–30 นาที (ไม่ใช่ 15 นาทีทุกสถานี) — pipeline ต้อง fail-closed เมื่อเกิน 30 นาที
-- [ ] git init ยังไม่ทำ (Phase 0 เหลือข้อเดียว)
+- [x] cadence ข้อมูลจริง ~10–30 นาที (ไม่ใช่ 15 นาทีทุกสถานี) — fail-closed >30 นาที ถูกใส่ใน pipeline แล้ว
+- [x] git init — DONE (baseline c583f93)
