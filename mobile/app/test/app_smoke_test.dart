@@ -32,9 +32,11 @@ void main() {
       waterService: ThaiWaterService(client: client, preferences: prefs),
       localStorage: LocalStore(prefs),
     );
-    await provider.refresh();
+    await tester.runAsync(() => provider.refresh());
 
     expect(provider.stations.length, 14);
+    expect(provider.boundaries.length, 8);
+    expect(provider.snapshot, isNotNull);
     expect(provider.warningStationCount, greaterThan(0));
     // BLOCKER-2 regression: activeAlerts ต้องไม่ว่างหลัง refresh เพื่อป้องกันแบนเนอร์สีเขียว "สถานการณ์ดีขึ้นแล้ว" ระหว่างน้ำท่วม
     expect(provider.activeAlerts, isNotEmpty);
@@ -57,16 +59,17 @@ void main() {
     expect(find.text('สถานีอัปเดตล่าสุด'), findsOneWidget);
     expect(find.text('เมืองยะลา'), findsWidgets);
 
-    // ปุ่มนำทางครบ 5 หน้า
+    // ปุ่มนำทางครบ 5 หน้า (ใช้คำว่า ศูนย์พักพิง)
     expect(find.text('หน้าหลัก'), findsOneWidget);
     expect(find.text('แจ้งเตือน'), findsWidgets);
     expect(find.text('SOS'), findsOneWidget);
-    expect(find.text('จุดอพยพ'), findsOneWidget);
+    expect(find.text('ศูนย์พักพิง'), findsOneWidget);
     expect(find.text('ตั้งค่า'), findsOneWidget);
 
-    // เปิดหน้าตั้งค่าจากแถบล่างได้จริง
+    // เปิดหน้าตั้งค่าจากแถบล่างได้จริง และมีเมนูเลือกภาษา 4 ภาษา
     await tester.tap(find.text('ตั้งค่า'));
     await tester.pump(const Duration(seconds: 1));
+    expect(find.text('ภาษาของแอป (Language)'), findsOneWidget);
     expect(find.text('พื้นที่ที่ติดตาม'), findsOneWidget);
     expect(find.text('เกณฑ์การแจ้งเตือน'), findsOneWidget);
   });

@@ -25,6 +25,14 @@ jobs:
         run: pytest -q backend/tests
       - name: Run Multi-Source Pipeline (fail-closed)
         run: python backend/pipeline.py --sync-mobile-asset
+      - name: Verify Snapshot Bundle (Dry-Run)
+        run: python backend/publish_supabase.py --snapshot-dir backend/output --dry-run
+      - name: Publish Snapshot to Supabase CDN (when secrets configured)
+        if: ${{ secrets.SUPABASE_URL != '' && secrets.SUPABASE_SERVICE_ROLE_KEY != '' }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python backend/publish_supabase.py --snapshot-dir backend/output
       - name: Upload snapshot artifacts
         if: success()
         uses: actions/upload-artifact@v4

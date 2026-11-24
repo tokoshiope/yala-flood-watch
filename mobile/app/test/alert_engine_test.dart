@@ -1,11 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:yala_flood_app/config/app_config.dart';
+import 'package:yala_flood_app/l10n/app_strings.dart';
 import 'package:yala_flood_app/models/alert_settings.dart';
 import 'package:yala_flood_app/models/rain_forecast.dart';
 import 'package:yala_flood_app/models/risk_level.dart';
 import 'package:yala_flood_app/models/station.dart';
 import 'package:yala_flood_app/services/alert_engine.dart';
+import 'package:yala_flood_app/services/snapshot_service.dart';
 
 Station _station({
   required String code,
@@ -355,6 +359,32 @@ void main() {
       expect(AppConfig.emergencyYalaMunicipality, '073212345');
       expect(AppConfig.emergencyMedical, '1669');
       expect(AppConfig.emergencyVolunteer, '1677');
+    });
+
+    test('Google Maps Directions URL และ 4 ภาษา (th/en/zh/ms) ทำงานถูกต้อง', () {
+      expect(
+        AppConfig.googleMapsDirectionsUrl(6.5415, 101.2812),
+        'https://www.google.com/maps/dir/?api=1&destination=6.5415,101.2812&travelmode=driving',
+      );
+      expect(AppConfig.googleMapsTileUrl('zh'), contains('hl=zh-CN'));
+      final s = const AlertSettings().copyWith(languageCode: 'ms');
+      expect(AlertSettings.fromJson(s.toJson()).languageCode, 'ms');
+      expect(const AppStrings('th').get('tab_shelters'), 'ศูนย์พักพิง');
+      expect(const AppStrings('en').get('tab_shelters'), 'Shelters');
+      expect(const AppStrings('zh').get('tab_shelters'), '避难中心');
+      expect(const AppStrings('ms').get('tab_shelters'), 'Pusat Pemindahan');
+      // UTC 09:30 -> Thailand UTC+7 16:30
+      expect(
+        AppStrings.formatThailandTime(DateTime.utc(2026, 11, 24, 9, 30)),
+        contains('16:30 น. (เวลาไทย UTC+7)'),
+      );
+    });
+
+    test('GeoJSON ขอบเขต 8 อำเภอ จ.ยะลา parse ได้ครบทั้ง 8 อำเภอ', () {
+      final raw = File('assets/geo/yala_amphoes.geojson').readAsStringSync();
+      final bounds = SnapshotService.parseGeoJsonBoundaries(raw);
+      expect(bounds.length, 8);
+      expect(bounds.map((b) => b.amphoeTh).toSet(), containsAll(AppConfig.riskAmphoeTh));
     });
   });
 }

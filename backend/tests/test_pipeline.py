@@ -307,3 +307,37 @@ def test_contacts_registry_has_verified_1784_and_yala_ddpm():
     assert by_id["yala_municipality"]["phone"] == "073-212345"
     assert by_id["volunteer_1677"]["phone"] == "1677"
     assert "ร่วมด้วยช่วยกัน" in by_id["volunteer_1677"]["name"]
+
+
+def test_yala_geojson_covers_exact_8_amphoes_matching_registry():
+    geo = json.loads((P.REGISTRY_DIR / "yala_amphoes.geojson").read_text(encoding="utf-8"))
+    geo_names = {f["properties"]["amphoe_th"] for f in geo["features"]}
+    reg_names = set(_amphoes_registry().keys())
+    assert len(geo_names) == 8
+    assert geo_names == reg_names
+
+
+def test_publish_supabase_dry_run_and_tamper_fail_closed(tmp_path):
+    import publish_supabase as PUB
+
+    fixed = datetime(2026, 11, 24, 15, 0, tzinfo=P.ICT)
+    rows = _rows_sample(2, at=fixed)
+    rows[0]["station"]["tele_station_oldcode"] = "PAT002"
+    rows[1]["station"]["tele_station_oldcode"] = "PAT001"
+    reg, amps, contacts, shelters = P.load_registry()
+    st, _ = P.normalize(rows, reg, now=fixed)
+    amp_sum = P.build_amphoe_summaries(amps, st, {}, {}, None)
+    body = P.build_snapshot(st, contacts, shelters, amphoes=amp_sum)
+    digest = P.content_hash(body)
+    payload = {**body, "generated_at": fixed.isoformat(), "content_hash": digest}
+    (tmp_path / "latest.json").write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    (tmp_path / "manifest.json").write_text(
+        json.dumps({"content_hash": digest, "count": len(st), "amphoe_count": 8}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    assert PUB.publish(tmp_path, dry_run=True) == 0
+
+    # Tamper latest.json -> must fail-closed (exit 1)
+    tampered = {**payload, "province": {"code": "95", "name": "TAMPERED"}}
+    (tmp_path / "latest.json").write_text(json.dumps(tampered, ensure_ascii=False), encoding="utf-8")
+    assert PUB.publish(tmp_path, dry_run=True) == 1

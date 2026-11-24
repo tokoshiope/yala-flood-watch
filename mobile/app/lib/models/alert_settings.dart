@@ -1,6 +1,6 @@
 import 'package:yala_flood_app/config/app_config.dart';
 
-/// การตั้งค่าของผู้ใช้ เก็บใน SharedPreferences
+/// การตั้งค่าของผู้ใช้ เก็บใน SharedPreferences (รวมภาษา 4 ภาษา: th / en / zh / ms)
 class AlertSettings {
   const AlertSettings({
     this.selectedAmphoeTh,
@@ -11,31 +11,20 @@ class AlertSettings {
     this.pushEnabled = true,
     this.rainScoreEnabled = true,
     this.refreshMinutes = 15,
+    this.languageCode = 'th',
   });
 
-  /// อำเภอที่เลือกฟังการแจ้งเตือน (null = ทั้งจังหวัด)
   final String? selectedAmphoeTh;
-
-  /// ตำบลที่เลือก (null = ทุกตำบลในอำเภอ)
   final String? selectedTumbonTh;
-
-  /// situation_level ที่ถือว่า "เตือนภัย"
   final int warningLevel;
-
-  /// situation_level ที่ถือว่า "อันตราย"
   final int dangerLevel;
-
-  /// โหมดเงียบ: ยังแสดงสถานะแต่ไม่เล่นเสียง/สั่น
   final bool quietMode;
-
-  /// เปิด Push
   final bool pushEnabled;
-
-  /// นำคะแนนฝนมาปรับระดับความรุนแรงด้วยหรือไม่
   final bool rainScoreEnabled;
-
-  /// รอบการรีเฟรชอัตโนมัติ (นาที)
   final int refreshMinutes;
+
+  /// รหัสภาษา UI และแผนที่ Google Maps: 'th' | 'en' | 'zh' | 'ms'
+  final String languageCode;
 
   AlertSettings copyWith({
     String? selectedAmphoeTh,
@@ -48,6 +37,7 @@ class AlertSettings {
     bool? pushEnabled,
     bool? rainScoreEnabled,
     int? refreshMinutes,
+    String? languageCode,
   }) =>
       AlertSettings(
         selectedAmphoeTh:
@@ -60,9 +50,9 @@ class AlertSettings {
         pushEnabled: pushEnabled ?? this.pushEnabled,
         rainScoreEnabled: rainScoreEnabled ?? this.rainScoreEnabled,
         refreshMinutes: refreshMinutes ?? this.refreshMinutes,
+        languageCode: languageCode ?? this.languageCode,
       );
 
-  /// ล้างค่าที่เป็น null ได้ (ใช้กับ dropdown ที่เลือก "ทั้งหมด")
   AlertSettings clearAmphoe() => AlertSettings(
         selectedAmphoeTh: null,
         selectedTumbonTh: null,
@@ -72,6 +62,7 @@ class AlertSettings {
         pushEnabled: pushEnabled,
         rainScoreEnabled: rainScoreEnabled,
         refreshMinutes: refreshMinutes,
+        languageCode: languageCode,
       );
 
   Map<String, dynamic> toJson() => {
@@ -83,18 +74,24 @@ class AlertSettings {
         'pushEnabled': pushEnabled,
         'rainScoreEnabled': rainScoreEnabled,
         'refreshMinutes': refreshMinutes,
+        'languageCode': languageCode,
       };
 
-  factory AlertSettings.fromJson(Map<String, dynamic> json) => AlertSettings(
-        selectedAmphoeTh: json['selectedAmphoeTh'] as String?,
-        selectedTumbonTh: json['selectedTumbonTh'] as String?,
-        warningLevel: _intOr(json['warningLevel'], AppConfig.defaultWarningLevel),
-        dangerLevel: _intOr(json['dangerLevel'], AppConfig.defaultDangerLevel),
-        quietMode: json['quietMode'] as bool? ?? false,
-        pushEnabled: json['pushEnabled'] as bool? ?? true,
-        rainScoreEnabled: json['rainScoreEnabled'] as bool? ?? true,
-        refreshMinutes: _intOr(json['refreshMinutes'], 15),
-      );
+  factory AlertSettings.fromJson(Map<String, dynamic> json) {
+    final lang = json['languageCode']?.toString() ?? 'th';
+    final validLang = const {'th', 'en', 'zh', 'ms'}.contains(lang) ? lang : 'th';
+    return AlertSettings(
+      selectedAmphoeTh: json['selectedAmphoeTh'] as String?,
+      selectedTumbonTh: json['selectedTumbonTh'] as String?,
+      warningLevel: _intOr(json['warningLevel'], AppConfig.defaultWarningLevel),
+      dangerLevel: _intOr(json['dangerLevel'], AppConfig.defaultDangerLevel),
+      quietMode: json['quietMode'] as bool? ?? false,
+      pushEnabled: json['pushEnabled'] as bool? ?? true,
+      rainScoreEnabled: json['rainScoreEnabled'] as bool? ?? true,
+      refreshMinutes: _intOr(json['refreshMinutes'], 15),
+      languageCode: validLang,
+    );
+  }
 
   static int _intOr(dynamic value, int fallback) =>
       value is num ? value.toInt() : fallback;

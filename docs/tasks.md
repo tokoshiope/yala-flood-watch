@@ -25,10 +25,15 @@
 - [x] สร้าง Interactive iOS Prototype & Live Simulation Server (`mobile/preview/serve.py` + `index.html`) เชื่อม 5 ฐานข้อมูลจริง + 3 เหตุการณ์จำลองน้ำท่วมล่วงหน้า + อัปเกรด `tools/dashboard/index.html` — DONE (2026-11-24)
 - [x] **Independent QA / Hydrology / Security Audit (Context แยก)** + แก้ไขทุก BLOCKER/HIGH/MEDIUM (`docs/qa/audit-2026-11-24-v2.md`) — DONE (2026-11-24 · พบ 2 BLOCKER + 3 HIGH → แก้ครบและผ่าน `pytest 23/23` + `flutter test 43/43`)
 
-## Phase 2 — Cloud Bridge, Legal Web & Official Verification `[TODO]`
-- [ ] เชื่อม Supabase Storage Public CDN (atomic snapshot publish จาก GitHub Actions) + Postgres RLS สำหรับ Community Reports
-- [ ] สร้างหน้า `web/` (Landing + PDPA Privacy Policy + Terms + Life-Safety Disclaimer) ขึ้น GitHub Pages
-- [ ] ขอพิกัดศูนย์พักพิงรายตำบลและเบอร์ตรงที่ว่าการอำเภออีก 7 อำเภอจาก ปภ.ยะลา (`pending_ddpm_verify` → `verified`)
+## Phase 2 — Cloud Bridge, UX v2 (Google Maps / 4 Languages), Legal Web `[DONE — Code & Dry-Run Ready]`
+- [x] เพิ่มขอบเขตภูมิศาสตร์จริง 8 อำเภอ (`backend/registry/yala_amphoes.geojson` + `mobile/app/assets/geo/`) และระบายสีระดับแจ้งเตือน 1–5 บนแผนที่ฐาน Google Maps — DONE (2026-11-24 · `DEC-014`)
+- [x] แสดงเวลาอัปเดตประเทศไทย (UTC+7) ทุกจุด, เปลี่ยน "จุดพักพิง" → **"ศูนย์พักพิง"** + นำทางด้วย Google Maps, ปรับกราฟพยากรณ์ฝนเป็นแถบเลื่อนลงมาพร้อมช่องเวลาชัดเจน และเพิ่มเมนู **4 ภาษา (ไทย/อังกฤษ/จีน/มาเลเซีย)** — DONE (2026-11-24)
+- [x] สร้าง Supabase Schema + RLS + Rate-Limited RPC + PDPA 90-day Purge (`supabase/migrations/0001_initial_yala_flood_schema.sql`) — DONE (2026-11-24)
+- [x] สร้าง Atomic Immutable Supabase CDN Publisher (`backend/publish_supabase.py` + Dry-Run & Tamper Fail-Closed tests) และเชื่อมเข้า `.github/workflows/data-pipeline.yml` — DONE (2026-11-24)
+- [x] เพิ่ม Flutter `SnapshotService` (`mobile/app/lib/services/snapshot_service.dart`) อ่าน 5-Source Snapshot จาก Supabase CDN / Bundled Offline Asset + โหลด 8-Amphoe GeoJSON — DONE (2026-11-24)
+- [x] สร้าง Legal Web (`web/index.html`, `web/privacy.html` PDPA, `web/terms.html` Life-Safety Disclaimer) + `.github/workflows/deploy-pages.yml` + `docs/launch/phase2-cloud-setup-runbook.md` — DONE (2026-11-24)
+- [ ] Founder ตั้งค่า Supabase Project / GitHub Secrets / GitHub Pages ตาม `docs/launch/phase2-cloud-setup-runbook.md` — WAITING FOUNDER
+- [ ] ขอพิกัดศูนย์พักพิงรายตำบลและเบอร์ตรงที่ว่าการอำเภออีก 7 อำเภอจาก ปภ.ยะลา (`pending_ddpm_verify` → `verified`) — WAITING FOUNDER
 
 ## Phase 3 — iOS TestFlight Beta & APNs/FCM Push `[TODO]`
 - [ ] ตั้งค่า `GoogleService-Info.plist` + APNs Key + Firebase Cloud Messaging topic รายอำเภอ (`yala_flood:{amphoe}`)

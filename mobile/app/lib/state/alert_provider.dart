@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
 
 import 'package:yala_flood_app/config/app_config.dart';
+import 'package:yala_flood_app/l10n/app_strings.dart';
 import 'package:yala_flood_app/models/alert.dart';
 import 'package:yala_flood_app/models/alert_settings.dart';
+import 'package:yala_flood_app/models/flood_snapshot.dart';
 import 'package:yala_flood_app/models/rain_forecast.dart';
 import 'package:yala_flood_app/models/risk_level.dart';
 import 'package:yala_flood_app/models/sos_request.dart';
@@ -11,9 +13,10 @@ import 'package:yala_flood_app/services/alert_engine.dart';
 import 'package:yala_flood_app/services/local_store.dart';
 import 'package:yala_flood_app/services/notification_service.dart';
 import 'package:yala_flood_app/services/rain_forecast_service.dart';
+import 'package:yala_flood_app/services/snapshot_service.dart';
 import 'package:yala_flood_app/services/thai_water_service.dart';
 
-/// ศูนย์รวม state ของแอพ: สถานี, แจ้งเตือน, การตั้งค่า, PDPA consent และคำขอ SOS
+/// ศูนย์รวม state ของแอพ: สถานี, 5-Source Snapshot, GeoJSON 8 อำเภอ, แจ้งเตือน, ภาษา 4 ภาษา และ SOS
 class AlertProvider extends ChangeNotifier {
   AlertProvider({
     required ThaiWaterService waterService,
@@ -21,23 +24,28 @@ class AlertProvider extends ChangeNotifier {
     AlertEngine? engine,
     LocalStore? localStorage,
     NotificationService? notificationService,
+    SnapshotService? snapshotService,
     // ignore: prefer_initializing_formals
   })  : _waterService = waterService,
         _rainService = rainService ?? RainForecastService(),
         _engine = engine ?? const AlertEngine(),
         _store = localStorage,
-        _notifications = notificationService ?? NotificationService.instance;
+        _notifications = notificationService ?? NotificationService.instance,
+        _snapshotService = snapshotService ?? SnapshotService();
 
   final ThaiWaterService _waterService;
   final RainForecastService _rainService;
   final AlertEngine _engine;
   final LocalStore? _store;
   final NotificationService _notifications;
+  final SnapshotService _snapshotService;
 
   List<Station> _stations = const <Station>[];
   List<AlertItem> _alerts = const <AlertItem>[];
   List<SosRequest> _sosRequests = const <SosRequest>[];
   AlertSettings _settings = const AlertSettings();
+  FloodSnapshot? _snapshot;
+  List<AmphoeBoundary> _boundaries = const <AmphoeBoundary>[];
   bool _gpsConsentGranted = false;
 
   bool _loading = false;
@@ -52,6 +60,9 @@ class AlertProvider extends ChangeNotifier {
   List<AlertItem> get alerts => _alerts;
   List<SosRequest> get sosRequests => _sosRequests;
   AlertSettings get settings => _settings;
+  AppStrings get strings => AppStrings(_settings.languageCode);
+  FloodSnapshot? get snapshot => _snapshot;
+  List<AmphoeBoundary> get boundaries => _boundaries;
   bool get gpsConsentGranted => _gpsConsentGranted;
   bool get loading => _loading;
   bool get initialized => _initialized;
@@ -70,7 +81,21 @@ class AlertProvider extends ChangeNotifier {
   int get dangerStationCount =>
       _stations.where((s) => s.riskLevel == RiskLevel.danger).length;
 
-  /// แจ้งเตือนที่กำลังมีผลอยู่ ณ ขณะนี้ (ห้ามใช้ Cooldown มาซ่อนสถานะเตือนภัยที่ยังไม่คลี่คลาย!)
+  /// ระดับแจ้งเตือน 1–5 ของแต่ละอำเภอ (ใช้ระบายสี Polygon บนแผนที่ Google Maps)
+  AlertLevel amphoeAlertLevel(String amphoeTh) {
+    final fromSnap = _snapshot?.byAmphoe(amphoeTh);
+    if (fromSnap != null) return AlertLevel.fromValue(fromSnap.level);
+    var maxLv = 1;
+    for (final s in _stations) {
+      if (s.amphoeTh == amphoeTh) {
+        final sev = s.riskLevel.severity;
+        if (sev > maxLv) maxLv = sev;
+      }
+    }
+    return AlertLevel.fromValue(maxLv);
+  }
+
+  /// แจ้งเตือนที่กำลังมีผลอยู่ ณ ขณะนี้ (ไม่ใช้ Cooldown มาซ่อนสถานะเตือนภัยที่ยังไม่คลี่คลาย)
   List<AlertItem> get activeAlerts {
     if (_stations.isEmpty) return const <AlertItem>[];
     return _engine.evaluate(
@@ -117,6 +142,8 @@ class AlertProvider extends ChangeNotifier {
       _sosRequests = store.loadSosRequests();
       _gpsConsentGranted = store.loadGpsConsent();
     }
+    _boundaries = await _snapshotService.loadYalaBoundaries();
+    _snapshot = await _snapshotService.loadSnapshot();
     _initialized = true;
     await refresh();
   }
@@ -128,11 +155,16 @@ class AlertProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      if (_boundaries.isEmpty) {
+        _boundaries = await _snapshotService.loadYalaBoundaries();
+      }
+      final snapFuture = _snapshotService.loadSnapshot();
       final result = await _waterService.fetch(forceRefresh: force);
       _stations = result.stations;
       _lastUpdated = result.updatedAt;
       _source = result.source;
       _noticeTh = result.messageTh;
+      _snapshot = await snapFuture ?? _snapshot;
 
       final rain = await _loadRain();
       final newAlerts = _engine.evaluate(
@@ -267,7 +299,6 @@ class AlertProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// ลบข้อมูลส่วนบุคคล ประวัติ SOS แจ้งเตือน แคช และรีเซ็ตการตั้งค่า (PDPA)
   Future<void> deleteAllUserData() async {
     _alerts = const <AlertItem>[];
     _sosRequests = const <SosRequest>[];
@@ -286,7 +317,7 @@ class AlertProvider extends ChangeNotifier {
       'สถานี ${_stations.length} แห่ง · เตือนภัย $warningStationCount · อันตราย $dangerStationCount',
     );
     if (_lastUpdated != null) {
-      buffer.write(' · ข้อมูลล่าสุด ${thaiRelativeTime(_lastUpdated!)}');
+      buffer.write(' · ${AppStrings.formatThailandTime(_lastUpdated!)}');
     }
     if (isOffline) buffer.write(' · ใช้ข้อมูลสำรอง');
     return buffer.toString();

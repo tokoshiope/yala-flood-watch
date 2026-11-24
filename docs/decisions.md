@@ -88,3 +88,13 @@
 - **ตัดสินใจ:** แก้ไขข้อผิดพลาดที่ระบุ `1677` เป็นกรม ปภ. → เปลี่ยนเป็นข้อมูลที่ตรวจสอบยืนยันแล้ว: **1784** (สายด่วนนิรภัย กรม ปภ. + LINE `@1784DDPM`), **073-203559** (สำนักงาน ปภ.ยะลา 073-203559–64), **073-212345** (ปภ.เทศบาลนครยะลา 24 ชม.), **1669** (เจ็บป่วยฉุกเฉิน สพฉ.), **199** (ดับเพลิง/ภัยพิบัติ), **191** (ตำรวจ), **073-340141** (ศูนย์บรรเทาสาธารณภัย มทบ.46), **073-228934** (รพ.ยะลา), **1677** (ร่วมด้วยช่วยกัน) และติดป้ายสถานะ `verified` / `pending_ddpm_verify` บนจุดพักพิงทุกแห่ง
 - **เหตุผล:** ป้องกันความเข้าใจผิดในสถานการณ์วิกฤตชีวิต
 - **กระทบ:** `backend/registry/contacts.yaml`, `backend/registry/shelters.yaml`, `mobile/app/lib/config/app_config.dart`, `mobile/app/lib/screens/sos_screen.dart`, `mobile/app/lib/screens/shelters_screen.dart`
+
+## DEC-014 — Google Maps Foundation + GeoJSON 8 อำเภอ + เวลาไทย UTC+7 + 4 ภาษา + Phase 2 Cloud Bridge
+- **วันที่:** 2026-11-24
+- **สถานะ:** ✅ อนุมัติโดย Founder
+- **ตัดสินใจ:**
+  1. ใช้ **Google Maps** เป็นแผนที่ฐานหลักพร้อมขอบเขตจริง 8 อำเภอ จ.ยะลา (`yala_amphoes.geojson`, 13.9 KB) ระบายสีตามระดับแจ้งเตือน 1–5 และใช้ Google Maps Directions URL (Free SKU) นำทางไปยัง **ศูนย์พักพิง**
+  2. แสดงเวลาอัปเดตทุกจุดเป็น **เวลาประเทศไทย (UTC+7)** อย่างชัดเจน และปรับกราฟพยากรณ์ฝนรายชั่วโมงเป็นแถบเลื่อนลงมาพร้อมช่องเวลา (UTC+7)
+  3. รองรับเมนูเลือกภาษา **4 ภาษา** (`ไทย`, `English`, `中文`, `Bahasa Melayu`) ทั้งใน iOS Prototype และ Flutter App
+  4. ดำเนิน **Phase 2 Cloud Bridge**: สร้าง Supabase Schema + RLS + PDPA 90-day retention (`supabase/migrations/0001_initial_yala_flood_schema.sql`), Atomic CDN Publisher (`backend/publish_supabase.py`), Flutter `SnapshotService` (CDN + Offline Asset), และหน้า Legal Web PDPA/Terms (`web/` + GitHub Pages workflow)
+- **กระทบ:** `backend/registry/yala_amphoes.geojson`, `backend/publish_supabase.py`, `supabase/migrations/`, `web/`, `mobile/preview/`, `mobile/app/lib/`

@@ -120,7 +120,7 @@ enum AlertLevel {
   AlertLevel plusLevels(int delta) => fromValue(value + delta);
 
   String get guidanceTh => switch (this) {
-        AlertLevel.danger => 'อพยพทันทีไปยังจุดพักพิงปลอดภัย หากติดค้างโทร 1784 / 1669',
+        AlertLevel.danger => 'อพยพทันทีไปยังศูนย์พักพิงปลอดภัย หากติดค้างโทร 1784 / 1669',
         AlertLevel.high => 'พร้อมอพยพทันที ติดตามประกาศ ปภ.ยะลา (073-203559)',
         AlertLevel.warning => 'ยกของขึ้นที่สูง เตรียมเส้นทางและแผนอพยพ',
         AlertLevel.watch => 'ติดตามข่าวใกล้ชิด เตรียมถุงยังชีพและชาร์จแบต',

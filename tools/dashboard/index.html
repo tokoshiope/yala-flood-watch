@@ -62,7 +62,7 @@ async function loadData(){
     try{const r=await fetch(url);if(r.ok){snap=await r.json();break;}}catch(_){}
   }
   if(!snap){document.getElementById('meta').textContent='ไม่พบ snapshot — กรุณารัน backend/.venv/bin/python mobile/preview/serve.py';return;}
-  document.getElementById('meta').textContent=`อัปเดตล่าสุด ${snap.generated_at} · formula_version=${snap.formula_version} · sha256=${(snap.content_hash||'').slice(0,12)} · degraded=${(snap.degraded_sources||[]).length}`;
+  document.getElementById('meta').textContent=`อัปเดตล่าสุด ${snap.generated_at} (เวลาไทย UTC+7) · formula_version=${snap.formula_version} · sha256=${(snap.content_hash||'').slice(0,12)} · degraded=${(snap.degraded_sources||[]).length}`;
   const dam=snap.banglang_dam||{};
   const warnCount=(snap.amphoes||[]).filter(a=>a.assessment.level>=3).length;
   document.getElementById('kpis').innerHTML=`

@@ -4,7 +4,7 @@ description: >-
   แจ้งเตือนภัยน้ำท่วมล่วงหน้าเฉพาะจังหวัดยะลา (รหัส 95) เชื่อมต่อ 5 ฐานข้อมูลจริง
 publish_to: 'none'
 
-version: 0.2.0+2
+version: 0.3.0+3
 
 environment:
   sdk: ^3.12.0
@@ -37,3 +37,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/snapshots/
+    - assets/geo/

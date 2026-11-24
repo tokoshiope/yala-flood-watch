@@ -268,6 +268,13 @@ class PreviewHandler(BaseHTTPRequestHandler):
         if self.path == "/api/manifest":
             self._send_json(_load_manifest())
             return
+        if self.path == "/api/geojson":
+            geo_path = BACKEND_DIR / "registry" / "yala_amphoes.geojson"
+            if geo_path.exists():
+                self._send_json(json.loads(geo_path.read_text(encoding="utf-8")))
+            else:
+                self._send_json({"error": "yala_amphoes.geojson not found"}, status=404)
+            return
         if self.path.startswith("/api/scenario/"):
             sc_id = self.path.split("/api/scenario/", 1)[1].split("?")[0]
             if sc_id not in ("live", "banglang_spillway", "kabang_flash", "nov2025_crisis"):

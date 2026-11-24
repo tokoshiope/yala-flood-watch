@@ -2,9 +2,10 @@ import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import 'package:yala_flood_app/config/app_config.dart';
+import 'package:yala_flood_app/l10n/app_strings.dart';
 import 'package:yala_flood_app/state/alert_provider.dart';
 
-/// หน้าตั้งค่า: อำเภอ/ตำบล, เกณฑ์แจ้งเตือน, โหมดเงียบ, PDPA ลบข้อมูลของฉัน และแหล่งที่มาข้อมูล 5 แหล่ง
+/// หน้าตั้งค่า: เลือกภาษา 4 ภาษา (ไทย/อังกฤษ/จีน/มาเลเซีย), อำเภอ/ตำบล, เกณฑ์แจ้งเตือน, PDPA และสถานะ CDN
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
@@ -46,6 +47,7 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<AlertProvider>();
     final settings = provider.settings;
+    final strings = provider.strings;
     final amphoes = AppConfig.riskAmphoeTh;
     final tumbons = <String>[...provider.tumbonsInSelectedAmphoe];
     if (settings.selectedTumbonTh != null &&
@@ -54,10 +56,29 @@ class SettingsScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('ตั้งค่า')),
+      appBar: AppBar(title: Text(strings.get('settings_title'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
+          _SectionTitle(strings.get('language_section')),
+          DropdownButtonFormField<String>(
+            initialValue: settings.languageCode,
+            decoration: const InputDecoration(
+              labelText: 'ภาษา / Language / 语言 / Bahasa',
+              prefixIcon: Icon(Icons.language),
+              border: OutlineInputBorder(),
+            ),
+            items: [
+              for (final entry in AppStrings.supportedLanguages)
+                DropdownMenuItem(value: entry.key, child: Text(entry.value)),
+            ],
+            onChanged: (value) {
+              if (value != null) {
+                provider.updateSettings(settings.copyWith(languageCode: value));
+              }
+            },
+          ),
+          const SizedBox(height: 20),
           const _SectionTitle('พื้นที่ที่ติดตาม'),
           DropdownButtonFormField<String?>(
             initialValue: settings.selectedAmphoeTh,
@@ -69,7 +90,7 @@ class SettingsScreen extends StatelessWidget {
             items: [
               const DropdownMenuItem(value: null, child: Text('ทั้งจังหวัดยะลา')),
               for (final amphoe in amphoes)
-                DropdownMenuItem(value: amphoe, child: Text(amphoe)),
+                DropdownMenuItem(value: amphoe, child: Text(strings.amphoe(amphoe))),
             ],
             onChanged: (value) {
               if (value == null) {
@@ -211,14 +232,14 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           const _SectionTitle('แหล่งข้อมูลและคำชี้แจง'),
-          const ListTile(
-            leading: Icon(Icons.info_outline),
-            title: Text('น้ำท่วมยะลา (Yala Flood Watch) v${AppConfig.appVersion}'),
+          ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: const Text('น้ำท่วมยะลา (Yala Flood Watch) v${AppConfig.appVersion}'),
             subtitle: Text(
               'สูตรเตือนภัย: formula_version = ${AppConfig.formulaVersion}\n'
-              'โหมดแอปปัจจุบัน (Phase 1.5): ดึงระดับน้ำสด 14 สถานีจาก ThaiWater พร้อมสูตร v2 ในเครื่อง\n'
-              'โหมด 5 ฐานข้อมูลเต็มรูปแบบ (Pipeline & iOS Preview): ระดับน้ำ 14 สถานี + ฝนจริง 87 สถานี + เขื่อนบางลาง + Open-Meteo 72 ชม. + GloFAS 7 วัน (เชื่อม CDN เข้าแอปใน Phase 2)\n'
-              'แผนที่: OpenStreetMap · ฟรี 100% เพื่อประชาชน\n\n'
+              'โหมดข้อมูล: ${provider.snapshot?.sourceLabel ?? 'ThaiWater Live 14 สถานี'}\n'
+              'แผนที่ฐาน: Google Maps + ขอบเขต 8 อำเภอ จ.ยะลา · เวลามาตรฐาน: ประเทศไทย (UTC+7)\n'
+              '5 ฐานข้อมูล: ThaiWater น้ำ 14 สถานี + ฝน 87 สถานี + เขื่อนบางลาง + Open-Meteo 72h + GloFAS 7d\n\n'
               '${AppConfig.lifeSafetyDisclaimerTh}',
             ),
             isThreeLine: true,

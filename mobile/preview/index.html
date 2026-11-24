@@ -3,7 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>น้ำท่วมยะลา (Yala Flood Watch) — iOS Interactive Prototype & Live 5-Source Simulator</title>
+  <title>น้ำท่วมยะลา (Yala Flood Watch) — iOS Interactive Prototype (Google Maps + 8 Amphoe Polygons + 4 Languages)</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <style>
     :root {
       --bg: #070d19;
@@ -32,7 +34,7 @@
       min-height: 100vh;
     }
     .layout {
-      max-width: 1400px;
+      max-width: 1420px;
       margin: 0 auto;
       padding: 20px;
       display: grid;
@@ -48,7 +50,7 @@
     .iphone-wrap { position: sticky; top: 16px; }
     .iphone {
       width: 398px;
-      height: 826px;
+      height: 836px;
       background: #0d1117;
       border-radius: 52px;
       padding: 12px;
@@ -69,15 +71,15 @@
       font-size: 13.5px;
     }
     .ios-screen.elderly { font-size: 16px; }
-    .ios-screen.elderly .small { font-size: 13.5px !important; }
+    .ios-screen.elderly .small { font-size: 13px !important; }
     .ios-status {
-      background: rgba(255, 255, 255, 0.92);
+      background: rgba(255, 255, 255, 0.94);
       backdrop-filter: blur(12px);
       padding: 10px 22px 6px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
       position: relative;
       z-index: 10;
@@ -87,8 +89,8 @@
       top: 8px;
       left: 50%;
       transform: translateX(-50%);
-      width: 108px;
-      height: 26px;
+      width: 106px;
+      height: 25px;
       background: #000;
       border-radius: 20px;
       z-index: 20;
@@ -98,13 +100,13 @@
       top: 44px;
       left: 12px;
       right: 12px;
-      background: rgba(20, 24, 34, 0.95);
+      background: rgba(20, 24, 34, 0.96);
       color: #fff;
       border-radius: 18px;
       padding: 11px 13px;
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-      z-index: 30;
-      transform: translateY(-140%);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.38);
+      z-index: 500;
+      transform: translateY(-150%);
       transition: transform 0.35s cubic-bezier(.22, 1, .36, 1);
       cursor: pointer;
     }
@@ -114,26 +116,27 @@
     .ios-push-body { font-size: 12px; color: #e2e8f0; margin-top: 2px; line-height: 1.35; }
 
     .ios-header {
-      background: rgba(255, 255, 255, 0.95);
-      padding: 6px 16px 10px;
+      background: rgba(255, 255, 255, 0.96);
+      padding: 6px 14px 10px;
       border-bottom: 1px solid #e2e8f0;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 6px;
     }
-    .ios-title { font-size: 18px; font-weight: 800; color: #0b2545; }
-    .ios-sub { font-size: 11px; color: var(--ios-muted); }
+    .ios-title { font-size: 17px; font-weight: 800; color: #0b2545; }
+    .ios-sub { font-size: 10.5px; color: var(--ios-muted); margin-top: 1px; }
     .ios-content {
       flex: 1;
       overflow-y: auto;
-      padding: 12px 12px 16px;
+      padding: 10px 11px 16px;
     }
     .ios-tabbar {
-      background: rgba(255, 255, 255, 0.96);
+      background: rgba(255, 255, 255, 0.97);
       border-top: 1px solid #dce3ee;
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      padding: 6px 4px 16px;
+      padding: 6px 3px 15px;
     }
     .ios-tab {
       border: 0;
@@ -142,8 +145,8 @@
       flex-direction: column;
       align-items: center;
       gap: 2px;
-      font-size: 10px;
-      font-weight: 600;
+      font-size: 9.8px;
+      font-weight: 700;
       color: #64748b;
       cursor: pointer;
       padding: 4px 0;
@@ -162,7 +165,7 @@
     .tab-badge {
       position: absolute;
       top: 0;
-      right: 12px;
+      right: 10px;
       background: var(--lv4);
       color: #fff;
       border-radius: 999px;
@@ -171,11 +174,11 @@
       padding: 1px 5px;
     }
 
-    /* ── iOS Cards & Badges ── */
+    /* ── iOS Cards & Map ── */
     .card {
       background: var(--ios-card);
       border-radius: 16px;
-      padding: 12px;
+      padding: 11px;
       margin-bottom: 10px;
       box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
       border: 1px solid #e6ecf5;
@@ -194,109 +197,167 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      padding: 3px 9px;
+      padding: 3px 8px;
       border-radius: 999px;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 800;
       color: #fff;
+      white-space: nowrap;
     }
     .lv-1 { background: var(--lv1); }
     .lv-2 { background: var(--lv2); color: #1f2937; }
     .lv-3 { background: var(--lv3); }
     .lv-4 { background: var(--lv4); }
     .lv-5 { background: var(--lv5); }
-    .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-    .small { font-size: 11.5px; color: var(--ios-muted); }
+    .row { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+    .small { font-size: 11px; color: var(--ios-muted); }
+
+    #yalaMap {
+      width: 100%;
+      height: 270px;
+      border-radius: 12px;
+      border: 1px solid #cbd5e1;
+      overflow: hidden;
+      z-index: 1;
+      background: #e2e8f0;
+    }
+    .map-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 7px;
+      font-size: 10px;
+      color: #475569;
+    }
+    .leg-dot { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 3px; vertical-align: middle; }
+    .amphoe-lbl {
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(15, 23, 42, 0.25);
+      border-radius: 6px;
+      padding: 1px 4px;
+      font-size: 9.5px;
+      font-weight: 800;
+      color: #0f172a;
+      white-space: nowrap;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+    }
+
     .dam-card {
       background: linear-gradient(135deg, #0b3b75, #145da0);
       color: #fff;
       border: 0;
     }
-    .dam-card.spill {
-      background: linear-gradient(135deg, #991b1b, #dc2626);
-    }
-    .dam-card .small { color: rgba(255, 255, 255, 0.82); }
-    .dam-metrics {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-      margin-top: 8px;
-    }
-    .dam-metric {
-      background: rgba(255, 255, 255, 0.14);
-      border-radius: 10px;
-      padding: 6px 8px;
-    }
-    .dam-metric b { font-size: 14px; display: block; }
-    .amphoe-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-    }
+    .dam-card.spill { background: linear-gradient(135deg, #991b1b, #dc2626); }
+    .dam-card .small { color: rgba(255, 255, 255, 0.85); }
+    .dam-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; }
+    .dam-metric { background: rgba(255, 255, 255, 0.14); border-radius: 10px; padding: 6px 7px; }
+    .dam-metric b { font-size: 13.5px; display: block; }
+
+    .amphoe-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; }
     .amp-tile {
       background: #fff;
       border: 1px solid #e2e8f0;
       border-left: 4px solid var(--lv1);
       border-radius: 12px;
-      padding: 9px;
-      cursor: pointer;
-      transition: transform 0.12s;
-    }
-    .amp-tile:hover { transform: translateY(-1px); }
-    .amp-tile .name { font-weight: 800; font-size: 13px; }
-    .station-row {
-      padding: 9px 0;
-      border-bottom: 1px solid #edf2f7;
+      padding: 8px;
       cursor: pointer;
     }
+    .amp-tile .name { font-weight: 800; font-size: 12.5px; }
+    .station-row { padding: 8px 0; border-bottom: 1px solid #edf2f7; cursor: pointer; }
     .station-row:last-child { border-bottom: 0; }
     .btn {
       border: 0;
-      border-radius: 11px;
-      padding: 9px 12px;
+      border-radius: 10px;
+      padding: 8px 10px;
       font-weight: 700;
-      font-size: 12.5px;
+      font-size: 12px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 5px;
       text-decoration: none;
     }
     .btn-primary { background: var(--ios-blue); color: #fff; }
     .btn-danger { background: var(--lv5); color: #fff; }
     .btn-soft { background: #e8f0fe; color: #0e5fa6; }
-    .map-svg { width: 100%; height: 225px; background: #e6f0fa; border-radius: 12px; border: 1px solid #c7dbf1; }
 
-    /* ── iOS Bottom Sheet Modal ── */
+    /* ── Scrollable Drop-Down Hourly Rainfall Chart (UTC+7) ── */
+    .rain-drawer-btn {
+      width: 100%;
+      background: #eff6ff;
+      color: #0e5fa6;
+      border: 1px solid #bfdbfe;
+      border-radius: 11px;
+      padding: 9px 11px;
+      font-weight: 800;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .rain-scroll {
+      margin-top: 8px;
+      max-height: 235px;
+      overflow-y: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: #f8fafc;
+      padding: 6px 8px;
+    }
+    .rain-day-sep {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #0e5fa6;
+      background: #e0f2fe;
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin: 6px 0 4px;
+    }
+    .rain-hr-row {
+      display: grid;
+      grid-template-columns: 62px 1fr 76px;
+      align-items: center;
+      gap: 7px;
+      padding: 4px 2px;
+      border-bottom: 1px dashed #e2e8f0;
+      font-size: 11.5px;
+    }
+    .rain-hr-row:last-child { border-bottom: 0; }
+    .rain-hr-time { font-weight: 700; color: #1e293b; font-variant-numeric: tabular-nums; }
+    .rain-bar-track { height: 12px; background: #e2e8f0; border-radius: 6px; overflow: hidden; }
+    .rain-bar-fill { height: 100%; border-radius: 6px; min-width: 2px; }
+    .rain-hr-val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 11px; }
+
+    /* ── iOS Bottom Sheet ── */
     .sheet-backdrop {
       position: absolute;
       inset: 0;
-      background: rgba(15, 23, 42, 0.45);
+      background: rgba(15, 23, 42, 0.48);
       display: none;
       align-items: flex-end;
-      z-index: 40;
+      z-index: 600;
     }
     .sheet-backdrop.open { display: flex; }
     .sheet {
       width: 100%;
-      max-height: 82%;
+      max-height: 85%;
       overflow-y: auto;
       background: #fff;
       color: var(--ios-text);
       border-radius: 24px 24px 0 0;
-      padding: 14px 16px 24px;
+      padding: 12px 15px 22px;
     }
     .sheet-handle { width: 40px; height: 4px; background: #cbd5e1; border-radius: 99px; margin: 0 auto 10px; }
-    .sig-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 10px 0; }
-    .sig-box { background: #f1f5f9; border-radius: 10px; padding: 6px; text-align: center; }
+    .sig-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin: 9px 0; }
+    .sig-box { background: #f1f5f9; border-radius: 10px; padding: 6px 4px; text-align: center; }
     .sig-box b { display: block; font-size: 13px; color: #0f172a; }
-    .bars { display: flex; align-items: flex-end; gap: 3px; height: 64px; margin-top: 8px; }
-    .bar-col { flex: 1; background: #38bdf8; border-radius: 3px 3px 0 0; min-height: 2px; }
 
-    /* ── Right Operations & Simulation Control Deck ── */
+    /* ── Right Operations & Simulation Deck ── */
     .deck-head { margin-bottom: 16px; }
-    .deck-head h1 { margin: 0 0 6px; font-size: 24px; }
+    .deck-head h1 { margin: 0 0 6px; font-size: 23px; }
     .deck-head p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
     .deck-card {
       background: var(--panel);
@@ -305,7 +366,7 @@
       padding: 16px;
       margin-bottom: 16px;
     }
-    .deck-card h2 { margin: 0 0 10px; font-size: 15px; display: flex; align-items: center; justify-content: space-between; }
+    .deck-card h2 { margin: 0 0 10px; font-size: 15px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
     .scenario-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
     @media (max-width: 640px) { .scenario-grid { grid-template-columns: 1fr; } }
     .sc-btn {
@@ -316,20 +377,13 @@
       padding: 11px 12px;
       text-align: left;
       cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
     }
     .sc-btn:hover { border-color: #38bdf8; }
     .sc-btn.active { border-color: #38bdf8; background: #163056; box-shadow: 0 0 0 1px #38bdf8; }
     .sc-btn b { display: block; font-size: 13px; margin-bottom: 3px; }
     .sc-btn span { font-size: 11.5px; color: var(--muted); line-height: 1.4; display: block; }
     .src-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
-    .src-box {
-      background: var(--panel2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-size: 12px;
-    }
+    .src-box { background: var(--panel2); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; font-size: 12px; }
     .dot-ok { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; margin-right: 5px; }
     .dot-deg { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; margin-right: 5px; }
     table { width: 100%; border-collapse: collapse; font-size: 12px; }
@@ -354,6 +408,18 @@
       border-radius: 6px;
       font-size: 11px;
     }
+    .lang-pills { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; margin-top: 8px; }
+    .lang-pill {
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: #0f172a;
+      border-radius: 10px;
+      padding: 8px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .lang-pill.active { background: #007aff; color: #fff; border-color: #007aff; }
   </style>
 </head>
 <body>
@@ -364,14 +430,14 @@
       <div class="dynamic-island"></div>
       <div class="ios-screen" id="iosScreen">
         <div class="ios-status">
-          <span id="iosClock">15:52</span>
-          <span>5G · ยะลา 🇹🇭</span>
+          <span id="iosClock">--:-- ICT</span>
+          <span>5G · ยะลา UTC+7</span>
         </div>
 
         <div class="ios-push" id="iosPush" onclick="hidePush(); switchTab('alerts');">
           <div class="ios-push-head">
-            <span>🌊 น้ำท่วมยะลา · แจ้งเตือนล่วงหน้า</span>
-            <span>เมื่อสักครู่</span>
+            <span id="pushApp">🌊 น้ำท่วมยะลา · แจ้งเตือนล่วงหน้า</span>
+            <span>UTC+7</span>
           </div>
           <div class="ios-push-title" id="pushTitle">แจ้งเตือนระดับน้ำ</div>
           <div class="ios-push-body" id="pushBody"></div>
@@ -379,8 +445,8 @@
 
         <div class="ios-header">
           <div>
-            <div class="ios-title">🌊 น้ำท่วมยะลา</div>
-            <div class="ios-sub" id="iosUpdated">กำลังโหลดข้อมูลจาก 5 ฐานข้อมูลจริง…</div>
+            <div class="ios-title" id="iosAppTitle">🌊 น้ำท่วมยะลา</div>
+            <div class="ios-sub" id="iosUpdated">กำลังโหลดข้อมูลเวลาไทย (UTC+7)…</div>
           </div>
           <span class="pill lv-1" id="iosTopBadge">ปกติ</span>
         </div>
@@ -388,11 +454,11 @@
         <div class="ios-content" id="iosContent"></div>
 
         <div class="ios-tabbar">
-          <button class="ios-tab active" data-tab="home" onclick="switchTab('home')"><span class="ic">🗺️</span>หน้าหลัก</button>
-          <button class="ios-tab" data-tab="alerts" onclick="switchTab('alerts')"><span class="ic">🔔</span>แจ้งเตือน<span class="tab-badge" id="alertBadge" style="display:none">0</span></button>
-          <button class="ios-tab sos-tab" data-tab="sos" onclick="switchTab('sos')"><span class="ic">SOS</span>ฉุกเฉิน</button>
-          <button class="ios-tab" data-tab="shelters" onclick="switchTab('shelters')"><span class="ic">🏕️</span>จุดพักพิง</button>
-          <button class="ios-tab" data-tab="settings" onclick="switchTab('settings')"><span class="ic">⚙️</span>ตั้งค่า</button>
+          <button class="ios-tab active" data-tab="home" onclick="switchTab('home')"><span class="ic">🗺️</span><span id="lblTabHome">หน้าหลัก</span></button>
+          <button class="ios-tab" data-tab="alerts" onclick="switchTab('alerts')"><span class="ic">🔔</span><span id="lblTabAlerts">แจ้งเตือน</span><span class="tab-badge" id="alertBadge" style="display:none">0</span></button>
+          <button class="ios-tab sos-tab" data-tab="sos" onclick="switchTab('sos')"><span class="ic">SOS</span><span id="lblTabSos">ฉุกเฉิน</span></button>
+          <button class="ios-tab" data-tab="shelters" onclick="switchTab('shelters')"><span class="ic">🏕️</span><span id="lblTabShelters">ศูนย์พักพิง</span></button>
+          <button class="ios-tab" data-tab="settings" onclick="switchTab('settings')"><span class="ic">⚙️</span><span id="lblTabSettings">ตั้งค่า</span></button>
         </div>
 
         <div class="sheet-backdrop" id="sheetBackdrop" onclick="if(event.target===this) closeSheet()">
@@ -408,34 +474,34 @@
   <!-- RIGHT: Operations & Simulation Control Deck -->
   <div>
     <div class="deck-head">
-      <h1>🌊 Yala Flood Watch — iOS Interactive Prototype & 5-Source Engine</h1>
+      <h1>🌊 Yala Flood Watch — iOS Interactive Prototype (Google Maps + 5-Source Engine)</h1>
       <p>
-        โมเดลทดลองที่เชื่อมต่อ <b>ฐานข้อมูลจริง 5 แหล่ง</b> (ThaiWater 14 สถานีวัดน้ำ + 87 สถานีฝนครบ 8 อำเภอ + เขื่อนบางลาง กฟผ./ชป. + Open-Meteo 72 ชม. + GloFAS 7 วัน)
-        คำนวณด้วยสูตร <span class="code-tag">formula_version = 2</span> ตรงกับโค้ด Flutter iOS 100%
+        แผนที่จริงฐาน <b>Google Maps</b> พร้อมขอบเขต <b>8 อำเภอ จ.ยะลา (GeoJSON จริง)</b> ระบายสีตามระดับแจ้งเตือน 1–5 ·
+        แสดงเวลาประเทศไทย (<b>UTC+7</b>) ทุกจุด · นำทางศูนย์พักพิงด้วย <b>Google Maps</b> · รองรับ <b>4 ภาษา (ไทย / EN / 中文 / Melayu)</b>
       </p>
     </div>
 
     <div class="deck-card">
       <h2>
-        <span>🎛️ สลับโหมดข้อมูลจริง / จำลองเหตุการณ์เตือนภัยล่วงหน้า</span>
+        <span>🎛️ โหมดข้อมูลจริง / จำลองเหตุการณ์เตือนภัยล่วงหน้า</span>
         <button class="refresh-btn" id="refreshBtn" onclick="refreshLive()">🔄 ดึงข้อมูลสดจาก 5 API จริงตอนนี้</button>
       </h2>
       <div class="scenario-grid">
         <button class="sc-btn active" id="sc-live" onclick="loadScenario('live')">
           <b>🟢 ข้อมูลจริงวันนี้ (Live 5-Source)</b>
-          <span>ดึงจริงจาก ThaiWater (14 น้ำ + 87 ฝน + เขื่อนบางลาง) และ Open-Meteo / GloFAS</span>
+          <span>ThaiWater 14 สถานีน้ำ + 87 สถานีฝน + เขื่อนบางลาง + Open-Meteo + GloFAS</span>
         </button>
         <button class="sc-btn" id="sc-banglang_spillway" onclick="loadScenario('banglang_spillway')">
           <b>🟠 จำลอง: เขื่อนบางลางเปิด Spillway</b>
-          <span>ทดสอบแจ้งเตือนล่วงหน้า 6–12 ชม. (บันนังสตา → กรงปินัง → เมืองยะลา X.40A)</span>
+          <span>เตือนภัยล่วงหน้า 6–12 ชม. (บันนังสตา → กรงปินัง → เมืองยะลา X.40A)</span>
         </button>
         <button class="sc-btn" id="sc-kabang_flash" onclick="loadScenario('kabang_flash')">
           <b>⚡ จำลอง: ฝนหนักฉับพลัน อ.กาบัง–บันนังสตา</b>
-          <span>ทดสอบ Flash Flood Override และ อ.กาบัง (0 สถานีน้ำ แต่ใช้ 4 สถานีฝน + พยากรณ์)</span>
+          <span>ทดสอบ Flash Flood Override และ อ.กาบัง (0 สถานีน้ำ ใช้ 4 สถานีฝน + พยากรณ์)</span>
         </button>
         <button class="sc-btn" id="sc-nov2025_crisis" onclick="loadScenario('nov2025_crisis')">
-          <b>🔴 จำลองวิกฤต: น้ำท่วมใหญ่ยะลา (แบบ พ.ย. 2568)</b>
-          <span>ระดับ 5 อันตราย อพยพทันที ครบ 8 อำเภอ + แจ้งเตือน iOS Push Banner</span>
+          <b>🔴 จำลองวิกฤต: น้ำท่วมใหญ่ยะลา (พ.ย. 2568)</b>
+          <span>ระดับ 5 อันตราย อพยพทันที ครบ 8 อำเภอ + iOS Push Banner</span>
         </button>
       </div>
       <div id="scenarioDesc" style="margin-top:10px;font-size:12.5px;color:#93c5fd;"></div>
@@ -443,7 +509,7 @@
 
     <div class="deck-card">
       <h2>
-        <span>📡 สถานะการเชื่อมต่อฐานข้อมูลจริงทั้ง 5 แหล่ง</span>
+        <span>📡 สถานะฐานข้อมูลจริงทั้ง 5 แหล่ง</span>
         <span class="code-tag" id="manifestHash">hash: —</span>
       </h2>
       <div class="src-grid" id="sourceHealthGrid"></div>
@@ -453,21 +519,13 @@
       <h2><span>🌊 พยากรณ์ปริมาณน้ำท่าล่วงหน้า 7 วัน (Open-Meteo GloFAS v4 · m³/s)</span></h2>
       <div id="glofasPanel"></div>
     </div>
-
-    <div class="deck-card">
-      <h2><span>🧮 สูตรคำนวณ <span class="code-tag">formula_version = 2</span> & กติกาความน่าเชื่อถือ</span></h2>
-      <div style="font-size:12.5px;color:var(--muted);line-height:1.65">
-        • <b>Score (0–100)</b> = <span class="code-tag">0.45·W(ระดับน้ำ+dH/dt) + 0.22·R(ฝนจริง 87 สถานี) + 0.13·F(พยากรณ์ 24 ชม.) + 0.10·D(เขื่อนบางลาง) + 0.10·C(ชุมชน)</span><br/>
-        • <b>Agency Floor:</b> ไม่ลดระดับต่ำกว่า <span class="code-tag">situation_level</span> ของ สสน./กฟผ./ชป.<br/>
-        • <b>กัน False Alarm:</b> ฝนอย่างเดียวไม่ Push เว้นแต่มีสัญญาณน้ำ/เขื่อน/ชุมชน หรือกรณีเขต Flash Flood ไร้สถานีน้ำ (อ.กาบัง) ที่ฝนจริงหนักมากร่วมกับพยากรณ์หนัก<br/>
-        • <b>Zero-Hallucination Emergency Contacts:</b> สายด่วนนิรภัย ปภ. <b>1784</b> · ปภ.ยะลา <b>073-203559</b> · เทศบาลนครยะลา <b>073-212345</b> · สพฉ. <b>1669</b>
-      </div>
-    </div>
   </div>
 </div>
 
 <script>
 let SNAP = null;
+let GEOJSON = null;
+let LEAFLET_MAP = null;
 let ACTIVE_TAB = 'home';
 let CURRENT_SCENARIO = 'live';
 let SUB_AMPHOE = '';
@@ -475,26 +533,223 @@ let ELDERLY_MODE = false;
 let GPS_CONSENT = false;
 let SOS_LOGS = [];
 let SHELTER_FILTER = '';
+let RAIN_DRAWER_OPEN = false;
+let SHEET_RAIN_OPEN = true;
+let LANG = 'th';
 let PUSH_TIMER = null;
+
+const AMPHOE_NAMES = {
+  'เมืองยะลา': { th: 'เมืองยะลา', en: 'Mueang Yala', zh: '也拉府直辖县', ms: 'Mueang Yala' },
+  'รามัน': { th: 'รามัน', en: 'Raman', zh: '拉曼县', ms: 'Raman' },
+  'ยะหา': { th: 'ยะหา', en: 'Yaha', zh: '亚哈县', ms: 'Yaha' },
+  'กรงปินัง': { th: 'กรงปินัง', en: 'Krong Pinang', zh: '功比南县', ms: 'Krong Pinang' },
+  'เบตง': { th: 'เบตง', en: 'Betong', zh: '勿洞县', ms: 'Betong' },
+  'บันนังสตา': { th: 'บันนังสตา', en: 'Bannang Sata', zh: '班南沙达县', ms: 'Bannang Sata' },
+  'ธารโต': { th: 'ธารโต', en: 'Than To', zh: '丹多县', ms: 'Than To' },
+  'กาบัง': { th: 'กาบัง', en: 'Kabang', zh: '加邦县', ms: 'Kabang' },
+};
+
+const I18N = {
+  th: {
+    appTitle: '🌊 น้ำท่วมยะลา',
+    googleHl: 'th',
+    tabHome: 'หน้าหลัก', tabAlerts: 'แจ้งเตือน', tabSos: 'ฉุกเฉิน', tabShelters: 'ศูนย์พักพิง', tabSettings: 'ตั้งค่า',
+    updatedPrefix: 'อัปเดต', tzLabel: 'เวลาไทย UTC+7',
+    levels: { 1: 'ปกติ', 2: 'เฝ้าระวัง', 3: 'เตือนภัย', 4: 'เตือนภัยสูง', 5: 'อันตราย' },
+    mapTitle: 'แผนที่ Google Maps · แบ่ง 8 อำเภอ จ.ยะลา',
+    mapHint: 'แตะอำเภอหรือหมุดสถานี',
+    damTitle: '🏗️ เขื่อนบางลาง · เตือนภัยล่วงหน้า',
+    damStorage: 'ปริมาณกักเก็บ', damRelease: 'ระบายออก/วัน', damEta: 'ถึงเมืองยะลา',
+    damSpill: 'SPILLWAY เปิด!', damNormal: 'ปกติ',
+    amphoeSection: 'ภาพรวม 8 อำเภอ (แตะดูกราฟฝนและสูตร v2)',
+    stationSection: 'สถานีวัดระดับน้ำโทรมาตร',
+    rainDrawerClosed: '▼ ดูกราฟพยากรณ์ฝนรายชั่วโมง 24 ชม. (เวลาไทย UTC+7)',
+    rainDrawerOpen: '▲ ซ่อนกราฟพยากรณ์ฝนรายชั่วโมง 24 ชม. (เวลาไทย UTC+7)',
+    noAlertsTitle: 'ทุกอำเภออยู่ในเกณฑ์ปกติ (ระดับ 1)',
+    noAlertsSub: 'ลองสลับโหมดจำลองเหตุการณ์ทางขวาเพื่อทดสอบแจ้งเตือนล่วงหน้า',
+    shelterHeader: 'ศูนย์พักพิงชั่วคราว จ.ยะลา',
+    allAmphoes: 'ทั้ง 8 อำเภอ',
+    navGoogleMaps: '🗺️ นำทาง Google Maps',
+    callNow: '📞 โทร',
+    officialApprox: 'ชื่อทางการ (พิกัดโดยประมาณ)',
+    pendingVerify: 'รอตรวจ ปภ.',
+    sosWarn: '⚠️ คำชี้แจงด้านความปลอดภัย',
+    sosContactsTitle: '📞 เบอร์ฉุกเฉินยืนยันแล้วครบ 9 หน่วยงาน',
+    sosLocalTitle: '📍 บันทึกคำขอ SOS ในเครื่อง (โหมดทดลอง + PDPA)',
+    sosConsentLabel: 'ยินยอมให้อ่านพิกัด GPS เฉพาะขณะเปิดหน้านี้ (When In Use · ไม่ส่งเซิร์ฟเวอร์)',
+    sosSaveBtn: 'บันทึกคำขอ SOS ในเครื่อง (ยังไม่ส่งศูนย์)',
+    langTitle: '🌐 ภาษาของแอป (Language)',
+    subAmphoeTitle: '📍 อำเภอที่ติดตามแจ้งเตือน',
+    allYalaOpt: 'ทั้งจังหวัดยะลา (8 อำเภอ)',
+    elderlyTitle: '👵 โหมดผู้สูงอายุ (ตัวอักษรใหญ่)',
+    elderlySub: 'ขยายขนาดข้อความทั้งแอปให้อ่านง่าย',
+    pdpaTitle: '🔐 ความเป็นส่วนตัว (PDPA)',
+    pdpaBtn: '🗑️ ลบข้อมูลทั้งหมดของฉัน (PDPA)',
+    manifestTitle: '🔎 ตรวจสอบความถูกต้องของข้อมูล (Manifest)',
+    rainHourCol: 'เวลา (UTC+7)', rainBarCol: 'ปริมาณฝนรายชั่วโมง', rainValCol: 'มม. / โอกาส',
+  },
+  en: {
+    appTitle: '🌊 Yala Flood Watch',
+    googleHl: 'en',
+    tabHome: 'Home', tabAlerts: 'Alerts', tabSos: 'SOS', tabShelters: 'Shelters', tabSettings: 'Settings',
+    updatedPrefix: 'Updated', tzLabel: 'Thailand Time UTC+7',
+    levels: { 1: 'Normal', 2: 'Watch', 3: 'Warning', 4: 'High Warning', 5: 'Danger' },
+    mapTitle: 'Google Maps · 8 Yala Districts',
+    mapHint: 'Tap district or gauge',
+    damTitle: '🏗️ Bang Lang Dam · Early Warning',
+    damStorage: 'Storage', damRelease: 'Release/Day', damEta: 'To Mueang Yala',
+    damSpill: 'SPILLWAY OPEN!', damNormal: 'Normal',
+    amphoeSection: '8 Districts Overview (Tap for rain chart & v2 score)',
+    stationSection: 'Telemetric Water-Level Stations',
+    rainDrawerClosed: '▼ Open 24h Hourly Rain Forecast Chart (Thailand UTC+7)',
+    rainDrawerOpen: '▲ Hide 24h Hourly Rain Forecast Chart (Thailand UTC+7)',
+    noAlertsTitle: 'All 8 Districts Normal (Level 1)',
+    noAlertsSub: 'Use simulation controls on the right to test early flood warnings.',
+    shelterHeader: 'Yala Temporary Evacuation Centers',
+    allAmphoes: 'All 8 Districts',
+    navGoogleMaps: '🗺️ Google Maps Route',
+    callNow: '📞 Call',
+    officialApprox: 'Official Name (Approx Coords)',
+    pendingVerify: 'Pending DDPM',
+    sosWarn: '⚠️ Life-Safety Disclaimer',
+    sosContactsTitle: '📞 Verified Emergency Hotlines (9 Agencies)',
+    sosLocalTitle: '📍 Local SOS Log (Simulation + PDPA)',
+    sosConsentLabel: 'Consent to read GPS only while this screen is open (When In Use, never uploaded)',
+    sosSaveBtn: 'Save SOS Locally (Not Sent to Dispatch)',
+    langTitle: '🌐 App Language',
+    subAmphoeTitle: '📍 Subscribed District',
+    allYalaOpt: 'All Yala Province (8 Districts)',
+    elderlyTitle: '👵 Large Font Mode (Elderly)',
+    elderlySub: 'Enlarge text across all screens for readability',
+    pdpaTitle: '🔐 Privacy (PDPA)',
+    pdpaBtn: '🗑️ Delete All My Local Data (PDPA)',
+    manifestTitle: '🔎 Snapshot Integrity (Manifest)',
+    rainHourCol: 'Time (UTC+7)', rainBarCol: 'Hourly Rainfall', rainValCol: 'mm / Prob',
+  },
+  zh: {
+    appTitle: '🌊 也拉洪水预警',
+    googleHl: 'zh-CN',
+    tabHome: '首页', tabAlerts: '预警', tabSos: '求救', tabShelters: '避难中心', tabSettings: '设置',
+    updatedPrefix: '更新', tzLabel: '泰国时间 UTC+7',
+    levels: { 1: '正常', 2: '关注', 3: '预警', 4: '高级预警', 5: '危险撤离' },
+    mapTitle: 'Google 地图 · 也拉府 8 县分区预警',
+    mapHint: '点击县区或水文站',
+    damTitle: '🏗️ 邦朗水库 · 提前 6–12 小时预警',
+    damStorage: '库容', damRelease: '日泄洪量', damEta: '抵达也拉市区',
+    damSpill: '溢洪道泄洪!', damNormal: '正常',
+    amphoeSection: '8 县区预警总览 (点击查看降雨图表)',
+    stationSection: '水位遥测站',
+    rainDrawerClosed: '▼ 展开未来 24 小时逐时降雨预报 (泰国时间 UTC+7)',
+    rainDrawerOpen: '▲ 收起未来 24 小时逐时降雨预报 (泰国时间 UTC+7)',
+    noAlertsTitle: '全部 8 县区水位正常 (1级)',
+    noAlertsSub: '可点击右侧模拟情景测试提前洪水预警',
+    shelterHeader: '也拉府临时避难中心',
+    allAmphoes: '全部 8 县',
+    navGoogleMaps: '🗺️ Google 地图导航',
+    callNow: '📞 拨打',
+    officialApprox: '官方名称 (参考坐标)',
+    pendingVerify: '待防灾厅确认',
+    sosWarn: '⚠️ 生命安全免责声明',
+    sosContactsTitle: '📞 已核实紧急救援电话 (9 个机构)',
+    sosLocalTitle: '📍 本地 SOS 记录 (模拟模式 + PDPA)',
+    sosConsentLabel: '同意仅在打开本页时读取 GPS 坐标 (不上传服务器)',
+    sosSaveBtn: '保存在本地 (未发送至救援中心)',
+    langTitle: '🌐 应用语言 (Language)',
+    subAmphoeTitle: '📍 关注预警县区',
+    allYalaOpt: '也拉府全境 (8 县)',
+    elderlyTitle: '👵 长辈大字模式',
+    elderlySub: '放大全应用字体方便阅读',
+    pdpaTitle: '🔐 隐私保护 (PDPA)',
+    pdpaBtn: '🗑️ 删除我的全部本地数据 (PDPA)',
+    manifestTitle: '🔎 数据完整性校验 (Manifest)',
+    rainHourCol: '时间 (UTC+7)', rainBarCol: '逐时降雨量', rainValCol: '毫米 / 概率',
+  },
+  ms: {
+    appTitle: '🌊 Amaran Banjir Yala',
+    googleHl: 'ms',
+    tabHome: 'Utama', tabAlerts: 'Amaran', tabSos: 'SOS', tabShelters: 'Pusat Pemindahan', tabSettings: 'Tetapan',
+    updatedPrefix: 'Kemas kini', tzLabel: 'Waktu Thailand UTC+7',
+    levels: { 1: 'Normal', 2: 'Waspada', 3: 'Amaran', 4: 'Amaran Tinggi', 5: 'Bahaya' },
+    mapTitle: 'Google Maps · 8 Daerah Wilayah Yala',
+    mapHint: 'Tekan daerah atau stesen',
+    damTitle: '🏗️ Empangan Bang Lang · Amaran Awal',
+    damStorage: 'Simpanan', damRelease: 'Pelepasan/Hari', damEta: 'Ke Bandar Yala',
+    damSpill: 'ALUR LIMPAH DIBUKA!', damNormal: 'Normal',
+    amphoeSection: 'Ringkasan 8 Daerah (Tekan untuk carta hujan)',
+    stationSection: 'Stesen Aras Air Telemetri',
+    rainDrawerClosed: '▼ Buka Carta Ramalan Hujan 24 Jam (Waktu Thailand UTC+7)',
+    rainDrawerOpen: '▲ Tutup Carta Ramalan Hujan 24 Jam (Waktu Thailand UTC+7)',
+    noAlertsTitle: 'Semua 8 Daerah Normal (Tahap 1)',
+    noAlertsSub: 'Gunakan mod simulasi di sebelah kanan untuk uji amaran awal.',
+    shelterHeader: 'Pusat Pemindahan Sementara Yala',
+    allAmphoes: 'Semua 8 Daerah',
+    navGoogleMaps: '🗺️ Arah Google Maps',
+    callNow: '📞 Hubungi',
+    officialApprox: 'Nama Rasmi (Koordinat Anggaran)',
+    pendingVerify: 'Menunggu DDPM',
+    sosWarn: '⚠️ Penafian Keselamatan Nyawa',
+    sosContactsTitle: '📞 Talian Kecemasan Disahkan (9 Agensi)',
+    sosLocalTitle: '📍 Rekod SOS Tempatan (Simulasi + PDPA)',
+    sosConsentLabel: 'Bersetuju membaca GPS semasa skrin dibuka sahaja (tidak dihantar ke pelayan)',
+    sosSaveBtn: 'Simpan SOS Tempatan (Belum Dihantar)',
+    langTitle: '🌐 Bahasa Aplikasi (Language)',
+    subAmphoeTitle: '📍 Daerah Dipantau',
+    allYalaOpt: 'Seluruh Wilayah Yala (8 Daerah)',
+    elderlyTitle: '👵 Mod Tulisan Besar (Warga Emas)',
+    elderlySub: 'Besarkan teks di seluruh aplikasi',
+    pdpaTitle: '🔐 Privasi (PDPA)',
+    pdpaBtn: '🗑️ Padam Semua Data Saya (PDPA)',
+    manifestTitle: '🔎 Pengesahan Data (Manifest)',
+    rainHourCol: 'Masa (UTC+7)', rainBarCol: 'Hujan Setiap Jam', rainValCol: 'mm / Peluang',
+  },
+};
+
+function t(key) { return (I18N[LANG] && I18N[LANG][key]) || I18N.th[key] || key; }
+function lvLabel(lv) { return (I18N[LANG]?.levels?.[lv]) || I18N.th.levels[lv] || `Lv.${lv}`; }
+function ampLabel(thName) { return (AMPHOE_NAMES[thName] && AMPHOE_NAMES[thName][LANG]) || thName; }
 
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
-
 function lvColor(lv) {
   return ({1:'#2e7d32',2:'#f9a825',3:'#ef6c00',4:'#e53935',5:'#b71c1c'})[lv] || '#64748b';
 }
 
+function formatThaiUtc7(isoOrStr) {
+  if (!isoOrStr) return '-';
+  let normalized = String(isoOrStr).trim();
+  // If naive "YYYY-MM-DD HH:MM", treat strictly as +07:00
+  if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2})?$/.test(normalized)) {
+    normalized = normalized.replace(' ', 'T') + '+07:00';
+  }
+  const dt = new Date(normalized);
+  if (Number.isNaN(dt.getTime())) return String(isoOrStr) + ' (UTC+7)';
+  const locale = LANG === 'th' ? 'th-TH' : (LANG === 'zh' ? 'zh-CN' : (LANG === 'ms' ? 'ms-MY' : 'en-GB'));
+  const formatted = new Intl.DateTimeFormat(locale, {
+    timeZone: 'Asia/Bangkok',
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(dt);
+  return `${formatted} (${t('tzLabel')})`;
+}
+
 function updateClock() {
-  const now = new Date();
-  const hh = String(now.getHours()).padStart(2, '0');
-  const mm = String(now.getMinutes()).padStart(2, '0');
-  document.getElementById('iosClock').textContent = `${hh}:${mm}`;
+  const txt = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Bangkok',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(new Date());
+  document.getElementById('iosClock').textContent = `${txt} ICT`;
 }
 setInterval(updateClock, 15000);
 updateClock();
 
 function showPush(title, body) {
+  document.getElementById('pushApp').textContent = `${t('appTitle')} · ${t('tabAlerts')}`;
   document.getElementById('pushTitle').textContent = title;
   document.getElementById('pushBody').textContent = body;
   const el = document.getElementById('iosPush');
@@ -502,34 +757,47 @@ function showPush(title, body) {
   clearTimeout(PUSH_TIMER);
   PUSH_TIMER = setTimeout(hidePush, 6500);
 }
-function hidePush() {
-  document.getElementById('iosPush').classList.remove('show');
-}
+function hidePush() { document.getElementById('iosPush').classList.remove('show'); }
 
 function switchTab(tab) {
   ACTIVE_TAB = tab;
   document.querySelectorAll('.ios-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   renderPhone();
 }
-
+function setLang(code) {
+  LANG = code;
+  renderAll();
+}
+function setShelterFilter(amphoe) {
+  SHELTER_FILTER = amphoe || '';
+  renderPhone();
+}
 function openSheet(html) {
   document.getElementById('sheetBody').innerHTML = html;
   document.getElementById('sheetBackdrop').classList.add('open');
 }
-function closeSheet() {
-  document.getElementById('sheetBackdrop').classList.remove('open');
+function closeSheet() { document.getElementById('sheetBackdrop').classList.remove('open'); }
+
+async function initGeoJson() {
+  if (GEOJSON) return GEOJSON;
+  try {
+    const r = await fetch('/api/geojson');
+    if (r.ok) GEOJSON = await r.json();
+  } catch (_) {}
+  return GEOJSON;
 }
 
 async function loadScenario(id) {
   CURRENT_SCENARIO = id;
   document.querySelectorAll('.sc-btn').forEach(b => b.classList.toggle('active', b.id === 'sc-' + id));
+  await initGeoJson();
   const res = await fetch('/api/scenario/' + encodeURIComponent(id));
   SNAP = await res.json();
   renderAll();
   const topPush = getPushAlerts()[0];
   if (topPush && (id !== 'live' || topPush.assessment.level >= 4)) {
     showPush(
-      `ระดับ ${topPush.assessment.level} (${topPush.assessment.label_th}) · อ.${topPush.amphoe}`,
+      `Lv.${topPush.assessment.level} (${lvLabel(topPush.assessment.level)}) · ${ampLabel(topPush.amphoe)}`,
       `${topPush.title} — ${topPush.assessment.action_th}`
     );
   }
@@ -547,7 +815,7 @@ async function refreshLive() {
     CURRENT_SCENARIO = 'live';
     document.querySelectorAll('.sc-btn').forEach(b => b.classList.toggle('active', b.id === 'sc-live'));
     renderAll();
-    showPush('อัปเดตข้อมูลสดสำเร็จ (5/5 แหล่ง)', `สถานีน้ำ ${SNAP.stations.length} แห่ง · สถานีฝน ${SNAP.rain_gauges_summary.total} แห่ง · เขื่อนบางลาง ${SNAP.banglang_dam?.storage_percent ?? '-'}%`);
+    showPush('อัปเดตข้อมูลสดสำเร็จ (5/5 แหล่ง)', `${formatThaiUtc7(SNAP.generated_at)} · สถานีน้ำ ${SNAP.stations.length} · ฝน ${SNAP.rain_gauges_summary.total}`);
   } catch (e) {
     alert('ดึงข้อมูลสดไม่สำเร็จ (Fail-Closed): ' + e.message);
   } finally {
@@ -562,11 +830,11 @@ function getPushAlerts() {
   for (const a of (SNAP.amphoes || [])) {
     if (SUB_AMPHOE && a.amphoe !== SUB_AMPHOE) continue;
     if (a.assessment.level >= 2) {
-      const lead = a.assessment.lead_time_hours ? ` · ล่วงหน้า ${a.assessment.lead_time_hours}` : '';
+      const lead = a.assessment.lead_time_hours ? ` · ETA ${a.assessment.lead_time_hours}` : '';
       list.push({
         amphoe: a.amphoe,
-        title: `อ.${a.amphoe}${lead}`,
-        subtitle: `ฝน 24 ชม. ${a.rain.max_rain_24h_mm} มม. · พยากรณ์ 24 ชม. ${a.weather_forecast.forecast_24h_mm} มม.`,
+        title: `${ampLabel(a.amphoe)}${lead}`,
+        subtitle: `24h ${a.rain.max_rain_24h_mm} mm · Forecast 24h ${a.weather_forecast.forecast_24h_mm} mm`,
         assessment: a.assessment,
         raw: a,
       });
@@ -577,12 +845,18 @@ function getPushAlerts() {
 
 function renderAll() {
   if (!SNAP) return;
+  document.getElementById('iosAppTitle').textContent = t('appTitle');
+  document.getElementById('lblTabHome').textContent = t('tabHome');
+  document.getElementById('lblTabAlerts').textContent = t('tabAlerts');
+  document.getElementById('lblTabSos').textContent = t('tabSos');
+  document.getElementById('lblTabShelters').textContent = t('tabShelters');
+  document.getElementById('lblTabSettings').textContent = t('tabSettings');
+
   const maxLv = Math.max(...(SNAP.amphoes || []).map(a => a.assessment.level), 1);
-  const topMeta = ({1:'ปกติ',2:'เฝ้าระวัง',3:'เตือนภัย',4:'เตือนภัยสูง',5:'อันตราย'})[maxLv];
   const badge = document.getElementById('iosTopBadge');
   badge.className = `pill lv-${maxLv}`;
-  badge.textContent = `ระดับ ${maxLv} · ${topMeta}`;
-  document.getElementById('iosUpdated').textContent = `อัปเดต ${SNAP.generated_at?.replace('T',' ').slice(0,16) || '-'} ICT · v${SNAP.formula_version}`;
+  badge.textContent = `Lv.${maxLv} · ${lvLabel(maxLv)}`;
+  document.getElementById('iosUpdated').textContent = `${t('updatedPrefix')}: ${formatThaiUtc7(SNAP.generated_at)}`;
 
   const pushCount = getPushAlerts().filter(x => x.assessment.should_push).length;
   const ab = document.getElementById('alertBadge');
@@ -636,36 +910,147 @@ function renderGlofas() {
 }
 
 function renderPhone() {
+  if (LEAFLET_MAP) {
+    LEAFLET_MAP.remove();
+    LEAFLET_MAP = null;
+  }
   const el = document.getElementById('iosContent');
   document.getElementById('iosScreen').classList.toggle('elderly', ELDERLY_MODE);
-  if (ACTIVE_TAB === 'home') el.innerHTML = renderHomeTab();
+  if (ACTIVE_TAB === 'home') {
+    el.innerHTML = renderHomeTab();
+    setTimeout(mountRealYalaMap, 0);
+  }
   else if (ACTIVE_TAB === 'alerts') el.innerHTML = renderAlertsTab();
   else if (ACTIVE_TAB === 'sos') el.innerHTML = renderSosTab();
   else if (ACTIVE_TAB === 'shelters') el.innerHTML = renderSheltersTab();
   else el.innerHTML = renderSettingsTab();
 }
 
-function renderMiniMapSvg() {
-  const stations = SNAP.stations || [];
-  const dam = SNAP.banglang_dam;
-  const la0 = 5.70, la1 = 6.75, lo0 = 100.95, lo1 = 101.52;
-  const X = lo => 20 + ((lo - lo0) / (lo1 - lo0)) * 320;
-  const Y = la => 205 - ((la - la0) / (la1 - la0)) * 185;
-  let dots = '';
-  // Pattani river approximate spine
-  dots += `<polyline points="${X(101.06)},${Y(5.78)} ${X(101.18)},${Y(5.92)} ${X(101.27)},${Y(6.15)} ${X(101.27)},${Y(6.26)} ${X(101.28)},${Y(6.41)} ${X(101.26)},${Y(6.55)} ${X(101.29)},${Y(6.68)}" fill="none" stroke="#60a5fa" stroke-width="3" stroke-dasharray="4 3" opacity="0.75"/>`;
-  if (dam) {
-    const dx = X(dam.lon), dy = Y(dam.lat);
-    dots += `<rect x="${dx-7}" y="${dy-7}" width="14" height="14" rx="3" fill="${dam.spillway_active ? '#dc2626' : '#0b3b75'}" stroke="#fff" stroke-width="2"/>`;
-    dots += `<text x="${dx+10}" y="${dy+3}" font-size="9" font-weight="800" fill="#0b3b75">เขื่อนบางลาง ${dam.storage_percent ?? ''}%</text>`;
+function mountRealYalaMap() {
+  const container = document.getElementById('yalaMap');
+  if (!container) return;
+  if (typeof L === 'undefined') {
+    container.innerHTML = '<div style="padding:20px;text-align:center;font-size:12px;color:#475569">Offline mode — แผนที่ Google Maps ต้องการการเชื่อมต่ออินเทอร์เน็ต</div>';
+    return;
   }
-  stations.forEach((s, i) => {
-    if (s.lat == null || s.lon == null) return;
-    const cx = X(s.lon), cy = Y(s.lat);
-    const col = lvColor(s.assessment.level);
-    dots += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="6.5" fill="${col}" stroke="#fff" stroke-width="1.8" style="cursor:pointer" onclick="showStationDetail(${i})"/>`;
+  const ampByName = {};
+  for (const a of (SNAP.amphoes || [])) ampByName[a.amphoe] = a;
+
+  const map = L.map(container, {
+    center: [6.22, 101.22],
+    zoom: 9,
+    zoomControl: true,
+    attributionControl: true,
   });
-  return `<svg class="map-svg" viewBox="0 0 360 220">${dots}</svg>`;
+  LEAFLET_MAP = map;
+
+  // Google Maps Road Base Layer (Primary Map Foundation)
+  const hl = t('googleHl');
+  L.tileLayer(`https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=${encodeURIComponent(hl)}`, {
+    maxZoom: 18,
+    attribution: 'Map data © Google · Boundaries: Yala 8 Districts',
+  }).addTo(map);
+
+  // Real 8-Amphoe GeoJSON Polygons tinted by Formula v2 Alert Level
+  if (GEOJSON && GEOJSON.features) {
+    const geoLayer = L.geoJSON(GEOJSON, {
+      style: feature => {
+        const name = feature.properties.amphoe_th;
+        const info = ampByName[name];
+        const lv = info ? info.assessment.level : 1;
+        const selected = SUB_AMPHOE && SUB_AMPHOE === name;
+        return {
+          color: selected ? '#0f172a' : '#ffffff',
+          weight: selected ? 2.6 : 1.5,
+          fillColor: lvColor(lv),
+          fillOpacity: selected ? 0.56 : 0.38,
+        };
+      },
+      onEachFeature: (feature, layer) => {
+        const name = feature.properties.amphoe_th;
+        const info = ampByName[name];
+        const lv = info ? info.assessment.level : 1;
+        layer.on('click', () => showAmphoeDetail(name));
+        const center = layer.getBounds().getCenter();
+        L.marker(center, {
+          interactive: true,
+          icon: L.divIcon({
+            className: '',
+            html: `<div class="amphoe-lbl" style="border-left:4px solid ${lvColor(lv)}">${esc(ampLabel(name))} · Lv.${lv}</div>`,
+            iconSize: [null, null],
+          }),
+        }).on('click', () => showAmphoeDetail(name)).addTo(map);
+      },
+    }).addTo(map);
+    map.fitBounds(geoLayer.getBounds(), { padding: [12, 12] });
+  }
+
+  // Bang Lang Dam Marker
+  if (SNAP.banglang_dam) {
+    const d = SNAP.banglang_dam;
+    L.circleMarker([d.lat, d.lon], {
+      radius: 7,
+      fillColor: d.spillway_active ? '#dc2626' : '#0b3b75',
+      color: '#ffffff',
+      weight: 2,
+      fillOpacity: 0.95,
+    }).bindTooltip(`🏗️ ${d.name_th}: ${d.storage_percent ?? '-'}%`).addTo(map);
+  }
+
+  // 14 Telemetric Water Stations
+  (SNAP.stations || []).forEach((s, idx) => {
+    if (s.lat == null || s.lon == null) return;
+    if (SUB_AMPHOE && s.amphoe !== SUB_AMPHOE) return;
+    L.circleMarker([s.lat, s.lon], {
+      radius: 5.5,
+      fillColor: lvColor(s.assessment.level),
+      color: '#111827',
+      weight: 1.5,
+      fillOpacity: 0.95,
+    })
+      .bindTooltip(`${s.name} (${s.oldcode}) · Lv.${s.assessment.level}`)
+      .on('click', () => showStationDetail(idx))
+      .addTo(map);
+  });
+}
+
+function rainBarColor(mm) {
+  if (mm >= 20) return '#b71c1c';
+  if (mm >= 10) return '#ef6c00';
+  if (mm >= 3) return '#f59e0b';
+  if (mm > 0) return '#0284c7';
+  return '#94a3b8';
+}
+
+function renderHourlyRainScroll(hourlyList) {
+  if (!hourlyList || !hourlyList.length) {
+    return '<div class="small" style="padding:8px">ไม่มีข้อมูลพยากรณ์ฝนรายชั่วโมง</div>';
+  }
+  const maxMm = Math.max(...hourlyList.map(h => h.mm || 0), 10);
+  let lastDate = '';
+  const rows = [];
+  rows.push(`<div class="rain-hr-row" style="font-weight:800;color:#475569;border-bottom:1px solid #cbd5e1">
+    <span>${esc(t('rainHourCol'))}</span><span>${esc(t('rainBarCol'))}</span><span style="text-align:right">${esc(t('rainValCol'))}</span>
+  </div>`);
+  for (const h of hourlyList) {
+    const raw = String(h.time || '');
+    const parts = raw.split('T');
+    const dayStr = parts[0] || '';
+    const hm = (parts[1] || '').slice(0, 5);
+    if (dayStr && dayStr !== lastDate) {
+      lastDate = dayStr;
+      rows.push(`<div class="rain-day-sep">📅 ${esc(dayStr)} · ${esc(t('tzLabel'))}</div>`);
+    }
+    const mm = Number(h.mm || 0);
+    const prob = Number(h.prob || 0);
+    const pct = Math.min(100, Math.round((mm / maxMm) * 100));
+    rows.push(`<div class="rain-hr-row">
+      <span class="rain-hr-time">${esc(hm)} น.</span>
+      <div class="rain-bar-track"><div class="rain-bar-fill" style="width:${mm > 0 ? Math.max(6, pct) : 2}%;background:${rainBarColor(mm)}"></div></div>
+      <span class="rain-hr-val" style="color:${mm >= 10 ? '#b71c1c' : '#0f172a'}">${mm.toFixed(1)} · ${prob}%</span>
+    </div>`);
+  }
+  return `<div class="rain-scroll">${rows.join('')}</div>`;
 }
 
 function renderHomeTab() {
@@ -673,56 +1058,83 @@ function renderHomeTab() {
   const dam = SNAP.banglang_dam;
   const amphoes = (SNAP.amphoes || []).filter(a => !SUB_AMPHOE || a.amphoe === SUB_AMPHOE);
   const stations = (SNAP.stations || []).filter(s => !SUB_AMPHOE || s.amphoe === SUB_AMPHOE);
+  const focusAmphoe = amphoes[0];
 
   let html = '';
   if (sim.is_simulated) {
     html += `<div class="sim-strip">🧪 ${esc(sim.title_th)}</div>`;
   }
+
+  // Real Google Map with 8-Amphoe Alert Polygons FIRST on Home tab!
+  html += `<div class="card">
+    <div class="row" style="margin-bottom:6px">
+      <b>${esc(t('mapTitle'))}</b>
+      <span class="small">${esc(t('mapHint'))}</span>
+    </div>
+    <div id="yalaMap"></div>
+    <div class="map-legend">
+      <span><i class="leg-dot" style="background:var(--lv1)"></i>1 ${esc(lvLabel(1))}</span>
+      <span><i class="leg-dot" style="background:var(--lv2)"></i>2 ${esc(lvLabel(2))}</span>
+      <span><i class="leg-dot" style="background:var(--lv3)"></i>3 ${esc(lvLabel(3))}</span>
+      <span><i class="leg-dot" style="background:var(--lv4)"></i>4 ${esc(lvLabel(4))}</span>
+      <span><i class="leg-dot" style="background:var(--lv5)"></i>5 ${esc(lvLabel(5))}</span>
+    </div>
+  </div>`;
+
+  // Collapsible Hourly Rain Forecast Scrollable Drawer on Home
+  if (focusAmphoe && focusAmphoe.weather_forecast?.hourly_next_24h?.length) {
+    html += `<div class="card" style="padding:10px">
+      <div class="row">
+        <b>🌧️ ${esc(ampLabel(focusAmphoe.amphoe))} · 24h: ${focusAmphoe.weather_forecast.forecast_24h_mm} mm</b>
+        <span class="small">Open-Meteo</span>
+      </div>
+      <button class="rain-drawer-btn" onclick="RAIN_DRAWER_OPEN=!RAIN_DRAWER_OPEN;renderPhone()">
+        <span>${esc(RAIN_DRAWER_OPEN ? t('rainDrawerOpen') : t('rainDrawerClosed'))}</span>
+      </button>
+      ${RAIN_DRAWER_OPEN ? renderHourlyRainScroll(focusAmphoe.weather_forecast.hourly_next_24h) : ''}
+    </div>`;
+  }
+
   if (dam) {
     html += `<div class="card dam-card ${dam.spillway_active ? 'spill' : ''}">
       <div class="row">
         <div>
-          <div style="font-weight:800;font-size:14px">🏗️ เขื่อนบางลาง · เตือนภัยล่วงหน้า</div>
-          <div class="small">${esc(dam.agency)} · อัปเดต ${esc(dam.hourly_observed_at || dam.daily_observed_at || '-')}</div>
+          <div style="font-weight:800;font-size:13.5px">${esc(t('damTitle'))}</div>
+          <div class="small">${esc(dam.agency)} · ${esc(formatThaiUtc7(dam.hourly_observed_at || dam.daily_observed_at))}</div>
         </div>
-        <span class="pill ${dam.spillway_active ? 'lv-5' : 'lv-1'}">${dam.spillway_active ? 'SPILLWAY เปิด!' : 'ปกติ'}</span>
+        <span class="pill ${dam.spillway_active ? 'lv-5' : 'lv-1'}">${esc(dam.spillway_active ? t('damSpill') : t('damNormal'))}</span>
       </div>
       <div class="dam-metrics">
-        <div class="dam-metric"><span class="small">ปริมาณกักเก็บ</span><b>${dam.storage_percent ?? '-'}%</b><span class="small">${dam.storage_mcm ?? '-'} ลบ.ม.</span></div>
-        <div class="dam-metric"><span class="small">ระบายออก/วัน</span><b>${dam.released_daily_mcm ?? '-'}</b><span class="small">ล้าน ลบ.ม.</span></div>
-        <div class="dam-metric"><span class="small">ถึงเมืองยะลา</span><b>6–12 ชม.</b><span class="small">บันนังสตา 2–4 ชม.</span></div>
+        <div class="dam-metric"><span class="small">${esc(t('damStorage'))}</span><b>${dam.storage_percent ?? '-'}%</b><span class="small">${dam.storage_mcm ?? '-'} MCM</span></div>
+        <div class="dam-metric"><span class="small">${esc(t('damRelease'))}</span><b>${dam.released_daily_mcm ?? '-'}</b><span class="small">MCM/d</span></div>
+        <div class="dam-metric"><span class="small">${esc(t('damEta'))}</span><b>6–12 h</b><span class="small">ETA</span></div>
       </div>
     </div>`;
   }
 
-  html += `<div class="card">
-    <div class="row" style="margin-bottom:6px"><b>แผนที่สถานีโทรมาตร จ.ยะลา (${stations.length} น้ำ · ${SNAP.rain_gauges_summary?.total ?? 0} ฝน)</b><span class="small">แตะจุดเพื่อดูสูตร v2</span></div>
-    ${renderMiniMapSvg()}
-  </div>`;
-
-  html += `<div style="font-weight:800;font-size:13px;margin:8px 2px 6px">ภาพรวมแจ้งเตือนล่วงหน้า 8 อำเภอ (แตะเพื่อดูรายละเอียด)</div>
+  html += `<div style="font-weight:800;font-size:12.5px;margin:8px 2px 6px">${esc(t('amphoeSection'))}</div>
   <div class="amphoe-grid">${amphoes.map(a => {
     const lv = a.assessment.level;
     return `<div class="amp-tile" style="border-left-color:${lvColor(lv)}" data-amphoe="${esc(a.amphoe)}" onclick="showAmphoeDetail(this.dataset.amphoe)">
-      <div class="row"><span class="name">${esc(a.amphoe)}</span><span class="pill lv-${lv}">Lv.${lv}</span></div>
-      <div class="small" style="margin-top:4px">คะแนน <b>${a.assessment.score}</b> · ฝน24h <b>${a.rain.max_rain_24h_mm}</b> มม.</div>
-      <div class="small">คาด24h <b>${a.weather_forecast.forecast_24h_mm}</b> มม. ${a.water_station_count === 0 ? '· 0 สถานีน้ำ' : ''}</div>
-      ${a.assessment.lead_time_hours ? `<div style="font-size:10.5px;color:#b91c1c;font-weight:700;margin-top:3px">⏱️ น้ำเขื่อนถึงใน ${esc(a.assessment.lead_time_hours)}</div>` : ''}
+      <div class="row"><span class="name">${esc(ampLabel(a.amphoe))}</span><span class="pill lv-${lv}">Lv.${lv}</span></div>
+      <div class="small" style="margin-top:4px">Score <b>${a.assessment.score}</b> · 24h <b>${a.rain.max_rain_24h_mm}</b> mm</div>
+      <div class="small">Next 24h: <b>${a.weather_forecast.forecast_24h_mm}</b> mm</div>
+      ${a.assessment.lead_time_hours ? `<div style="font-size:10px;color:#b91c1c;font-weight:700;margin-top:3px">⏱️ ETA ${esc(a.assessment.lead_time_hours)}</div>` : ''}
     </div>`;
   }).join('')}</div>`;
 
   html += `<div class="card" style="margin-top:10px">
-    <div class="row" style="margin-bottom:4px"><b>สถานีวัดระดับน้ำ (${stations.length} แห่ง)</b><span class="small">เรียงตามความเสี่ยง</span></div>
+    <div class="row" style="margin-bottom:4px"><b>${esc(t('stationSection'))} (${stations.length})</b><span class="small">${esc(t('tzLabel'))}</span></div>
     ${[...stations].sort((a,b) => b.assessment.level - a.assessment.level || b.assessment.score - a.assessment.score).map(s => {
       const idx = SNAP.stations.indexOf(s);
       const rem = s.remaining_to_bank_m;
-      const remTxt = rem == null ? 'ไม่มีตลิ่ง' : (rem >= 0 ? `ต่ำกว่าตลิ่ง ${rem.toFixed(2)} ม.` : `ล้นตลิ่ง ${(-rem).toFixed(2)} ม.!`);
+      const remTxt = rem == null ? '-' : (rem >= 0 ? `-${rem.toFixed(2)} m` : `+${(-rem).toFixed(2)} m OVER!`);
       return `<div class="station-row" onclick="showStationDetail(${idx})">
         <div class="row">
           <div><b>${esc(s.name)}</b> <span class="small">(${esc(s.oldcode)})</span></div>
-          <span class="pill lv-${s.assessment.level}">${esc(s.assessment.label_th)} · ${s.assessment.score}</span>
+          <span class="pill lv-${s.assessment.level}">${esc(lvLabel(s.assessment.level))} · ${s.assessment.score}</span>
         </div>
-        <div class="small" style="margin-top:2px">อ.${esc(s.amphoe)} · น้ำ <b>${s.level_msl ?? '-'}</b> ม.รทก. · ${remTxt} · ${esc(s.agency)}</div>
+        <div class="small" style="margin-top:2px">${esc(ampLabel(s.amphoe))} · ${s.level_msl ?? '-'} m MSL (${remTxt}) · ${esc(formatThaiUtc7(s.observed_at))}</div>
       </div>`;
     }).join('')}
   </div>`;
@@ -733,30 +1145,28 @@ function showAmphoeDetail(ampName) {
   const a = (SNAP.amphoes || []).find(x => x.amphoe === ampName);
   if (!a) return;
   const sig = a.assessment.signals;
-  const hourly = (a.weather_forecast.hourly_next_24h || []).slice(0, 24);
-  const maxH = Math.max(...hourly.map(x => x.mm), 5);
+  const hourly = a.weather_forecast.hourly_next_24h || [];
   openSheet(`
     <div class="row">
-      <div><b style="font-size:17px">อ.${esc(a.amphoe)}</b><div class="small">${esc(a.basin)} · ${a.is_flash_flood ? 'เขตน้ำท่วมฉับพลัน' : 'เขตน้ำล้นตลิ่ง'}</div></div>
-      <span class="pill lv-${a.assessment.level}">ระดับ ${a.assessment.level} · ${esc(a.assessment.label_th)}</span>
+      <div><b style="font-size:17px">${esc(ampLabel(a.amphoe))}</b><div class="small">${esc(a.basin)} · ${a.is_flash_flood ? 'Flash Flood Zone' : 'Riverine Flood Zone'}</div></div>
+      <span class="pill lv-${a.assessment.level}">Lv.${a.assessment.level} · ${esc(lvLabel(a.assessment.level))}</span>
     </div>
     <div style="margin-top:10px;padding:10px;border-radius:12px;background:#f8fafc;border:1px solid #e2e8f0">
-      <b>คำแนะนำ:</b> ${esc(a.assessment.action_th)}
-      <div class="small" style="margin-top:4px">Push: <b>${a.assessment.should_push ? '✅ ส่งแจ้งเตือนทันที' : '⏸ แสดงในแอปเท่านั้น (ไม่ส่ง Push ซ้ำซ้อน)'}</b></div>
+      <b>Guidance:</b> ${esc(a.assessment.action_th)}
+      <div class="small" style="margin-top:4px">Push: <b>${a.assessment.should_push ? '✅ Push Eligible' : '⏸ In-App Only (Anti-False-Alarm)'}</b></div>
     </div>
-    <div style="font-weight:700;margin-top:12px">องค์ประกอบสูตร formula_version = 2 (คะแนน ${a.assessment.score}/100)</div>
+    <div style="font-weight:700;margin-top:11px;font-size:12.5px">Formula v2 Breakdown (${a.assessment.score}/100)</div>
     <div class="sig-grid">
-      <div class="sig-box"><span class="small">W น้ำ</span><b>${sig.W.toFixed(2)}</b></div>
-      <div class="sig-box"><span class="small">R ฝนจริง</span><b>${sig.R.toFixed(2)}</b></div>
-      <div class="sig-box"><span class="small">F พยากรณ์</span><b>${sig.F.toFixed(2)}</b></div>
-      <div class="sig-box"><span class="small">D เขื่อน</span><b>${sig.D.toFixed(2)}</b></div>
-      <div class="sig-box"><span class="small">C ชุมชน</span><b>${sig.C.toFixed(2)}</b></div>
+      <div class="sig-box"><span class="small">W</span><b>${sig.W.toFixed(2)}</b></div>
+      <div class="sig-box"><span class="small">R</span><b>${sig.R.toFixed(2)}</b></div>
+      <div class="sig-box"><span class="small">F</span><b>${sig.F.toFixed(2)}</b></div>
+      <div class="sig-box"><span class="small">D</span><b>${sig.D.toFixed(2)}</b></div>
+      <div class="sig-box"><span class="small">C</span><b>${sig.C.toFixed(2)}</b></div>
     </div>
-    <div class="small">สถานีฝนจริง: <b>${a.rain.gauge_count} แห่ง</b> (สูงสุด 1 ชม. ${a.rain.max_rain_1h_mm} มม. / 24 ชม. ${a.rain.max_rain_24h_mm} มม.)</div>
-    <div class="small" style="margin-top:4px">พยากรณ์ Open-Meteo: 6 ชม. <b>${a.weather_forecast.forecast_6h_mm} มม.</b> · 24 ชม. <b>${a.weather_forecast.forecast_24h_mm} มม.</b> · 72 ชม. <b>${a.weather_forecast.forecast_72h_mm} มม.</b></div>
-    ${hourly.length ? `<div style="font-weight:700;margin-top:10px;font-size:12px">กราฟพยากรณ์ฝนรายชั่วโมง 24 ชม. ข้างหน้า</div>
-      <div class="bars">${hourly.map(h => `<div class="bar-col" title="${esc(h.time)}: ${esc(h.mm)} มม." style="height:${Math.max(4, (h.mm/maxH)*100)}%"></div>`).join('')}</div>` : ''}
-    ${a.note ? `<div class="small" style="margin-top:8px;color:#0e5fa6">ℹ️ ${esc(a.note)}</div>` : ''}
+    <div class="small">Rain Gauges: <b>${a.rain.gauge_count}</b> (1h max ${a.rain.max_rain_1h_mm} mm / 24h max ${a.rain.max_rain_24h_mm} mm)</div>
+    <div class="small" style="margin-top:3px">Open-Meteo Forecast: 6h <b>${a.weather_forecast.forecast_6h_mm} mm</b> · 24h <b>${a.weather_forecast.forecast_24h_mm} mm</b> · 72h <b>${a.weather_forecast.forecast_72h_mm} mm</b></div>
+    <div style="font-weight:800;margin-top:10px;font-size:12px">🌧️ ${esc(t('rainDrawerOpen').replace('▲ ', ''))}</div>
+    ${renderHourlyRainScroll(hourly)}
   `);
 }
 
@@ -766,24 +1176,25 @@ function showStationDetail(idx) {
   const sig = s.assessment.signals;
   openSheet(`
     <div class="row">
-      <div><b style="font-size:16px">${esc(s.name)}</b><div class="small">${esc(s.oldcode)} · อ.${esc(s.amphoe)} ต.${esc(s.tumbon)} · ${esc(s.agency)}</div></div>
+      <div><b style="font-size:16px">${esc(s.name)}</b><div class="small">${esc(s.oldcode)} · ${esc(ampLabel(s.amphoe))} · ${esc(s.agency)}</div></div>
       <span class="pill lv-${s.assessment.level}">Lv.${s.assessment.level} · ${s.assessment.score}</span>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
-      <div class="sig-box"><span class="small">ระดับน้ำล่าสุด</span><b>${s.level_msl ?? '-'} ม.รทก.</b><span class="small">dH: ${sig.dH_m >= 0 ? '+' : ''}${sig.dH_m} ม.</span></div>
-      <div class="sig-box"><span class="small">ระดับตลิ่ง (${esc(s.bank_source)})</span><b>${s.bank_m ?? 'ไม่มี'} ม.</b><span class="small">${s.remaining_to_bank_m != null ? `เหลือ ${s.remaining_to_bank_m} ม.` : '-'}</span></div>
+      <div class="sig-box"><span class="small">Water Level</span><b>${s.level_msl ?? '-'} m MSL</b><span class="small">dH: ${sig.dH_m >= 0 ? '+' : ''}${sig.dH_m} m</span></div>
+      <div class="sig-box"><span class="small">Bank (${esc(s.bank_source)})</span><b>${s.bank_m ?? '-'} m</b><span class="small">${s.remaining_to_bank_m != null ? `Margin ${s.remaining_to_bank_m} m` : '-'}</span></div>
     </div>
     <div class="sig-grid">
-      <div class="sig-box"><span class="small">W น้ำ</span><b>${sig.W.toFixed(2)}</b></div>
-      <div class="sig-box"><span class="small">R ฝนจริง</span><b>${sig.R.toFixed(2)}</b></div>
-      <div class="sig-box"><span class="small">F พยากรณ์</span><b>${sig.F.toFixed(2)}</b></div>
-      <div class="sig-box"><span class="small">D เขื่อน</span><b>${sig.D.toFixed(2)}</b></div>
-      <div class="sig-box"><span class="small">C ชุมชน</span><b>${sig.C.toFixed(2)}</b></div>
+      <div class="sig-box"><span class="small">W</span><b>${sig.W.toFixed(2)}</b></div>
+      <div class="sig-box"><span class="small">R</span><b>${sig.R.toFixed(2)}</b></div>
+      <div class="sig-box"><span class="small">F</span><b>${sig.F.toFixed(2)}</b></div>
+      <div class="sig-box"><span class="small">D</span><b>${sig.D.toFixed(2)}</b></div>
+      <div class="sig-box"><span class="small">C</span><b>${sig.C.toFixed(2)}</b></div>
     </div>
-    <div class="small">เวลาตรวจวัด (ICT): <b>${esc(s.observed_at || '-')}</b> ${s.stale ? '⚠️ ข้อมูลเก่าเกิน 60 นาที' : '✅ สด'}</div>
-    <div class="small">สถานีฝนใกล้สุด: ${esc(s.nearest_rain_gauge || '-')} (24h: ${s.rain_24h_mm} มม.)</div>
-    <div class="small" style="margin-top:4px">Flags: ${s.assessment.flags.length ? s.assessment.flags.map(f => `<span class="code-tag" style="color:#0369a1">${esc(f)}</span>`).join(' ') : 'ปกติ'}</div>
-    <div style="margin-top:10px;padding:10px;background:#f8fafc;border-radius:10px;font-size:12.5px"><b>คำแนะนำ:</b> ${esc(s.assessment.action_th)}</div>
+    <div class="small">Observed: <b>${esc(formatThaiUtc7(s.observed_at))}</b> ${s.stale ? '⚠️ Stale >60m' : '✅ Fresh'}</div>
+    <div class="small">Nearest Rain Gauge: ${esc(s.nearest_rain_gauge || '-')} (24h: ${s.rain_24h_mm} mm)</div>
+    <div style="margin-top:10px">
+      <a class="btn btn-soft" style="width:100%" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(s.lat)},${encodeURIComponent(s.lon)}&travelmode=driving">${esc(t('navGoogleMaps'))}</a>
+    </div>
   `);
 }
 
@@ -792,35 +1203,30 @@ function renderAlertsTab() {
   if (!alerts.length) {
     return `<div class="card" style="text-align:center;padding:28px 14px">
       <div style="font-size:32px">✅</div>
-      <b>ทุกอำเภออยู่ในเกณฑ์ปกติ (ระดับ 1)</b>
-      <div class="small" style="margin-top:6px">ลองกดโหมดจำลองเหตุการณ์ทางด้านขวา เพื่อทดสอบระบบแจ้งเตือนล่วงหน้าและ iOS Push Banner</div>
+      <b>${esc(t('noAlertsTitle'))}</b>
+      <div class="small" style="margin-top:6px">${esc(t('noAlertsSub'))}</div>
     </div>`;
   }
   return alerts.map(a => `<div class="card" style="border-left:5px solid ${lvColor(a.assessment.level)};cursor:pointer" data-amphoe="${esc(a.amphoe)}" onclick="showAmphoeDetail(this.dataset.amphoe)">
     <div class="row">
       <b>${esc(a.title)}</b>
-      <span class="pill lv-${a.assessment.level}">Lv.${a.assessment.level} · ${esc(a.assessment.label_th)}</span>
+      <span class="pill lv-${a.assessment.level}">Lv.${a.assessment.level} · ${esc(lvLabel(a.assessment.level))}</span>
     </div>
     <div style="margin-top:5px;font-size:12.5px">${esc(a.assessment.action_th)}</div>
-    <div class="small" style="margin-top:5px">${esc(a.subtitle)} · คะแนน <b>${a.assessment.score}/100</b></div>
-    <div class="small" style="margin-top:3px">${a.assessment.should_push ? '🔔 <b>ส่ง Push แจ้งเตือน</b> (มีสัญญาณหลักยืนยัน)' : 'ℹ️ แสดงในแอปเท่านั้น (ไม่ Push เพื่อกัน False Alarm)'}</div>
+    <div class="small" style="margin-top:5px">${esc(a.subtitle)} · Score <b>${a.assessment.score}/100</b></div>
+    <div class="small" style="margin-top:3px">${a.assessment.should_push ? '🔔 <b>Push Eligible</b>' : 'ℹ️ In-App Only'}</div>
   </div>`).join('');
-}
-
-function setShelterFilter(amphoe) {
-  SHELTER_FILTER = amphoe || '';
-  renderPhone();
 }
 
 function renderSosTab() {
   const contacts = (SNAP.contacts && SNAP.contacts.emergency) || [];
   return `
     <div class="card" style="background:#fef2f2;border-color:#fca5a5">
-      <b style="color:#991b1b">⚠️ คำชี้แจงด้านความปลอดภัย</b>
+      <b style="color:#991b1b">${esc(t('sosWarn'))}</b>
       <div class="small" style="color:#7f1d1d;margin-top:3px">${esc(SNAP.contacts?.disclaimer_th || '')}</div>
     </div>
     <div class="card">
-      <b style="display:block;margin-bottom:8px">📞 เบอร์ฉุกเฉินยืนยันแล้วครบ ${contacts.length} หน่วยงาน (กดโทรได้ทันที)</b>
+      <b style="display:block;margin-bottom:8px">${esc(t('sosContactsTitle'))}</b>
       ${contacts.map(c => `<div class="row" style="padding:7px 0;border-bottom:1px solid #f1f5f9">
         <div>
           <b style="font-size:12.5px">${esc(c.name)}</b>
@@ -830,26 +1236,22 @@ function renderSosTab() {
       </div>`).join('')}
     </div>
     <div class="card">
-      <b>📍 บันทึกคำขอ SOS ในเครื่อง (โหมดทดลอง + PDPA)</b>
+      <b>${esc(t('sosLocalTitle'))}</b>
       <div class="small" style="margin:6px 0">
         <label style="display:flex;gap:6px;align-items:flex-start;cursor:pointer">
           <input type="checkbox" ${GPS_CONSENT ? 'checked' : ''} onchange="GPS_CONSENT=this.checked;renderPhone()" />
-          <span>ยินยอมให้อ่านพิกัด GPS เฉพาะขณะเปิดหน้านี้ (When In Use · ไม่ส่งเซิร์ฟเวอร์)</span>
+          <span>${esc(t('sosConsentLabel'))}</span>
         </label>
       </div>
-      <button class="btn btn-primary" style="width:100%" onclick="simulateSos()">บันทึกคำขอ SOS ในเครื่อง (ยังไม่ส่งศูนย์)</button>
+      <button class="btn btn-primary" style="width:100%" onclick="simulateSos()">${esc(t('sosSaveBtn'))}</button>
       ${SOS_LOGS.map(l => `<div class="small" style="margin-top:8px;padding:7px;background:#f8fafc;border-radius:8px">📌 ${esc(l)}</div>`).join('')}
     </div>
   `;
 }
 
 function simulateSos() {
-  if (!GPS_CONSENT) {
-    alert('กรุณาติ๊กยินยอม PDPA ก่อนใช้พิกัด GPS');
-    return;
-  }
-  const ts = new Date().toLocaleTimeString('th-TH');
-  SOS_LOGS.unshift(`บันทึกในเครื่องเมื่อ ${ts} · พิกัดตัวอย่าง 6.54130, 101.28030 (โหมดทดลอง — กรุณาโทร 1784 / 073-203559)`);
+  if (!GPS_CONSENT) { alert('Please grant PDPA GPS consent first.'); return; }
+  SOS_LOGS.unshift(`${formatThaiUtc7(new Date().toISOString())} · GPS 6.54130, 101.28030 (Local only — Call 1784 / 073-203559)`);
   renderPhone();
 }
 
@@ -859,22 +1261,23 @@ function renderSheltersTab() {
   const filtered = SHELTER_FILTER ? all.filter(s => s.amphoe === SHELTER_FILTER) : all;
   return `
     <div class="card" style="background:#eff6ff;border-color:#bfdbfe">
-      <div class="small" style="color:#1e3a8a">🏕️ ${esc(SNAP.shelters_notice_th || '')}</div>
+      <b style="color:#1e3a8a;font-size:12.5px">🏕️ ${esc(t('shelterHeader'))}</b>
+      <div class="small" style="color:#1e3a8a;margin-top:3px">${esc(SNAP.shelters_notice_th || '')}</div>
     </div>
     <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px">
-      <button class="btn ${!SHELTER_FILTER ? 'btn-primary' : 'btn-soft'}" data-amphoe="" onclick="setShelterFilter(this.dataset.amphoe)">ทั้ง 8 อำเภอ</button>
-      ${amphoes.map(a => `<button class="btn ${SHELTER_FILTER===a ? 'btn-primary' : 'btn-soft'}" data-amphoe="${esc(a)}" onclick="setShelterFilter(this.dataset.amphoe)">${esc(a)}</button>`).join('')}
+      <button class="btn ${!SHELTER_FILTER ? 'btn-primary' : 'btn-soft'}" data-amphoe="" onclick="setShelterFilter(this.dataset.amphoe)">${esc(t('allAmphoes'))}</button>
+      ${amphoes.map(a => `<button class="btn ${SHELTER_FILTER===a ? 'btn-primary' : 'btn-soft'}" data-amphoe="${esc(a)}" onclick="setShelterFilter(this.dataset.amphoe)">${esc(ampLabel(a))}</button>`).join('')}
     </div>
     ${filtered.map(s => `<div class="card">
       <div class="row">
         <b>${esc(s.name)}</b>
-        <span class="pill ${s.verification_status==='official_name_coords_approx' ? 'lv-2' : 'lv-3'}">${s.verification_status==='official_name_coords_approx' ? 'ชื่อทางการ (พิกัดโดยประมาณ)' : 'รอตรวจ ปภ.'}</span>
+        <span class="pill ${s.verification_status==='official_name_coords_approx' ? 'lv-2' : 'lv-3'}">${esc(s.verification_status==='official_name_coords_approx' ? t('officialApprox') : t('pendingVerify'))}</span>
       </div>
-      <div class="small" style="margin-top:4px">${esc(s.address || ('อ.'+s.amphoe))}</div>
+      <div class="small" style="margin-top:4px">${esc(s.address || ampLabel(s.amphoe))}</div>
       <div class="small" style="margin-top:2px">${esc(s.notes || '')}</div>
       <div class="row" style="margin-top:8px">
-        <a class="btn btn-soft" style="flex:1" target="_blank" rel="noopener noreferrer" href="https://maps.apple.com/?ll=${encodeURIComponent(s.lat)},${encodeURIComponent(s.lng)}&q=${encodeURIComponent(s.name)}">🗺️ Apple Maps</a>
-        <a class="btn btn-primary" style="flex:1" href="tel:${esc(s.phone || '073203559')}">📞 โทร ${esc(s.phone || '073-203559')}</a>
+        <a class="btn btn-soft" style="flex:1" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(s.lat)},${encodeURIComponent(s.lon)}&travelmode=driving">${esc(t('navGoogleMaps'))}</a>
+        <a class="btn btn-primary" style="flex:1" href="tel:${esc(s.phone || '073203559')}">${esc(t('callNow'))} ${esc(s.phone || '073-203559')}</a>
       </div>
     </div>`).join('')}
   `;
@@ -884,28 +1287,37 @@ function renderSettingsTab() {
   const amps = (SNAP.amphoes || []).map(a => a.amphoe);
   return `
     <div class="card">
-      <b>📍 อำเภอที่ติดตามแจ้งเตือน</b>
+      <b>${esc(t('langTitle'))}</b>
+      <div class="lang-pills">
+        <button class="lang-pill ${LANG==='th'?'active':''}" onclick="setLang('th')">🇹🇭 ไทย (Thai)</button>
+        <button class="lang-pill ${LANG==='en'?'active':''}" onclick="setLang('en')">🇬🇧 English</button>
+        <button class="lang-pill ${LANG==='zh'?'active':''}" onclick="setLang('zh')">🇨🇳 中文 (Chinese)</button>
+        <button class="lang-pill ${LANG==='ms'?'active':''}" onclick="setLang('ms')">🇲🇾 Bahasa Melayu</button>
+      </div>
+    </div>
+    <div class="card">
+      <b>${esc(t('subAmphoeTitle'))}</b>
       <select style="width:100%;margin-top:8px;padding:8px;border-radius:10px;border:1px solid #cbd5e1" onchange="SUB_AMPHOE=this.value;renderAll()">
-        <option value="">ทั้งจังหวัดยะลา (8 อำเภอ)</option>
-        ${amps.map(a => `<option value="${esc(a)}" ${SUB_AMPHOE===a ? 'selected' : ''}>อ.${esc(a)}</option>`).join('')}
+        <option value="">${esc(t('allYalaOpt'))}</option>
+        ${amps.map(a => `<option value="${esc(a)}" ${SUB_AMPHOE===a ? 'selected' : ''}>${esc(ampLabel(a))}</option>`).join('')}
       </select>
     </div>
     <div class="card">
       <div class="row">
-        <div><b>👵 โหมดผู้สูงอายุ (ตัวอักษรใหญ่)</b><div class="small">ขยายขนาดข้อความทั้งแอปให้อ่านง่าย</div></div>
+        <div><b>${esc(t('elderlyTitle'))}</b><div class="small">${esc(t('elderlySub'))}</div></div>
         <input type="checkbox" ${ELDERLY_MODE ? 'checked' : ''} onchange="ELDERLY_MODE=this.checked;renderPhone()" />
       </div>
     </div>
     <div class="card">
-      <b>🔐 ความเป็นส่วนตัว (PDPA)</b>
-      <div class="small" style="margin:6px 0">ข้อมูลทุกอย่างเก็บในเครื่องเท่านั้น ไม่มีเซิร์ฟเวอร์ติดตามพิกัด</div>
-      <button class="btn btn-danger" style="width:100%" onclick="GPS_CONSENT=false;SOS_LOGS=[];SUB_AMPHOE='';alert('ลบข้อมูลส่วนบุคคลในเครื่องทั้งหมดเรียบร้อยแล้ว');renderAll()">🗑️ ลบข้อมูลทั้งหมดของฉัน (PDPA)</button>
+      <b>${esc(t('pdpaTitle'))}</b>
+      <div class="small" style="margin:6px 0">Local-first storage · Zero server GPS tracking</div>
+      <button class="btn btn-danger" style="width:100%" onclick="GPS_CONSENT=false;SOS_LOGS=[];SUB_AMPHOE='';alert('Deleted all local personal data.');renderAll()">${esc(t('pdpaBtn'))}</button>
     </div>
     <div class="card">
-      <b>🔎 ตรวจสอบความถูกต้องของข้อมูล (Manifest)</b>
-      <div class="small" style="margin-top:4px">Formula: <b>v${SNAP.formula_version}</b> · Schema: <b>v${SNAP.schema_version}</b></div>
-      <div class="small">SHA-256: <code>${esc((SNAP.content_hash || '').slice(0, 24))}…</code></div>
-      <div class="small">Degraded Sources: <b>${(SNAP.degraded_sources || []).length === 0 ? '0 (ครบทั้ง 5 แหล่ง)' : esc(SNAP.degraded_sources.join(', '))}</b></div>
+      <b>${esc(t('manifestTitle'))}</b>
+      <div class="small" style="margin-top:4px">${esc(t('updatedPrefix'))}: <b>${esc(formatThaiUtc7(SNAP.generated_at))}</b></div>
+      <div class="small">Formula: <b>v${SNAP.formula_version}</b> · SHA-256: <code>${esc((SNAP.content_hash || '').slice(0, 20))}…</code></div>
+      <div class="small">Degraded: <b>${(SNAP.degraded_sources || []).length === 0 ? '0 (5/5 OK)' : esc(SNAP.degraded_sources.join(', '))}</b></div>
     </div>
   `;
 }

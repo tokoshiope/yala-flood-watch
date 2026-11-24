@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:;" />
+  <title>น้ำท่วมยะลา (Yala Flood Watch) — แอปเตือนภัยน้ำท่วมล่วงหน้า จ.ยะลา ฟรี 100%</title>
+  <style>
+    :root{--bg:#071121;--card:#0f1d36;--fg:#eef4ff;--muted:#9cb0d4;--accent:#38bdf8;--danger:#dc2626;--border:#1f3358}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans Thai","Sarabun",sans-serif;line-height:1.65}
+    .wrap{max-width:920px;margin:0 auto;padding:28px 18px 60px}
+    .hero{background:linear-gradient(135deg,#0d2a52,#0b1931);border:1px solid var(--border);border-radius:20px;padding:28px;margin-bottom:20px}
+    h1{margin:0 0 8px;font-size:28px}h2{margin:0 0 10px;font-size:18px;color:#7dd3fc}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px}
+    .alert{background:#3b0d0d;border:1px solid #ef4444;border-radius:14px;padding:16px;margin-bottom:18px;color:#fee2e2}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+    .item{background:#142544;border-radius:12px;padding:14px;font-size:14px}
+    a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+    nav{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px;font-weight:700;font-size:14px}
+    .muted{color:var(--muted);font-size:13.5px}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>🌊 น้ำท่วมยะลา (Yala Flood Watch)</h1>
+    <p>แอปพลิเคชันแจ้งเตือนภัยน้ำท่วมล่วงหน้า <b>เฉพาะจังหวัดยะลา (8 อำเภอ)</b> — พัฒนาเพื่อสาธารณประโยชน์ <b>ฟรี 100% ตลอดชีพ</b> ไม่มีโฆษณา ไม่มีค่าใช้จ่ายแอบแฝง รองรับ 4 ภาษา (ไทย / English / 中文 / Bahasa Melayu)</p>
+    <nav>
+      <a href="index.html">หน้าแรก</a>
+      <a href="privacy.html">นโยบายความเป็นส่วนตัว (PDPA)</a>
+      <a href="terms.html">ข้อกำหนดการใช้งานและคำชี้แจงความปลอดภัย</a>
+    </nav>
+  </div>
+
+  <div class="alert">
+    <b>⚠️ คำชี้แจงด้านความปลอดภัย (Life-Safety Disclaimer):</b>
+    แอปนี้เป็นระบบสนับสนุนการเฝ้าระวังและแจ้งเตือนล่วงหน้าอิสระ <b>ไม่ใช่ช่องทางการแจ้งเหตุกู้ภัยหลักของทางราชการ</b>
+    หากอยู่ในสถานการณ์ฉุกเฉินกรุณาโทร <b>1784</b> (สายด่วนนิรภัย ปภ. 24 ชม.), <b>073-203559</b> (ปภ.ยะลา), <b>073-212345</b> (เทศบาลนครยะลา) หรือ <b>1669</b> (เจ็บป่วยฉุกเฉิน) ทันที
+  </div>
+
+  <div class="card">
+    <h2>📡 เชื่อมต่อ 5 ฐานข้อมูลอุทกวิทยาและอุตุนิยมวิทยาที่ตรวจสอบได้</h2>
+    <div class="grid">
+      <div class="item"><b>1. ระดับน้ำ 14 สถานี จ.ยะลา</b><br/><span class="muted">คลังข้อมูลน้ำแห่งชาติ ThaiWater (สสน., กฟผ., ชป., พพภ.)</span></div>
+      <div class="item"><b>2. ฝนจริง 87 สถานีครบ 8 อำเภอ</b><br/><span class="muted">ThaiWater Real-Time Rain ครอบคลุมถึง อ.กาบัง</span></div>
+      <div class="item"><b>3. เขื่อนบางลาง รายชั่วโมง/รายวัน</b><br/><span class="muted">กฟผ. & กรมชลประทาน เตือนภัยล่วงหน้า 6–12 ชม. ถึงเมืองยะลา</span></div>
+      <div class="item"><b>4. พยากรณ์ฝน 72 ชม. & น้ำท่า 7 วัน</b><br/><span class="muted">Open-Meteo Weather & GloFAS v4 (CC BY 4.0)</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📱 ความสามารถหลัก (iOS-First)</h2>
+    <ul>
+      <li>แผนที่จริงฐาน Google Maps แบ่งขอบเขต 8 อำเภอ จ.ยะลา ระบายสีตามระดับแจ้งเตือน 1–5</li>
+      <li>แสดงเวลาอัปเดตตาม <b>เวลาประเทศไทย (UTC+7)</b> ชัดเจนทุกหน้าจอ</li>
+      <li>ค้นหา <b>ศูนย์พักพิง</b> พร้อมปุ่มนำทางด้วย Google Maps และปุ่มโทรฉุกเฉิน 1 แตะ</li>
+      <li>ทำงานแบบ Offline-First เก็บข้อมูลล่าสุดในเครื่อง เปิดดูระดับน้ำและเบอร์ฉุกเฉินได้แม้สัญญาณขาด</li>
+      <li>ออกแบบตามหลัก <b>PDPA Privacy-by-Design</b> ไม่ติดตามพิกัดพื้นหลัง และมีปุ่มลบข้อมูลในเครื่องได้ทันที</li>
+    </ul>
+  </div>
+
+  <p class="muted">© 2026 Yala Flood Watch (Civic Open-Interest Project) · <a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms &amp; Disclaimer</a></p>
+</div>
+</body>
+</html>

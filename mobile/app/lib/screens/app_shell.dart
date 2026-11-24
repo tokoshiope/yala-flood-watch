@@ -8,7 +8,7 @@ import 'package:yala_flood_app/screens/shelters_screen.dart';
 import 'package:yala_flood_app/screens/sos_screen.dart';
 import 'package:yala_flood_app/state/alert_provider.dart';
 
-/// กรอบแอพหลัก: แถบนำทางด้านล่าง 5 หน้า
+/// กรอบแอพหลัก: แถบนำทางด้านล่าง 5 หน้า (รองรับ 4 ภาษา + ใช้คำว่า "ศูนย์พักพิง")
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
 
@@ -30,6 +30,7 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AlertProvider>();
+    final strings = provider.strings;
     final unread = provider.unreadCount;
 
     return Scaffold(
@@ -38,10 +39,10 @@ class _AppShellState extends State<AppShell> {
         selectedIndex: _index,
         onDestinationSelected: (value) => setState(() => _index = value),
         destinations: [
-          const NavigationDestination(
-            icon: Icon(Icons.map_outlined),
-            selectedIcon: Icon(Icons.map),
-            label: 'หน้าหลัก',
+          NavigationDestination(
+            icon: const Icon(Icons.map_outlined),
+            selectedIcon: const Icon(Icons.map),
+            label: strings.get('tab_home'),
           ),
           NavigationDestination(
             icon: Badge(
@@ -54,28 +55,28 @@ class _AppShellState extends State<AppShell> {
               label: Text('$unread'),
               child: const Icon(Icons.notifications),
             ),
-            label: 'แจ้งเตือน',
+            label: strings.get('tab_alerts'),
           ),
           NavigationDestination(
             icon: Container(
               padding: const EdgeInsets.all(6),
               decoration: const BoxDecoration(
-                color: Color(0xFFC62828),
+                color: Color(0xFFB71C1C),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.sos, color: Colors.white, size: 20),
             ),
-            label: 'SOS',
+            label: strings.get('tab_sos'),
           ),
-          const NavigationDestination(
-            icon: Icon(Icons.home_work_outlined),
-            selectedIcon: Icon(Icons.home_work),
-            label: 'จุดอพยพ',
+          NavigationDestination(
+            icon: const Icon(Icons.home_work_outlined),
+            selectedIcon: const Icon(Icons.home_work),
+            label: strings.get('tab_shelters'),
           ),
-          const NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'ตั้งค่า',
+          NavigationDestination(
+            icon: const Icon(Icons.settings_outlined),
+            selectedIcon: const Icon(Icons.settings),
+            label: strings.get('tab_settings'),
           ),
         ],
       ),

@@ -19,21 +19,21 @@
       "status": "ok",
       "tier": "A",
       "count": 14,
-      "latency_ms": 1255
+      "latency_ms": 1448
     },
     "thaiwater_rain_24h": {
       "status": "ok",
       "tier": "A",
       "count": 87,
       "amphoes_covered": 8,
-      "latency_ms": 1174
+      "latency_ms": 1343
     },
     "thaiwater_dam": {
       "status": "ok",
       "tier": "A",
       "storage_percent": 54.3,
       "spillway_active": false,
-      "latency_ms": 2728
+      "latency_ms": 2977
     },
     "open_meteo_weather": {
       "status": "ok",
@@ -45,7 +45,7 @@
       "status": "ok",
       "tier": "B",
       "checkpoints": 2,
-      "latency_ms": 302
+      "latency_ms": 371
     }
   },
   "degraded_sources": [],
@@ -204,13 +204,13 @@
       "governing_station": "PAT002",
       "rain": {
         "gauge_count": 11,
-        "fresh_gauge_count": 7,
+        "fresh_gauge_count": 10,
         "max_rain_1h_mm": 0.0,
         "avg_rain_1h_mm": 0.0,
         "max_rain_24h_mm": 18.8,
-        "avg_rain_24h_mm": 9.31,
+        "avg_rain_24h_mm": 10.48,
         "stale": false,
-        "latest_observed_at": "2026-11-24 15:00"
+        "latest_observed_at": "2026-11-24 16:00"
       },
       "weather_forecast": {
         "source": "Open-Meteo (CC BY 4.0)",
@@ -357,7 +357,7 @@
       },
       "assessment": {
         "formula_version": 2,
-        "score": 27.2,
+        "score": 27.4,
         "score_level": 2,
         "floor_level": 4,
         "flash_bonus": 0,
@@ -369,12 +369,12 @@
         "has_primary_signal": true,
         "lead_time_hours": null,
         "signals": {
-          "W": 0.5,
+          "W": 0.505,
           "R": 0.1253,
           "F": 0.15,
           "D": 0.0,
           "C": 0.0,
-          "dH_m": 0.0
+          "dH_m": 0.01
         },
         "flags": [
           "h_normal_bootstrap",
@@ -398,11 +398,11 @@
       "governing_station": "PAT001",
       "rain": {
         "gauge_count": 19,
-        "fresh_gauge_count": 7,
+        "fresh_gauge_count": 19,
         "max_rain_1h_mm": 0.0,
         "avg_rain_1h_mm": 0.0,
-        "max_rain_24h_mm": 6.0,
-        "avg_rain_24h_mm": 2.17,
+        "max_rain_24h_mm": 15.0,
+        "avg_rain_24h_mm": 3.99,
         "stale": false,
         "latest_observed_at": "2026-11-24 16:00"
       },
@@ -551,7 +551,7 @@
       },
       "assessment": {
         "formula_version": 2,
-        "score": 2.5,
+        "score": 3.8,
         "score_level": 1,
         "floor_level": 4,
         "flash_bonus": 0,
@@ -564,7 +564,7 @@
         "lead_time_hours": null,
         "signals": {
           "W": 0.0,
-          "R": 0.04,
+          "R": 0.1,
           "F": 0.1242,
           "D": 0.0,
           "C": 0.0,
@@ -592,11 +592,11 @@
       "governing_station": "BLGTU02",
       "rain": {
         "gauge_count": 20,
-        "fresh_gauge_count": 7,
+        "fresh_gauge_count": 20,
         "max_rain_1h_mm": 0.0,
         "avg_rain_1h_mm": 0.0,
-        "max_rain_24h_mm": 9.2,
-        "avg_rain_24h_mm": 5.5,
+        "max_rain_24h_mm": 14.0,
+        "avg_rain_24h_mm": 6.75,
         "stale": false,
         "latest_observed_at": "2026-11-24 16:00"
       },
@@ -745,7 +745,7 @@
       },
       "assessment": {
         "formula_version": 2,
-        "score": 2.2,
+        "score": 2.9,
         "score_level": 1,
         "floor_level": 2,
         "flash_bonus": 0,
@@ -758,14 +758,14 @@
         "lead_time_hours": null,
         "signals": {
           "W": 0.0,
-          "R": 0.0613,
+          "R": 0.0933,
           "F": 0.0633,
           "D": 0.0,
           "C": 0.0,
-          "dH_m": 0.0
+          "dH_m": -0.01
         },
         "flags": [
-          "water_stale"
+          "h_normal_bootstrap"
         ]
       },
       "note": null
@@ -785,11 +785,11 @@
       "governing_station": "BLGTD04",
       "rain": {
         "gauge_count": 10,
-        "fresh_gauge_count": 4,
+        "fresh_gauge_count": 10,
         "max_rain_1h_mm": 0.0,
         "avg_rain_1h_mm": 0.0,
         "max_rain_24h_mm": 8.4,
-        "avg_rain_24h_mm": 3.48,
+        "avg_rain_24h_mm": 4.59,
         "stale": false,
         "latest_observed_at": "2026-11-24 16:00"
       },
@@ -978,11 +978,11 @@
       "governing_station": "X.77",
       "rain": {
         "gauge_count": 13,
-        "fresh_gauge_count": 4,
+        "fresh_gauge_count": 12,
         "max_rain_1h_mm": 0.0,
         "avg_rain_1h_mm": 0.0,
         "max_rain_24h_mm": 27.2,
-        "avg_rain_24h_mm": 12.55,
+        "avg_rain_24h_mm": 12.98,
         "stale": false,
         "latest_observed_at": "2026-11-24 16:00"
       },
@@ -1157,6 +1157,199 @@
       "note": null
     },
     {
+      "amphoe": "รามัน",
+      "name_en": "Raman",
+      "lat": 6.4798,
+      "lon": 101.4238,
+      "basin": "แม่น้ำสายบุรี",
+      "risk_zone": "riverine",
+      "is_flash_flood": false,
+      "banglang_downstream": false,
+      "banglang_lead_time_hours": null,
+      "risk_villages_10yr": 85,
+      "water_station_count": 1,
+      "governing_station": "X.273",
+      "rain": {
+        "gauge_count": 7,
+        "fresh_gauge_count": 7,
+        "max_rain_1h_mm": 0.0,
+        "avg_rain_1h_mm": 0.0,
+        "max_rain_24h_mm": 12.5,
+        "avg_rain_24h_mm": 7.07,
+        "stale": false,
+        "latest_observed_at": "2026-11-24 16:00"
+      },
+      "weather_forecast": {
+        "source": "Open-Meteo (CC BY 4.0)",
+        "forecast_6h_mm": 1.0,
+        "forecast_24h_mm": 14.8,
+        "forecast_72h_mm": 29.8,
+        "max_prob_24h_pct": 100,
+        "hourly_next_24h": [
+          {
+            "time": "2026-11-24T16:00",
+            "mm": 0.8,
+            "prob": 98
+          },
+          {
+            "time": "2026-11-24T17:00",
+            "mm": 0.2,
+            "prob": 94
+          },
+          {
+            "time": "2026-11-24T18:00",
+            "mm": 0.0,
+            "prob": 89
+          },
+          {
+            "time": "2026-11-24T19:00",
+            "mm": 0.0,
+            "prob": 82
+          },
+          {
+            "time": "2026-11-24T20:00",
+            "mm": 0.0,
+            "prob": 71
+          },
+          {
+            "time": "2026-11-24T21:00",
+            "mm": 0.0,
+            "prob": 59
+          },
+          {
+            "time": "2026-11-24T22:00",
+            "mm": 0.0,
+            "prob": 51
+          },
+          {
+            "time": "2026-11-24T23:00",
+            "mm": 0.0,
+            "prob": 53
+          },
+          {
+            "time": "2026-11-25T00:00",
+            "mm": 0.0,
+            "prob": 59
+          },
+          {
+            "time": "2026-11-25T01:00",
+            "mm": 0.1,
+            "prob": 63
+          },
+          {
+            "time": "2026-11-25T02:00",
+            "mm": 0.0,
+            "prob": 61
+          },
+          {
+            "time": "2026-11-25T03:00",
+            "mm": 0.0,
+            "prob": 56
+          },
+          {
+            "time": "2026-11-25T04:00",
+            "mm": 0.1,
+            "prob": 55
+          },
+          {
+            "time": "2026-11-25T05:00",
+            "mm": 0.3,
+            "prob": 60
+          },
+          {
+            "time": "2026-11-25T06:00",
+            "mm": 0.1,
+            "prob": 69
+          },
+          {
+            "time": "2026-11-25T07:00",
+            "mm": 0.0,
+            "prob": 76
+          },
+          {
+            "time": "2026-11-25T08:00",
+            "mm": 1.4,
+            "prob": 80
+          },
+          {
+            "time": "2026-11-25T09:00",
+            "mm": 1.3,
+            "prob": 83
+          },
+          {
+            "time": "2026-11-25T10:00",
+            "mm": 0.7,
+            "prob": 86
+          },
+          {
+            "time": "2026-11-25T11:00",
+            "mm": 0.2,
+            "prob": 91
+          },
+          {
+            "time": "2026-11-25T12:00",
+            "mm": 0.3,
+            "prob": 97
+          },
+          {
+            "time": "2026-11-25T13:00",
+            "mm": 3.6,
+            "prob": 100
+          },
+          {
+            "time": "2026-11-25T14:00",
+            "mm": 2.0,
+            "prob": 98
+          },
+          {
+            "time": "2026-11-25T15:00",
+            "mm": 3.7,
+            "prob": 94
+          }
+        ],
+        "daily_3d": [
+          {
+            "date": "2026-11-24",
+            "mm": 9.0
+          },
+          {
+            "date": "2026-11-25",
+            "mm": 19.2
+          },
+          {
+            "date": "2026-11-26",
+            "mm": 9.6
+          }
+        ]
+      },
+      "assessment": {
+        "formula_version": 2,
+        "score": 3.4,
+        "score_level": 1,
+        "floor_level": 1,
+        "flash_bonus": 0,
+        "level": 1,
+        "label_th": "ปกติ",
+        "color": "#2E7D32",
+        "action_th": "ติดตามสถานการณ์ได้ตามปกติ",
+        "should_push": false,
+        "has_primary_signal": false,
+        "lead_time_hours": null,
+        "signals": {
+          "W": 0.0,
+          "R": 0.0833,
+          "F": 0.1233,
+          "D": 0.0,
+          "C": 0.0,
+          "dH_m": 0.0
+        },
+        "flags": [
+          "water_stale"
+        ]
+      },
+      "note": null
+    },
+    {
       "amphoe": "กรงปินัง",
       "name_en": "Krong Pinang",
       "lat": 6.4117,
@@ -1171,11 +1364,11 @@
       "governing_station": "FOP045",
       "rain": {
         "gauge_count": 3,
-        "fresh_gauge_count": 1,
+        "fresh_gauge_count": 3,
         "max_rain_1h_mm": 0.0,
         "avg_rain_1h_mm": 0.0,
         "max_rain_24h_mm": 4.8,
-        "avg_rain_24h_mm": 4.8,
+        "avg_rain_24h_mm": 2.93,
         "stale": false,
         "latest_observed_at": "2026-11-24 16:00"
       },
@@ -1350,199 +1543,6 @@
       "note": null
     },
     {
-      "amphoe": "รามัน",
-      "name_en": "Raman",
-      "lat": 6.4798,
-      "lon": 101.4238,
-      "basin": "แม่น้ำสายบุรี",
-      "risk_zone": "riverine",
-      "is_flash_flood": false,
-      "banglang_downstream": false,
-      "banglang_lead_time_hours": null,
-      "risk_villages_10yr": 85,
-      "water_station_count": 1,
-      "governing_station": "X.273",
-      "rain": {
-        "gauge_count": 7,
-        "fresh_gauge_count": 2,
-        "max_rain_1h_mm": 0.0,
-        "avg_rain_1h_mm": 0.0,
-        "max_rain_24h_mm": 0.5,
-        "avg_rain_24h_mm": 0.25,
-        "stale": false,
-        "latest_observed_at": "2026-11-24 15:00"
-      },
-      "weather_forecast": {
-        "source": "Open-Meteo (CC BY 4.0)",
-        "forecast_6h_mm": 1.0,
-        "forecast_24h_mm": 14.8,
-        "forecast_72h_mm": 29.8,
-        "max_prob_24h_pct": 100,
-        "hourly_next_24h": [
-          {
-            "time": "2026-11-24T16:00",
-            "mm": 0.8,
-            "prob": 98
-          },
-          {
-            "time": "2026-11-24T17:00",
-            "mm": 0.2,
-            "prob": 94
-          },
-          {
-            "time": "2026-11-24T18:00",
-            "mm": 0.0,
-            "prob": 89
-          },
-          {
-            "time": "2026-11-24T19:00",
-            "mm": 0.0,
-            "prob": 82
-          },
-          {
-            "time": "2026-11-24T20:00",
-            "mm": 0.0,
-            "prob": 71
-          },
-          {
-            "time": "2026-11-24T21:00",
-            "mm": 0.0,
-            "prob": 59
-          },
-          {
-            "time": "2026-11-24T22:00",
-            "mm": 0.0,
-            "prob": 51
-          },
-          {
-            "time": "2026-11-24T23:00",
-            "mm": 0.0,
-            "prob": 53
-          },
-          {
-            "time": "2026-11-25T00:00",
-            "mm": 0.0,
-            "prob": 59
-          },
-          {
-            "time": "2026-11-25T01:00",
-            "mm": 0.1,
-            "prob": 63
-          },
-          {
-            "time": "2026-11-25T02:00",
-            "mm": 0.0,
-            "prob": 61
-          },
-          {
-            "time": "2026-11-25T03:00",
-            "mm": 0.0,
-            "prob": 56
-          },
-          {
-            "time": "2026-11-25T04:00",
-            "mm": 0.1,
-            "prob": 55
-          },
-          {
-            "time": "2026-11-25T05:00",
-            "mm": 0.3,
-            "prob": 60
-          },
-          {
-            "time": "2026-11-25T06:00",
-            "mm": 0.1,
-            "prob": 69
-          },
-          {
-            "time": "2026-11-25T07:00",
-            "mm": 0.0,
-            "prob": 76
-          },
-          {
-            "time": "2026-11-25T08:00",
-            "mm": 1.4,
-            "prob": 80
-          },
-          {
-            "time": "2026-11-25T09:00",
-            "mm": 1.3,
-            "prob": 83
-          },
-          {
-            "time": "2026-11-25T10:00",
-            "mm": 0.7,
-            "prob": 86
-          },
-          {
-            "time": "2026-11-25T11:00",
-            "mm": 0.2,
-            "prob": 91
-          },
-          {
-            "time": "2026-11-25T12:00",
-            "mm": 0.3,
-            "prob": 97
-          },
-          {
-            "time": "2026-11-25T13:00",
-            "mm": 3.6,
-            "prob": 100
-          },
-          {
-            "time": "2026-11-25T14:00",
-            "mm": 2.0,
-            "prob": 98
-          },
-          {
-            "time": "2026-11-25T15:00",
-            "mm": 3.7,
-            "prob": 94
-          }
-        ],
-        "daily_3d": [
-          {
-            "date": "2026-11-24",
-            "mm": 9.0
-          },
-          {
-            "date": "2026-11-25",
-            "mm": 19.2
-          },
-          {
-            "date": "2026-11-26",
-            "mm": 9.6
-          }
-        ]
-      },
-      "assessment": {
-        "formula_version": 2,
-        "score": 1.7,
-        "score_level": 1,
-        "floor_level": 1,
-        "flash_bonus": 0,
-        "level": 1,
-        "label_th": "ปกติ",
-        "color": "#2E7D32",
-        "action_th": "ติดตามสถานการณ์ได้ตามปกติ",
-        "should_push": false,
-        "has_primary_signal": false,
-        "lead_time_hours": null,
-        "signals": {
-          "W": 0.0,
-          "R": 0.0033,
-          "F": 0.1233,
-          "D": 0.0,
-          "C": 0.0,
-          "dH_m": 0.0
-        },
-        "flags": [
-          "water_stale"
-        ]
-      },
-      "note": null
-    },
-    {
       "amphoe": "กาบัง",
       "name_en": "Kabang",
       "lat": 6.459,
@@ -1557,13 +1557,13 @@
       "governing_station": null,
       "rain": {
         "gauge_count": 4,
-        "fresh_gauge_count": 1,
+        "fresh_gauge_count": 4,
         "max_rain_1h_mm": 0.0,
         "avg_rain_1h_mm": 0.0,
-        "max_rain_24h_mm": 1.8,
-        "avg_rain_24h_mm": 1.8,
+        "max_rain_24h_mm": 2.0,
+        "avg_rain_24h_mm": 1.45,
         "stale": false,
-        "latest_observed_at": "2026-11-24 15:00"
+        "latest_observed_at": "2026-11-24 16:00"
       },
       "weather_forecast": {
         "source": "Open-Meteo (CC BY 4.0)",
@@ -1723,7 +1723,7 @@
         "lead_time_hours": null,
         "signals": {
           "W": 0.0,
-          "R": 0.012,
+          "R": 0.0133,
           "F": 0.0733,
           "D": 0.0,
           "C": 0.0,
@@ -1738,7 +1738,7 @@
   ],
   "stations": [
     {
-      "id": 1345871146,
+      "id": 1345875708,
       "oldcode": "FOP045",
       "name": "สะพานข้ามแม่น้ำปัตตานี",
       "river": "แม่น้ำปัตตานี",
@@ -1746,16 +1746,16 @@
       "tumbon": "กรงปินัง",
       "lat": 6.411704,
       "lon": 101.27776,
-      "level_msl": 6.61,
-      "previous_msl": 6.63,
+      "level_msl": 6.59,
+      "previous_msl": 6.61,
       "bank_m": 25.128,
       "bank_source": "api",
-      "remaining_to_bank_m": 18.518,
+      "remaining_to_bank_m": 18.538,
       "situation_level": 1,
-      "storage_percent": 3.44,
+      "storage_percent": 3.34,
       "storage_anomaly": false,
-      "observed_at": "2026-11-24 16:00",
-      "age_minutes": 18.3,
+      "observed_at": "2026-11-24 16:10",
+      "age_minutes": 15.6,
       "agency": "พพภ",
       "risk_zone": "flash",
       "is_flash_flood": true,
@@ -1811,7 +1811,7 @@
       "storage_percent": null,
       "storage_anomaly": false,
       "observed_at": "2026-11-24 15:00",
-      "age_minutes": 78.3,
+      "age_minutes": 85.6,
       "agency": "ชป.",
       "risk_zone": "flash",
       "is_flash_flood": true,
@@ -1821,7 +1821,7 @@
       "bank_missing": false,
       "rain_1h_mm": 0.0,
       "rain_24h_mm": 27.2,
-      "nearest_rain_gauge": "สถานีพัฒนาที่ดินยะลา (11.2 กม.)",
+      "nearest_rain_gauge": "บ้านไทยพัฒนา (3.4 กม.)",
       "forecast_24h_mm": 18.6,
       "assessment": {
         "formula_version": 2,
@@ -1867,7 +1867,7 @@
       "storage_percent": 27.2,
       "storage_anomaly": false,
       "observed_at": "2026-11-24 16:00",
-      "age_minutes": 18.3,
+      "age_minutes": 25.6,
       "agency": "กฟผ.",
       "risk_zone": "flash",
       "is_flash_flood": true,
@@ -1876,12 +1876,12 @@
       "situation_missing": false,
       "bank_missing": false,
       "rain_1h_mm": 0.0,
-      "rain_24h_mm": 6.0,
-      "nearest_rain_gauge": "ท้ายเขื่อนบางลาง (0.0 กม.)",
+      "rain_24h_mm": 15.0,
+      "nearest_rain_gauge": "สะพานท้ายเขื่อนบางลาง อ.บันนังสตา จ.ยะลา (0.0 กม.)",
       "forecast_24h_mm": 14.9,
       "assessment": {
         "formula_version": 2,
-        "score": 2.5,
+        "score": 3.8,
         "score_level": 1,
         "floor_level": 2,
         "flash_bonus": 0,
@@ -1894,7 +1894,7 @@
         "lead_time_hours": null,
         "signals": {
           "W": 0.0,
-          "R": 0.04,
+          "R": 0.1,
           "F": 0.1242,
           "D": 0.0,
           "C": 0.0,
@@ -1923,7 +1923,7 @@
       "storage_percent": 13.85,
       "storage_anomaly": false,
       "observed_at": "2026-11-24 16:00",
-      "age_minutes": 18.3,
+      "age_minutes": 25.6,
       "agency": "กฟผ.",
       "risk_zone": "flash",
       "is_flash_flood": true,
@@ -1932,12 +1932,12 @@
       "situation_missing": false,
       "bank_missing": false,
       "rain_1h_mm": 0.0,
-      "rain_24h_mm": 6.0,
-      "nearest_rain_gauge": "บันนังสตา (0.0 กม.)",
+      "rain_24h_mm": 15.0,
+      "nearest_rain_gauge": "สะพานหัวสะพาน อ.บันนังสตา จ.ยะลา (0.0 กม.)",
       "forecast_24h_mm": 14.9,
       "assessment": {
         "formula_version": 2,
-        "score": 2.5,
+        "score": 3.8,
         "score_level": 1,
         "floor_level": 2,
         "flash_bonus": 0,
@@ -1950,7 +1950,7 @@
         "lead_time_hours": null,
         "signals": {
           "W": 0.0,
-          "R": 0.04,
+          "R": 0.1,
           "F": 0.1242,
           "D": 0.0,
           "C": 0.0,
@@ -1962,7 +1962,7 @@
       }
     },
     {
-      "id": 1345849731,
+      "id": 1345874892,
       "oldcode": "BLGTU05",
       "name": "เขื่อนบางลาง อ.บันนังสตา จ.ยะลา",
       "river": "แม่น้ำปัตตานี",
@@ -1978,22 +1978,22 @@
       "situation_level": null,
       "storage_percent": null,
       "storage_anomaly": false,
-      "observed_at": "2026-11-24 15:00",
-      "age_minutes": 78.3,
+      "observed_at": "2026-11-24 16:00",
+      "age_minutes": 25.6,
       "agency": "กฟผ.",
       "risk_zone": "dam",
       "is_flash_flood": true,
       "registry_known": true,
-      "stale": true,
+      "stale": false,
       "situation_missing": true,
       "bank_missing": true,
       "rain_1h_mm": 0.0,
-      "rain_24h_mm": 6.0,
-      "nearest_rain_gauge": "ท้ายเขื่อนบางลาง (0.9 กม.)",
+      "rain_24h_mm": 15.0,
+      "nearest_rain_gauge": "สะพานท้ายเขื่อนบางลาง อ.บันนังสตา จ.ยะลา (0.8 กม.)",
       "forecast_24h_mm": 14.9,
       "assessment": {
         "formula_version": 2,
-        "score": 2.5,
+        "score": 3.8,
         "score_level": 1,
         "floor_level": 1,
         "flash_bonus": 0,
@@ -2006,19 +2006,19 @@
         "lead_time_hours": null,
         "signals": {
           "W": 0.0,
-          "R": 0.04,
+          "R": 0.1,
           "F": 0.1242,
           "D": 0.0,
           "C": 0.0,
           "dH_m": 0.0
         },
         "flags": [
-          "water_stale"
+          "no_water_signal"
         ]
       }
     },
     {
-      "id": 1345849729,
+      "id": 1345874885,
       "oldcode": "BLGTU06",
       "name": "ฝายละแอ อ.บันนังสตา จ.ยะลา",
       "river": "คลองละแอ",
@@ -2026,7 +2026,7 @@
       "tumbon": "เขื่อนบางลาง",
       "lat": 6.143055,
       "lon": 101.309167,
-      "level_msl": 331.73,
+      "level_msl": 331.71,
       "previous_msl": 331.73,
       "bank_m": null,
       "bank_source": "none",
@@ -2034,22 +2034,22 @@
       "situation_level": null,
       "storage_percent": null,
       "storage_anomaly": false,
-      "observed_at": "2026-11-24 15:00",
-      "age_minutes": 78.3,
+      "observed_at": "2026-11-24 16:00",
+      "age_minutes": 25.6,
       "agency": "กฟผ.",
       "risk_zone": "dam",
       "is_flash_flood": true,
       "registry_known": true,
-      "stale": true,
+      "stale": false,
       "situation_missing": true,
       "bank_missing": true,
       "rain_1h_mm": 0.0,
-      "rain_24h_mm": 6.0,
-      "nearest_rain_gauge": "ท้ายเขื่อนบางลาง (4.2 กม.)",
+      "rain_24h_mm": 15.0,
+      "nearest_rain_gauge": "ฝายละแอ อ.บันนังสตา จ.ยะลา (0.0 กม.)",
       "forecast_24h_mm": 14.9,
       "assessment": {
         "formula_version": 2,
-        "score": 2.5,
+        "score": 3.8,
         "score_level": 1,
         "floor_level": 1,
         "flash_bonus": 0,
@@ -2062,19 +2062,19 @@
         "lead_time_hours": null,
         "signals": {
           "W": 0.0,
-          "R": 0.04,
+          "R": 0.1,
           "F": 0.1242,
           "D": 0.0,
           "C": 0.0,
-          "dH_m": 0.0
+          "dH_m": -0.02
         },
         "flags": [
-          "water_stale"
+          "no_water_signal"
         ]
       }
     },
     {
-      "id": 1345871675,
+      "id": 1345876231,
       "oldcode": "PAT001",
       "name": "บันนังสตา",
       "river": "แม่น้ำปัตตานี",
@@ -2082,16 +2082,16 @@
       "tumbon": "บันนังสตา",
       "lat": 6.262041,
       "lon": 101.268036,
-      "level_msl": 34.4,
-      "previous_msl": 34.41,
+      "level_msl": 34.39,
+      "previous_msl": 34.4,
       "bank_m": 38.678,
       "bank_source": "api",
-      "remaining_to_bank_m": 4.278,
+      "remaining_to_bank_m": 4.288,
       "situation_level": 4,
-      "storage_percent": 78.73,
+      "storage_percent": 78.67,
       "storage_anomaly": false,
-      "observed_at": "2026-11-24 16:00",
-      "age_minutes": 18.3,
+      "observed_at": "2026-11-24 16:10",
+      "age_minutes": 15.6,
       "agency": "สสน.",
       "risk_zone": "flash",
       "is_flash_flood": true,
@@ -2100,12 +2100,12 @@
       "situation_missing": false,
       "bank_missing": false,
       "rain_1h_mm": 0.0,
-      "rain_24h_mm": 6.0,
+      "rain_24h_mm": 15.0,
       "nearest_rain_gauge": "บันนังสตา (0.0 กม.)",
       "forecast_24h_mm": 14.9,
       "assessment": {
         "formula_version": 2,
-        "score": 2.5,
+        "score": 3.8,
         "score_level": 1,
         "floor_level": 4,
         "flash_bonus": 0,
@@ -2118,7 +2118,7 @@
         "lead_time_hours": null,
         "signals": {
           "W": 0.0,
-          "R": 0.04,
+          "R": 0.1,
           "F": 0.1242,
           "D": 0.0,
           "C": 0.0,
@@ -2148,7 +2148,7 @@
       "storage_percent": 28.23,
       "storage_anomaly": false,
       "observed_at": "2026-11-24 16:00",
-      "age_minutes": 18.3,
+      "age_minutes": 25.6,
       "agency": "กฟผ.",
       "risk_zone": "riverine",
       "is_flash_flood": false,
@@ -2158,7 +2158,7 @@
       "bank_missing": false,
       "rain_1h_mm": 0.0,
       "rain_24h_mm": 8.4,
-      "nearest_rain_gauge": "สะพานอาเส็น (1.3 กม.)",
+      "nearest_rain_gauge": "อาคารสูบน้ำดิบ กปภ. อ.ยะหา จ.ยะลา (0.0 กม.)",
       "forecast_24h_mm": 8.3,
       "assessment": {
         "formula_version": 2,
@@ -2204,7 +2204,7 @@
       "storage_percent": null,
       "storage_anomaly": false,
       "observed_at": "2026-11-24 15:00",
-      "age_minutes": 78.3,
+      "age_minutes": 85.6,
       "agency": "ชป.",
       "risk_zone": "riverine",
       "is_flash_flood": false,
@@ -2213,12 +2213,12 @@
       "situation_missing": true,
       "bank_missing": false,
       "rain_1h_mm": 0.0,
-      "rain_24h_mm": 0.5,
+      "rain_24h_mm": 12.5,
       "nearest_rain_gauge": "4066-แม่น้ำสายบุรี (0.1 กม.)",
       "forecast_24h_mm": 14.8,
       "assessment": {
         "formula_version": 2,
-        "score": 1.7,
+        "score": 3.4,
         "score_level": 1,
         "floor_level": 1,
         "flash_bonus": 0,
@@ -2231,7 +2231,7 @@
         "lead_time_hours": null,
         "signals": {
           "W": 0.0,
-          "R": 0.0033,
+          "R": 0.0833,
           "F": 0.1233,
           "D": 0.0,
           "C": 0.0,
@@ -2243,7 +2243,7 @@
       }
     },
     {
-      "id": 1345849259,
+      "id": 1345874252,
       "oldcode": "BLGTU02",
       "name": "สะพานบ้าน กม.29 อ.เบตง จ.ยะลา",
       "river": "แม่น้ำปัตตานี",
@@ -2251,30 +2251,30 @@
       "tumbon": "อัยเยอร์เวง",
       "lat": 5.920578,
       "lon": 101.182086,
-      "level_msl": 117.14,
+      "level_msl": 117.13,
       "previous_msl": 117.14,
       "bank_m": 120.37,
       "bank_source": "api",
-      "remaining_to_bank_m": 3.23,
+      "remaining_to_bank_m": 3.24,
       "situation_level": 2,
-      "storage_percent": 28.74,
+      "storage_percent": 28.66,
       "storage_anomaly": false,
-      "observed_at": "2026-11-24 15:00",
-      "age_minutes": 78.3,
+      "observed_at": "2026-11-24 16:00",
+      "age_minutes": 25.6,
       "agency": "กฟผ.",
       "risk_zone": "flash",
       "is_flash_flood": true,
       "registry_known": true,
-      "stale": true,
+      "stale": false,
       "situation_missing": false,
       "bank_missing": false,
       "rain_1h_mm": 0.0,
-      "rain_24h_mm": 9.2,
-      "nearest_rain_gauge": "ชุมชนบ้านเหมือง (6.2 กม.)",
+      "rain_24h_mm": 14.0,
+      "nearest_rain_gauge": "สะพานบ้าน กม.29 อ.เบตง จ.ยะลา (0.0 กม.)",
       "forecast_24h_mm": 7.6,
       "assessment": {
         "formula_version": 2,
-        "score": 2.2,
+        "score": 2.9,
         "score_level": 1,
         "floor_level": 2,
         "flash_bonus": 0,
@@ -2287,19 +2287,19 @@
         "lead_time_hours": null,
         "signals": {
           "W": 0.0,
-          "R": 0.0613,
+          "R": 0.0933,
           "F": 0.0633,
           "D": 0.0,
           "C": 0.0,
-          "dH_m": 0.0
+          "dH_m": -0.01
         },
         "flags": [
-          "water_stale"
+          "h_normal_bootstrap"
         ]
       }
     },
     {
-      "id": 1345871223,
+      "id": 1345875783,
       "oldcode": "MOU454",
       "name": "คลองเบตง (ชุมชนกุนุงจนอง)",
       "river": "คลองตาโล๊ะ",
@@ -2315,8 +2315,8 @@
       "situation_level": 1,
       "storage_percent": 2.15,
       "storage_anomaly": false,
-      "observed_at": "2026-11-24 16:00",
-      "age_minutes": 18.3,
+      "observed_at": "2026-11-24 16:10",
+      "age_minutes": 15.6,
       "agency": "พพภ",
       "risk_zone": "flash",
       "is_flash_flood": true,
@@ -2325,12 +2325,12 @@
       "situation_missing": false,
       "bank_missing": false,
       "rain_1h_mm": 0.0,
-      "rain_24h_mm": 9.2,
+      "rain_24h_mm": 14.0,
       "nearest_rain_gauge": "คลองเบตง (ชุมชนกุนุงจนอง) (0.0 กม.)",
       "forecast_24h_mm": 7.6,
       "assessment": {
         "formula_version": 2,
-        "score": 2.2,
+        "score": 2.9,
         "score_level": 1,
         "floor_level": 1,
         "flash_bonus": 0,
@@ -2343,7 +2343,7 @@
         "lead_time_hours": null,
         "signals": {
           "W": 0.0,
-          "R": 0.0613,
+          "R": 0.0933,
           "F": 0.0633,
           "D": 0.0,
           "C": 0.0,
@@ -2372,7 +2372,7 @@
       "storage_percent": 45.33,
       "storage_anomaly": false,
       "observed_at": "2026-11-24 16:00",
-      "age_minutes": 18.3,
+      "age_minutes": 25.6,
       "agency": "กฟผ.",
       "risk_zone": "riverine",
       "is_flash_flood": false,
@@ -2382,7 +2382,7 @@
       "bank_missing": false,
       "rain_1h_mm": 0.0,
       "rain_24h_mm": 18.8,
-      "nearest_rain_gauge": "โครงการชลประทานยะลา (1.9 กม.)",
+      "nearest_rain_gauge": "สะพานท่าสาป อ.เมือง จ.ยะลา (0.0 กม.)",
       "forecast_24h_mm": 18.0,
       "assessment": {
         "formula_version": 2,
@@ -2412,7 +2412,7 @@
       }
     },
     {
-      "id": 1345871676,
+      "id": 1345876232,
       "oldcode": "PAT002",
       "name": "เมืองยะลา",
       "river": "เขื่อนปัตตานี",
@@ -2420,16 +2420,16 @@
       "tumbon": "ตาเซะ",
       "lat": 6.67525,
       "lon": 101.286354,
-      "level_msl": 12.85,
+      "level_msl": 12.86,
       "previous_msl": 12.85,
       "bank_m": 13.85,
       "bank_source": "api",
-      "remaining_to_bank_m": 1.0,
+      "remaining_to_bank_m": 0.99,
       "situation_level": 4,
-      "storage_percent": 91.74,
+      "storage_percent": 91.82,
       "storage_anomaly": false,
-      "observed_at": "2026-11-24 16:00",
-      "age_minutes": 18.3,
+      "observed_at": "2026-11-24 16:10",
+      "age_minutes": 15.6,
       "agency": "สสน.",
       "risk_zone": "riverine",
       "is_flash_flood": false,
@@ -2443,7 +2443,7 @@
       "forecast_24h_mm": 18.0,
       "assessment": {
         "formula_version": 2,
-        "score": 27.2,
+        "score": 27.4,
         "score_level": 2,
         "floor_level": 4,
         "flash_bonus": 0,
@@ -2455,12 +2455,12 @@
         "has_primary_signal": true,
         "lead_time_hours": null,
         "signals": {
-          "W": 0.5,
+          "W": 0.505,
           "R": 0.1253,
           "F": 0.15,
           "D": 0.0,
           "C": 0.0,
-          "dH_m": 0.0
+          "dH_m": 0.01
         },
         "flags": [
           "h_normal_bootstrap",
@@ -2486,7 +2486,7 @@
       "storage_percent": null,
       "storage_anomaly": false,
       "observed_at": "2026-11-24 15:00",
-      "age_minutes": 78.3,
+      "age_minutes": 85.6,
       "agency": "ชป.",
       "risk_zone": "riverine",
       "is_flash_flood": false,
@@ -2527,7 +2527,7 @@
   ],
   "rain_gauges_summary": {
     "total": 87,
-    "fresh": 33,
+    "fresh": 85,
     "top_rain_24h": [
       {
         "id": 320612996,
@@ -2540,42 +2540,27 @@
         "rain_1h_mm": 0.0,
         "rain_24h_mm": 27.2,
         "observed_at": "2026-11-24 16:00",
-        "age_minutes": 18.3,
+        "age_minutes": 25.6,
         "stale": false,
         "agency": "พพภ"
       },
       {
-        "id": 320607947,
-        "oldcode": "BLGTU02",
-        "name": "สะพานบ้าน กม.29 อ.เบตง จ.ยะลา",
-        "amphoe": "เบตง",
-        "tumbon": "อัยเยอร์เวง",
-        "lat": 5.920578,
-        "lon": 101.182086,
-        "rain_1h_mm": 0.0,
-        "rain_24h_mm": 22.0,
-        "observed_at": "2026-11-24 14:00",
-        "age_minutes": 138.3,
-        "stale": true,
-        "agency": "กฟผ."
-      },
-      {
-        "id": 320610909,
+        "id": 320617449,
         "oldcode": "STN2160",
         "name": "บ้านคอกช้าง",
         "amphoe": "ธารโต",
         "tumbon": "แม่หวาด",
         "lat": 6.044381,
         "lon": 101.166291,
-        "rain_1h_mm": 0.0,
+        "rain_1h_mm": null,
         "rain_24h_mm": 21.5,
-        "observed_at": "2026-11-24 14:00",
-        "age_minutes": 138.3,
-        "stale": true,
+        "observed_at": "2026-11-24 15:00",
+        "age_minutes": 85.6,
+        "stale": false,
         "agency": "ทน."
       },
       {
-        "id": 320607948,
+        "id": 320614486,
         "oldcode": "BLGTU03",
         "name": "วัดคอกช้าง อ.ธารโต จ.ยะลา",
         "amphoe": "ธารโต",
@@ -2584,28 +2569,13 @@
         "lon": 101.160038,
         "rain_1h_mm": 0.0,
         "rain_24h_mm": 21.0,
-        "observed_at": "2026-11-24 14:00",
-        "age_minutes": 138.3,
-        "stale": true,
+        "observed_at": "2026-11-24 15:00",
+        "age_minutes": 85.6,
+        "stale": false,
         "agency": "กฟผ."
       },
       {
-        "id": 320607946,
-        "oldcode": "BLGTU01",
-        "name": "ที่ว่าการอำเภอเบตง จ.ยะลา",
-        "amphoe": "เบตง",
-        "tumbon": "เบตง",
-        "lat": 5.773046,
-        "lon": 101.060712,
-        "rain_1h_mm": 0.0,
-        "rain_24h_mm": 21.0,
-        "observed_at": "2026-11-24 14:00",
-        "age_minutes": 138.3,
-        "stale": true,
-        "agency": "กฟผ."
-      },
-      {
-        "id": 320609012,
+        "id": 320615205,
         "oldcode": "STH031",
         "name": "รพ.สต.บ้านวังไทร",
         "amphoe": "ธารโต",
@@ -2614,13 +2584,13 @@
         "lon": 101.26753,
         "rain_1h_mm": 0.0,
         "rain_24h_mm": 19.6,
-        "observed_at": "2026-11-24 15:00",
-        "age_minutes": 78.3,
+        "observed_at": "2026-11-24 16:00",
+        "age_minutes": 25.6,
         "stale": false,
         "agency": "สสน."
       },
       {
-        "id": 320609010,
+        "id": 320615204,
         "oldcode": "PAT002",
         "name": "เมืองยะลา",
         "amphoe": "เมืองยะลา",
@@ -2629,28 +2599,28 @@
         "lon": 101.286354,
         "rain_1h_mm": 0.0,
         "rain_24h_mm": 18.8,
-        "observed_at": "2026-11-24 15:00",
-        "age_minutes": 78.3,
+        "observed_at": "2026-11-24 16:00",
+        "age_minutes": 25.6,
         "stale": false,
         "agency": "สสน."
       },
       {
-        "id": 320610515,
+        "id": 320617052,
         "oldcode": "STN1697",
         "name": "บ้านวังไทร",
         "amphoe": "ธารโต",
         "tumbon": "แม่หวาด",
         "lat": 6.008383,
         "lon": 101.269002,
-        "rain_1h_mm": 0.0,
+        "rain_1h_mm": null,
         "rain_24h_mm": 18.0,
-        "observed_at": "2026-11-24 14:00",
-        "age_minutes": 138.3,
-        "stale": true,
+        "observed_at": "2026-11-24 15:00",
+        "age_minutes": 85.6,
+        "stale": false,
         "agency": "ทน."
       },
       {
-        "id": 320607949,
+        "id": 320614487,
         "oldcode": "BLGTU04",
         "name": "โครงการจุฬาภรณ์พัฒนา 7 อ.ธารโต จ.ยะลา",
         "amphoe": "ธารโต",
@@ -2658,29 +2628,14 @@
         "lat": 6.063376,
         "lon": 101.364834,
         "rain_1h_mm": 0.0,
-        "rain_24h_mm": 18.0,
-        "observed_at": "2026-11-24 14:00",
-        "age_minutes": 138.3,
-        "stale": true,
+        "rain_24h_mm": 17.0,
+        "observed_at": "2026-11-24 15:00",
+        "age_minutes": 85.6,
+        "stale": false,
         "agency": "กฟผ."
       },
       {
-        "id": 320610452,
-        "oldcode": "STN1622",
-        "name": "ชุมชนกุนุงจนอง",
-        "amphoe": "เบตง",
-        "tumbon": "เบตง",
-        "lat": 5.785342,
-        "lon": 101.056443,
-        "rain_1h_mm": 0.0,
-        "rain_24h_mm": 16.5,
-        "observed_at": "2026-11-24 14:00",
-        "age_minutes": 138.3,
-        "stale": true,
-        "agency": "ทน."
-      },
-      {
-        "id": 320607975,
+        "id": 320614513,
         "oldcode": "BLGTD03",
         "name": "สะพานท่าสาป อ.เมือง จ.ยะลา",
         "amphoe": "เมืองยะลา",
@@ -2689,28 +2644,13 @@
         "lon": 101.266197,
         "rain_1h_mm": 0.0,
         "rain_24h_mm": 16.0,
-        "observed_at": "2026-11-24 14:00",
-        "age_minutes": 138.3,
-        "stale": true,
+        "observed_at": "2026-11-24 15:00",
+        "age_minutes": 85.6,
+        "stale": false,
         "agency": "กฟผ."
       },
       {
-        "id": 320565114,
-        "oldcode": "G09006-TA210208",
-        "name": "โรงเรียนเบตง วีระราษฎร์ประสาน",
-        "amphoe": "เบตง",
-        "tumbon": "เบตง",
-        "lat": 5.774624,
-        "lon": 101.07136,
-        "rain_1h_mm": 0.0,
-        "rain_24h_mm": 15.5,
-        "observed_at": "2026-11-24 08:00",
-        "age_minutes": 498.3,
-        "stale": true,
-        "agency": "ทน."
-      },
-      {
-        "id": 320607954,
+        "id": 320614492,
         "oldcode": "BLGTU06",
         "name": "ฝายละแอ อ.บันนังสตา จ.ยะลา",
         "amphoe": "บันนังสตา",
@@ -2719,13 +2659,13 @@
         "lon": 101.309167,
         "rain_1h_mm": 0.0,
         "rain_24h_mm": 15.0,
-        "observed_at": "2026-11-24 14:00",
-        "age_minutes": 138.3,
-        "stale": true,
+        "observed_at": "2026-11-24 15:00",
+        "age_minutes": 85.6,
+        "stale": false,
         "agency": "กฟผ."
       },
       {
-        "id": 320609006,
+        "id": 320615202,
         "oldcode": "STH017",
         "name": "โครงการชลประทานยะลา",
         "amphoe": "เมืองยะลา",
@@ -2734,24 +2674,84 @@
         "lon": 101.25938,
         "rain_1h_mm": 0.0,
         "rain_24h_mm": 14.8,
-        "observed_at": "2026-11-24 15:00",
-        "age_minutes": 78.3,
+        "observed_at": "2026-11-24 16:00",
+        "age_minutes": 25.6,
         "stale": false,
         "agency": "สสน."
       },
       {
-        "id": 320610914,
-        "oldcode": "STN2165",
-        "name": "บ้านกุนุงจนอง",
+        "id": 320617450,
+        "oldcode": "STN2161",
+        "name": "บ้านสันติ",
+        "amphoe": "ธารโต",
+        "tumbon": "แม่หวาด",
+        "lat": 6.104922,
+        "lon": 101.301193,
+        "rain_1h_mm": null,
+        "rain_24h_mm": 14.0,
+        "observed_at": "2026-11-24 15:00",
+        "age_minutes": 85.6,
+        "stale": false,
+        "agency": "ทน."
+      },
+      {
+        "id": 320614484,
+        "oldcode": "BLGTU01",
+        "name": "ที่ว่าการอำเภอเบตง จ.ยะลา",
         "amphoe": "เบตง",
         "tumbon": "เบตง",
-        "lat": 5.77988,
-        "lon": 101.05103,
+        "lat": 5.773046,
+        "lon": 101.060712,
         "rain_1h_mm": 0.0,
         "rain_24h_mm": 14.0,
-        "observed_at": "2026-11-24 14:00",
-        "age_minutes": 138.3,
-        "stale": true,
+        "observed_at": "2026-11-24 15:00",
+        "age_minutes": 85.6,
+        "stale": false,
+        "agency": "กฟผ."
+      },
+      {
+        "id": 320614485,
+        "oldcode": "BLGTU02",
+        "name": "สะพานบ้าน กม.29 อ.เบตง จ.ยะลา",
+        "amphoe": "เบตง",
+        "tumbon": "อัยเยอร์เวง",
+        "lat": 5.920578,
+        "lon": 101.182086,
+        "rain_1h_mm": 0.0,
+        "rain_24h_mm": 14.0,
+        "observed_at": "2026-11-24 15:00",
+        "age_minutes": 85.6,
+        "stale": false,
+        "agency": "กฟผ."
+      },
+      {
+        "id": 320617533,
+        "oldcode": "STN2253",
+        "name": "ชุมชนตลาดเมืองใหม่",
+        "amphoe": "เมืองยะลา",
+        "tumbon": "สะเตง",
+        "lat": 6.552701,
+        "lon": 101.266779,
+        "rain_1h_mm": null,
+        "rain_24h_mm": 13.5,
+        "observed_at": "2026-11-24 15:00",
+        "age_minutes": 85.6,
+        "stale": false,
+        "agency": "ทน."
+      },
+      {
+        "id": 320617662,
+        "oldcode": "G09006-TA210312",
+        "name": "สะพานเฉลิมพระเกียรติ 72 พรรษา มหาราชินี",
+        "amphoe": "เมืองยะลา",
+        "tumbon": "สะเตง",
+        "lat": 6.540887,
+        "lon": 101.24951,
+        "rain_1h_mm": null,
+        "rain_24h_mm": 13.0,
+        "observed_at": "2026-11-24 16:00",
+        "age_minutes": 25.6,
+        "stale": false,
         "agency": "ทน."
       }
     ]
@@ -3046,6 +3046,6 @@
       }
     ]
   },
-  "generated_at": "2026-11-24T16:18:15+07:00",
-  "content_hash": "19698acd550b11d6e53fd6791b7c298b0697b6340f5927bb97dae37846c6b780"
+  "generated_at": "2026-11-24T16:25:35+07:00",
+  "content_hash": "78a579f2759a746951f692b32d300be1f7bbc84e27142c2cdd18f5720158a756"
 }
