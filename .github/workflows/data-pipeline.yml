@@ -24,6 +24,9 @@ jobs:
       - name: Hermetic Unit & Formula v2 Tests
         run: pytest -q backend/tests
       - name: Run Multi-Source Pipeline (fail-closed)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: python backend/pipeline.py --sync-mobile-asset
       - name: Verify Snapshot Bundle (Dry-Run)
         run: python backend/publish_supabase.py --snapshot-dir backend/output --dry-run

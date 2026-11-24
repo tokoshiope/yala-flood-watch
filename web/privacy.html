@@ -26,20 +26,21 @@
 
     <h2>2. ข้อมูลที่เราขอใช้งานและวัตถุประสงค์</h2>
     <ul>
-      <li><b>ตำแหน่งที่ตั้ง (Location — When In Use เท่านั้น):</b> ขออนุญาตเฉพาะเมื่อผู้ใช้กดยินยอมในหน้าขอความช่วยเหลือ (SOS) หรือค้นหาสถานีใกล้เคียง <b>ไม่มีการติดตามตำแหน่งพื้นหลัง (Never Always)</b> และไม่มีการส่งพิกัด GPS ส่วนบุคคลขึ้นเซิร์ฟเวอร์โดยอัตโนมัติ</li>
+      <li><b>ตำแหน่งที่ตั้ง (Location — When In Use เท่านั้น):</b> ขออนุญาตเฉพาะเมื่อผู้ใช้กดยินยอมในหน้าแผนที่ ("ตำแหน่งของฉัน") หรือหน้าขอความช่วยเหลือ (SOS) <b>ไม่มีการติดตามตำแหน่งพื้นหลัง (Never Always)</b> และไม่มีการส่งพิกัด GPS แม่นยำขึ้นเซิร์ฟเวอร์โดยอัตโนมัติ</li>
+      <li><b>ข้อความขอความช่วยเหลือฉุกเฉิน (Smart SOS Dispatch):</b> การส่งข้อความ SOS พร้อมพิกัดผ่าน SMS, LINE, การคัดลอก หรือการโทรออก ควบคุมโดยผู้ใช้โดยตรงบนอุปกรณ์ ประวัติ SOS เบอร์โทรติดต่อกลับ และรายละเอียดเพิ่มเติมเก็บไว้ <b>ในเครื่องเท่านั้น</b> (ไม่ส่งขึ้นเซิร์ฟเวอร์ของเรา)</li>
       <li><b>การตั้งค่าพื้นที่ (อำเภอ/ตำบล) และภาษา:</b> เก็บไว้ในหน่วยความจำของเครื่อง (SharedPreferences) เพื่อกรองแจ้งเตือน</li>
-      <li><b>รายงานสถานการณ์ชุมชน (ถ้าผู้ใช้เลือกส่งในอนาคต):</b> เก็บเฉพาะอำเภอ ประเภทเหตุการณ์ และพิกัดปัดเศษระดับ ~110 เมตร โดยไม่เก็บชื่อ เบอร์โทร หรือบัตรประชาชน และจะถูกลบอัตโนมัติภายใน <b>90 วัน</b></li>
+      <li><b>รายงานสถานการณ์น้ำชุมชน (แบบไม่ระบุตัวตน):</b> เมื่อผู้ใช้กดส่งรายงานชุมชนด้วยตนเอง ระบบส่งเฉพาะอำเภอ ประเภทเหตุการณ์ ความลึกน้ำโดยประมาณ หมายเหตุสั้น ๆ (ไม่บังคับ) พิกัดปัดเศษระดับ ~110 เมตร (ทศนิยม 3 ตำแหน่ง) และรหัสแฮชนิรนาม SHA-256 เพื่อจำกัด 1 ครั้ง/ชม. โดย <b>ไม่เก็บชื่อ เบอร์โทร หรือบัตรประชาชน</b> และลบข้อมูลอัตโนมัติภายใน <b>90 วัน</b></li>
     </ul>
 
     <h2>3. สิทธิของเจ้าของข้อมูลตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล (PDPA)</h2>
-    <p>ผู้ใช้สามารถใช้สิทธิลบข้อมูลส่วนบุคคล ประวัติ SOS ความยินยอม GPS และประวัติแจ้งเตือนทั้งหมดได้ทันทีผ่านเมนู <b>ตั้งค่า → "ลบข้อมูลของฉันทั้งหมด (PDPA)"</b> ภายในแอป</p>
+    <p>ผู้ใช้สามารถใช้สิทธิลบข้อมูลส่วนบุคคล ประวัติ SOS ความยินยอม GPS หมุดแผนที่ รหัสสุ่มนิรนามสำหรับรายงานชุมชน และประวัติแจ้งเตือนทั้งหมดในเครื่องได้ทันทีผ่านเมนู <b>ตั้งค่า → "ลบข้อมูลของฉันทั้งหมด (PDPA)"</b> ภายในแอป</p>
 
     <h2>4. การรักษาความปลอดภัยและการแจ้งเหตุละเมิด</h2>
     <p>ข้อมูลสาธารณะทั้งหมดส่งผ่าน HTTPS พร้อมตรวจสอบแฮช SHA-256 และควบคุมสิทธิ์ฐานข้อมูลด้วย Row Level Security (RLS) หากเกิดเหตุละเมิดข้อมูลส่วนบุคคล ทีมงานจะแจ้งเตือนผู้เกี่ยวข้องภายใน 72 ชั่วโมงตามข้อกำหนด PDPA</p>
 
     <hr style="border-color:#1f3358;margin:24px 0" />
     <h2>English Summary (App Store Review)</h2>
-    <p><b>Yala Flood Watch</b> is a 100% free public-interest civic flood early-warning app for Yala Province, Thailand. We collect zero advertising trackers, require no account registration, never track background location (<code>When In Use</code> only after explicit in-app consent), keep SOS logs and preferences strictly local on device, and provide one-tap <b>Delete All My Data (PDPA)</b> in Settings.</p>
+    <p><b>Yala Flood Watch</b> is a 100% free public-interest civic flood early-warning app for Yala Province, Thailand. We collect zero advertising trackers, require no account registration, and never track background location (<code>When In Use</code> only after explicit in-app consent). SOS messages (SMS / LINE / copy / phone calls), optional callback phone numbers, and SOS history remain strictly local on device with zero PII uploaded to our servers. Optional anonymous community flood reports transmit only district, flood type, optional depth, and ~110m rounded coordinates (auto-deleted after 90 days). Users can erase all local data at any time via <b>Settings → Delete All My Data (PDPA)</b>.</p>
   </div>
 </div>
 </body>

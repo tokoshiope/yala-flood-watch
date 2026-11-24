@@ -638,3 +638,93 @@ def test_rain_degraded_outage_triggers_sensor_gap_fallback_in_normalize():
     assert st[0]["rain_24h_mm"] == 160.0
     assert st[0]["assessment"]["confidence"] == "medium"
     assert st[0]["assessment"]["level"] >= 3
+
+
+# ── Option C: Tier C Community Reports Ingestion Tests ───────────────────────
+
+def test_fetch_community_reports_returns_empty_when_unconfigured(monkeypatch):
+    monkeypatch.delenv("SUPABASE_URL", raising=False)
+    monkeypatch.delenv("SUPABASE_SERVICE_ROLE_KEY", raising=False)
+    fixed = datetime(2026, 11, 24, 15, 0, tzinfo=P.ICT)
+    assert P.fetch_community_reports_60m(fixed) == {}
+
+
+def test_fetch_community_reports_rejects_non_https():
+    fixed = datetime(2026, 11, 24, 15, 0, tzinfo=P.ICT)
+    with pytest.raises(P.ValidationError):
+        P.fetch_community_reports_60m(
+            fixed,
+            supabase_url="http://insecure.supabase.co",
+            service_key="secret",
+        )
+
+
+def test_fetch_community_reports_filters_trust_score_gte_3(monkeypatch):
+    class _FakeResp:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return [
+                {"amphoe_th": "เมืองยะลา", "trust_score": 4},
+                {"amphoe_th": "เมืองยะลา", "trust_score": 3},
+                {"amphoe_th": "เมืองยะลา", "trust_score": 1},  # unverified -> must be ignored
+                {"amphoe_th": "กาบัง", "trust_score": 5},
+                {"amphoe_th": "กรุงเทพมหานคร", "trust_score": 5},  # non-Yala -> must be ignored
+            ]
+
+    monkeypatch.setattr(P.requests, "get", lambda *a, **kw: _FakeResp())
+    fixed = datetime(2026, 11, 24, 15, 0, tzinfo=P.ICT)
+    counts = P.fetch_community_reports_60m(
+        fixed,
+        supabase_url="https://demo.supabase.co",
+        service_key="srv-key",
+    )
+    assert counts == {"เมืองยะลา": 2, "กาบัง": 1}
+
+
+def test_normalize_and_amphoe_summaries_use_community_reports_never_sole_lv5():
+    fixed = datetime(2026, 11, 24, 15, 0, tzinfo=P.ICT)
+    rows = _rows_sample(1, at=fixed)
+    rows[0]["station"]["tele_station_oldcode"] = "X.40A"
+    rows[0]["waterlevel_msl"] = "11.00"
+    rows[0]["waterlevel_msl_previous"] = "11.00"
+    rows[0]["situation_level"] = 1
+
+    st_without, _ = P.normalize(rows, _registry(), now=fixed)
+    st_with, _ = P.normalize(
+        rows,
+        _registry(),
+        now=fixed,
+        community_reports_by_amphoe={"เมืองยะลา": 5},
+    )
+    assert st_with[0]["assessment"]["score"] > st_without[0]["assessment"]["score"]
+    assert "community_reports" in st_with[0]["assessment"]["reason_codes"]
+    # Guardrail: Tier C community reports alone MUST NEVER trigger Level 5 evacuation
+    assert st_with[0]["assessment"]["level"] < 5
+
+    # Also verify 0-gauge amphoe (อ.กาบัง) incorporates community_reports_by_amphoe
+    _, amphoes_reg, _, _ = P.load_registry()
+    kabang_only = {"กาบัง": amphoes_reg["กาบัง"]}
+    s0 = P.build_amphoe_summaries(kabang_only, [], {}, {}, None, community_reports_by_amphoe={})
+    s5 = P.build_amphoe_summaries(kabang_only, [], {}, {}, None, community_reports_by_amphoe={"กาบัง": 5})
+    assert s5[0]["assessment"]["score"] > s0[0]["assessment"]["score"]
+    assert s5[0]["assessment"]["level"] < 5
+
+
+def test_publish_supabase_rejects_non_https_before_sending_service_key(monkeypatch):
+    import publish_supabase as PUB
+
+    called = {"count": 0}
+    monkeypatch.setattr(
+        PUB.requests,
+        "post",
+        lambda *a, **kw: called.__setitem__("count", called["count"] + 1),
+    )
+    monkeypatch.setenv("SUPABASE_URL", "http://insecure.supabase.co")
+    monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "super-secret-key")
+    rc = PUB.publish(P.OUT_DIR, dry_run=False)
+    assert rc == 1
+    assert called["count"] == 0
+    assert PUB._purge_expired_reports("http://insecure.supabase.co", "super-secret-key") is None
+    assert called["count"] == 0

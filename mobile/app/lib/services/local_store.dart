@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -109,6 +110,32 @@ class LocalStore {
     await _prefs.remove(AppConfig.pinnedLocationPrefsKey);
   }
 
+  // ── รหัสสุ่มนิรนามสำหรับรายงานน้ำชุมชน (PDPA: ลบได้ตลอดเวลา) ───────────
+  Future<String> loadOrCreateCommunitySalt() async {
+    final existing = _prefs.getString(AppConfig.communityDeviceSaltKey);
+    if (existing != null && existing.length >= 32) {
+      return existing;
+    }
+    final rng = Random.secure();
+    final bytes = List<int>.generate(24, (_) => rng.nextInt(256));
+    final salt = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    await _prefs.setString(AppConfig.communityDeviceSaltKey, salt);
+    return salt;
+  }
+
+  DateTime? loadCommunityLastReportAt() {
+    final raw = _prefs.getString(AppConfig.communityLastReportAtKey);
+    if (raw == null || raw.isEmpty) return null;
+    return DateTime.tryParse(raw);
+  }
+
+  Future<void> saveCommunityLastReportAt(DateTime timestamp) async {
+    await _prefs.setString(
+      AppConfig.communityLastReportAtKey,
+      timestamp.toUtc().toIso8601String(),
+    );
+  }
+
   /// ลบข้อมูลส่วนบุคคลและประวัติทั้งหมดในเครื่อง (สิทธิเจ้าของข้อมูล PDPA)
   Future<void> deleteAllUserData() async {
     await _prefs.remove(AppConfig.alertsPrefsKey);
@@ -117,5 +144,7 @@ class LocalStore {
     await _prefs.remove(AppConfig.gpsConsentPrefsKey);
     await _prefs.remove(AppConfig.subscribedTopicPrefsKey);
     await _prefs.remove(AppConfig.pinnedLocationPrefsKey);
+    await _prefs.remove(AppConfig.communityDeviceSaltKey);
+    await _prefs.remove(AppConfig.communityLastReportAtKey);
   }
 }

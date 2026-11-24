@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
@@ -5,13 +6,23 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:yala_flood_app/config/app_config.dart';
 import 'package:yala_flood_app/l10n/app_strings.dart';
+import 'package:yala_flood_app/models/flood_snapshot.dart';
 import 'package:yala_flood_app/models/sos_request.dart';
+import 'package:yala_flood_app/services/community_report_service.dart';
+import 'package:yala_flood_app/services/sos_dispatch_service.dart';
 import 'package:yala_flood_app/state/alert_provider.dart';
 
-/// หน้า SOS ขอความช่วยเหลือ: เบอร์ฉุกเฉินยืนยันแล้ว (1784 / 073-203559 / 073-212345 / 1669),
-/// PDPA Consent ก่อนขอพิกัด GPS และบันทึกคำขอในเครื่อง รองรับ iOS Dark Mode & 4 ภาษาเต็มรูปแบบ
+/// หน้า SOS ขอความช่วยเหลือ (Option C — v1.0):
+/// 1) เบอร์ฉุกเฉินยืนยันแล้ว (1784 / 073-203559 / 073-212345 / 1669) + LINE/Facebook
+/// 2) ปลดล็อคส่ง SOS จริงแบบ Zero-Server PII (SMS ใช้ได้แม้เน็ตล่ม · LINE Share · คัดลอกพร้อมพิกัด · โทรด่วน)
+/// 3) รายงานสถานการณ์น้ำชุมชน (Tier C · ไม่ระบุตัวตน · ปัดเศษพิกัด ~110 ม. · ลบอัตโนมัติ 90 วัน)
 class SosScreen extends StatefulWidget {
-  const SosScreen({super.key});
+  const SosScreen({
+    super.key,
+    @visibleForTesting this.initialPositionOverride,
+  });
+
+  final Position? initialPositionOverride;
 
   @override
   State<SosScreen> createState() => _SosScreenState();
@@ -19,29 +30,63 @@ class SosScreen extends StatefulWidget {
 
 class _SosScreenState extends State<SosScreen> {
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _noteController = TextEditingController();
+  final TextEditingController _communityDepthController = TextEditingController();
+  final TextEditingController _communityNoteController = TextEditingController();
+
   String _type = kSosTypes.first;
   Position? _position;
   LocationStatus _locationStatus = LocationStatus.idle;
   String? _locationError;
   bool _sending = false;
+
+  String _communityAmphoe = AppConfig.riskAmphoeTh.first;
+  String _communityType = kCommunityReportTypes.first;
+  bool _communityAmphoeUserPicked = false;
+  bool _submittingCommunity = false;
   int _lastHandledResetVersion = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _lastHandledResetVersion = context.read<AlertProvider>().dataResetVersion;
+    if (widget.initialPositionOverride != null) {
+      _position = widget.initialPositionOverride;
+      _locationStatus = LocationStatus.ready;
+    }
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final resetVer = context.watch<AlertProvider>().dataResetVersion;
+    final provider = context.watch<AlertProvider>();
+    if (!_communityAmphoeUserPicked) {
+      final selected = provider.settings.selectedAmphoeTh;
+      if (selected != null && AppConfig.riskAmphoeTh.contains(selected)) {
+        _communityAmphoe = selected;
+      }
+    }
+    final resetVer = provider.dataResetVersion;
     if (resetVer != _lastHandledResetVersion) {
       _lastHandledResetVersion = resetVer;
       _position = null;
       _locationStatus = LocationStatus.idle;
       _locationError = null;
       _phoneController.clear();
+      _noteController.clear();
+      _communityDepthController.clear();
+      _communityNoteController.clear();
+      _communityAmphoeUserPicked = false;
+      _communityAmphoe = AppConfig.riskAmphoeTh.first;
     }
   }
 
   @override
   void dispose() {
     _phoneController.dispose();
+    _noteController.dispose();
+    _communityDepthController.dispose();
+    _communityNoteController.dispose();
     super.dispose();
   }
 
@@ -68,6 +113,7 @@ class _SosScreenState extends State<SosScreen> {
       );
       if (approved != true || !mounted) return;
       await provider.setGpsConsent(true);
+      if (!mounted) return;
     }
     await _locate(strings);
   }
@@ -107,9 +153,20 @@ class _SosScreenState extends State<SosScreen> {
         ),
       );
       if (!mounted) return;
+      final provider = context.read<AlertProvider>();
+      final assessed = provider.evaluateCoordinates(
+        position.latitude,
+        position.longitude,
+        isGps: true,
+      );
       setState(() {
         _position = position;
         _locationStatus = LocationStatus.ready;
+        if (!_communityAmphoeUserPicked &&
+            assessed.amphoeTh != null &&
+            AppConfig.riskAmphoeTh.contains(assessed.amphoeTh)) {
+          _communityAmphoe = assessed.amphoeTh!;
+        }
       });
     } on Exception catch (error) {
       if (!mounted) return;
@@ -124,27 +181,29 @@ class _SosScreenState extends State<SosScreen> {
     await Geolocator.openAppSettings();
   }
 
-  Future<void> _call(String number, AppStrings strings) async {
+  Future<bool> _call(String number, AppStrings strings, {bool showSnack = true}) async {
     final sanitized = number.replaceAll(RegExp(r'[^0-9+*#]'), '');
-    if (sanitized.isEmpty) return;
+    if (sanitized.isEmpty) return false;
     final uri = Uri(scheme: 'tel', path: sanitized);
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!ok && mounted) {
+    if (!ok && showSnack && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${strings.get('cannot_call')} ($number)')),
       );
     }
+    return ok;
   }
 
-  Future<void> _openExternalUrl(String url, AppStrings strings) async {
+  Future<bool> _openExternalUrl(String url, AppStrings strings, {bool showSnack = true}) async {
     final uri = Uri.tryParse(url);
-    if (uri == null || uri.scheme != 'https') return;
+    if (uri == null || uri.scheme != 'https') return false;
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!ok && mounted) {
+    if (!ok && showSnack && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(strings.get('cannot_open_link'))),
       );
     }
+    return ok;
   }
 
   Future<void> _sendSos(AppStrings strings) async {
@@ -163,7 +222,14 @@ class _SosScreenState extends State<SosScreen> {
     }
 
     setState(() => _sending = true);
+    final provider = context.read<AlertProvider>();
     final now = DateTime.now();
+    final pinAssessment = provider.evaluateCoordinates(
+      _position!.latitude,
+      _position!.longitude,
+      isGps: true,
+    );
+    final note = _noteController.text.trim();
     final request = SosRequest(
       id: 'sos-${now.millisecondsSinceEpoch}',
       typeTh: _type,
@@ -171,16 +237,172 @@ class _SosScreenState extends State<SosScreen> {
       lat: _position!.latitude,
       lng: _position!.longitude,
       phone: phone,
-      note: '',
+      note: note,
+      amphoeTh: pinAssessment.amphoeTh,
       status: SosStatus.pending,
       statusHistory: const [SosStatus.pending],
     );
-    context.read<AlertProvider>().addSosRequest(request);
-    await Future<void>.delayed(const Duration(milliseconds: 300));
+    provider.addSosRequest(request);
     if (!mounted) return;
     setState(() => _sending = false);
+
+    await _openDispatchSheet(
+      request: request,
+      strings: strings,
+      accuracyMeters: _position!.accuracy,
+      pinAssessment: pinAssessment,
+    );
+  }
+
+  Future<void> _openDispatchSheet({
+    required SosRequest request,
+    required AppStrings strings,
+    double? accuracyMeters,
+    UserPinAssessment? pinAssessment,
+  }) async {
+    final provider = context.read<AlertProvider>();
+    final assessment = pinAssessment ??
+        provider.evaluateCoordinates(request.lat, request.lng, isGps: true);
+    final message = SosDispatchService.buildSosMessage(
+      strings: strings,
+      typeTh: request.typeTh,
+      lat: request.lat,
+      lng: request.lng,
+      timestamp: request.createdAt,
+      accuracyMeters: accuracyMeters,
+      phone: request.phone,
+      note: request.note,
+      pinAssessment: assessment,
+    );
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (sheetCtx) => _SosDispatchSheet(
+        strings: strings,
+        request: request,
+        message: message,
+        assessment: assessment,
+        onSendSms: () async {
+          final uri = SosDispatchService.buildSmsUri(message);
+          final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+          if (ok) {
+            provider.updateSosDispatchedVia(request.id, 'sms');
+            return strings.sosDispatchedViaLabel('sms');
+          }
+          await Clipboard.setData(ClipboardData(text: message));
+          provider.updateSosDispatchedVia(request.id, 'clipboard');
+          return strings.get('sos_cannot_open_sms');
+        },
+        onShareLine: () async {
+          await Clipboard.setData(ClipboardData(text: message));
+          final uri = SosDispatchService.buildLineShareUri(message);
+          final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+          provider.updateSosDispatchedVia(request.id, ok ? 'line' : 'clipboard');
+          return ok
+              ? strings.sosDispatchedViaLabel('line')
+              : strings.get('sos_dispatch_copied');
+        },
+        onCopy: () async {
+          await Clipboard.setData(ClipboardData(text: message));
+          provider.updateSosDispatchedVia(request.id, 'clipboard');
+          return strings.get('sos_dispatch_copied');
+        },
+        onCopyAndOpenLine: (url) async {
+          await Clipboard.setData(ClipboardData(text: message));
+          final ok = await _openExternalUrl(url, strings, showSnack: false);
+          provider.updateSosDispatchedVia(request.id, ok ? 'line' : 'clipboard');
+          return strings.get('sos_dispatch_copied');
+        },
+        onCall: (number) async {
+          final ok = await _call(number, strings, showSnack: false);
+          if (ok) {
+            provider.updateSosDispatchedVia(request.id, 'call');
+            return strings.sosDispatchedViaLabel('call');
+          }
+          return '${strings.get('cannot_call')} ($number)';
+        },
+      ),
+    );
+  }
+
+  Future<void> _submitCommunityReport(AppStrings strings) async {
+    final provider = context.read<AlertProvider>();
+    final rawDepth = _communityDepthController.text.trim();
+    int? depthCm;
+    if (rawDepth.isNotEmpty) {
+      depthCm = int.tryParse(rawDepth);
+      if (depthCm == null || depthCm < 0 || depthCm > 1000) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(strings.get('community_report_invalid_depth'))),
+        );
+        return;
+      }
+    }
+
+    // ใช้พิกัด GPS เฉพาะเมื่อตรงกับอำเภอที่เลือก มิฉะนั้นใช้จุดศูนย์กลางของอำเภอที่เลือก (ปัดเศษ ~110 ม. ใน Service เสมอ)
+    double lat;
+    double lng;
+    final gpsMatchesSelectedAmphoe = _position != null &&
+        CommunityReportService.isWithinYalaBbox(
+          _position!.latitude,
+          _position!.longitude,
+        ) &&
+        provider
+                .evaluateCoordinates(
+                  _position!.latitude,
+                  _position!.longitude,
+                  isGps: true,
+                )
+                .amphoeTh ==
+            _communityAmphoe;
+    if (gpsMatchesSelectedAmphoe) {
+      lat = _position!.latitude;
+      lng = _position!.longitude;
+    } else {
+      AmphoeBoundary? matchedBoundary;
+      for (final b in provider.boundaries) {
+        if (b.amphoeTh == _communityAmphoe) {
+          matchedBoundary = b;
+          break;
+        }
+      }
+      if (matchedBoundary != null) {
+        lat = matchedBoundary.centroid.latitude;
+        lng = matchedBoundary.centroid.longitude;
+      } else {
+        lat = AppConfig.defaultLat;
+        lng = AppConfig.defaultLng;
+      }
+    }
+
+    setState(() => _submittingCommunity = true);
+    final result = await provider.submitCommunityReport(
+      amphoeTh: _communityAmphoe,
+      reportType: _communityType,
+      lat: lat,
+      lng: lng,
+      waterDepthCm: depthCm,
+      noteTh: _communityNoteController.text.trim(),
+    );
+    if (!mounted) return;
+    setState(() => _submittingCommunity = false);
+
+    final snackKey = switch (result.status) {
+      CommunitySubmitStatus.success => 'community_report_success',
+      CommunitySubmitStatus.rateLimited => 'community_report_rate_limited',
+      CommunitySubmitStatus.outsideYala => 'community_report_outside_yala',
+      CommunitySubmitStatus.notConfigured => 'community_report_not_configured',
+      CommunitySubmitStatus.invalidInput => 'community_report_invalid_depth',
+      CommunitySubmitStatus.networkError => 'community_report_error',
+    };
+    if (result.ok) {
+      _communityDepthController.clear();
+      _communityNoteController.clear();
+    }
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(strings.get('sos_saved_snack'))),
+      SnackBar(content: Text(strings.get(snackKey))),
     );
   }
 
@@ -188,6 +410,13 @@ class _SosScreenState extends State<SosScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<AlertProvider>();
     final strings = provider.strings;
+    final gpsAssessment = _position == null
+        ? null
+        : provider.evaluateCoordinates(
+            _position!.latitude,
+            _position!.longitude,
+            isGps: true,
+          );
 
     return Scaffold(
       appBar: AppBar(title: Text(strings.get('sos_title'))),
@@ -217,6 +446,7 @@ class _SosScreenState extends State<SosScreen> {
             strings: strings,
             status: _locationStatus,
             position: _position,
+            assessment: gpsAssessment,
             errorText: _locationError,
             onRetry: _requestConsentAndLocate,
             onOpenSettings: _openLocationSettings,
@@ -232,14 +462,50 @@ class _SosScreenState extends State<SosScreen> {
               border: const OutlineInputBorder(),
             ),
           ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _noteController,
+            maxLength: 200,
+            maxLines: 2,
+            decoration: InputDecoration(
+              labelText: strings.get('sos_note_label'),
+              hintText: strings.get('sos_note_hint'),
+              prefixIcon: const Icon(Icons.notes),
+              border: const OutlineInputBorder(),
+            ),
+          ),
           if (provider.sosRequests.isNotEmpty) ...[
             const SizedBox(height: 12),
             _RequestList(
               strings: strings,
               requests: provider.sosRequests,
               onAdvance: provider.advanceSosStatus,
+              onResend: (req) => _openDispatchSheet(
+                request: req,
+                strings: strings,
+              ),
             ),
           ],
+          const SizedBox(height: 16),
+          _CommunityReportCard(
+            strings: strings,
+            selectedAmphoe: _communityAmphoe,
+            selectedType: _communityType,
+            depthController: _communityDepthController,
+            noteController: _communityNoteController,
+            submitting: _submittingCommunity,
+            configured: provider.communityReportConfigured,
+            recentReports: provider.recentCommunityReports,
+            onAmphoeChanged: (val) {
+              if (val == null) return;
+              setState(() {
+                _communityAmphoe = val;
+                _communityAmphoeUserPicked = true;
+              });
+            },
+            onTypeChanged: (val) => setState(() => _communityType = val),
+            onSubmit: () => _submitCommunityReport(strings),
+          ),
         ],
       ),
     );
@@ -270,7 +536,7 @@ class _SafetyBanner extends StatelessWidget {
         children: [
           Icon(
             Icons.health_and_safety,
-            color: isDark ? const Color(0xFFFF8A80) : const Color(0xFFB71C1C),
+            color: isDark ? const Color(0xFFFF8A80) : const Color(AppConfig.colorDanger),
             size: 22,
           ),
           const SizedBox(width: 8),
@@ -299,7 +565,7 @@ class _SosButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 132,
+      height: 136,
       width: double.infinity,
       child: FilledButton(
         style: FilledButton.styleFrom(
@@ -325,10 +591,322 @@ class _SosButton extends StatelessWidget {
             Text(
               strings.get('sos_save_sub'),
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white70, fontSize: 12),
+              style: const TextStyle(color: Colors.white, fontSize: 12),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _SosDispatchSheet extends StatefulWidget {
+  const _SosDispatchSheet({
+    required this.strings,
+    required this.request,
+    required this.message,
+    required this.assessment,
+    required this.onSendSms,
+    required this.onShareLine,
+    required this.onCopy,
+    required this.onCopyAndOpenLine,
+    required this.onCall,
+  });
+
+  final AppStrings strings;
+  final SosRequest request;
+  final String message;
+  final UserPinAssessment assessment;
+  final Future<String?> Function() onSendSms;
+  final Future<String?> Function() onShareLine;
+  final Future<String?> Function() onCopy;
+  final Future<String?> Function(String url) onCopyAndOpenLine;
+  final Future<String?> Function(String number) onCall;
+
+  @override
+  State<_SosDispatchSheet> createState() => _SosDispatchSheetState();
+}
+
+class _SosDispatchSheetState extends State<_SosDispatchSheet> {
+  String? _statusFeedback;
+
+  Future<void> _runAction(Future<String?> Function() action) async {
+    final msg = await action();
+    if (!mounted || msg == null || msg.isEmpty) return;
+    setState(() => _statusFeedback = msg);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // WCAG AA >= 4.5:1 on both Light (#04783A = 5.60:1) & Dark (#4ADE80 = 9.80:1)
+    final lineColor = isDark ? const Color(0xFF4ADE80) : const Color(0xFF04783A);
+    final dangerIconColor =
+        isDark ? const Color(0xFFFF8A80) : const Color(AppConfig.colorDanger);
+    final previewBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9);
+    final previewText = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    final bannerBg = isDark ? const Color(0xFF064E3B) : const Color(0xFFECFDF5);
+    final bannerBorder = isDark ? const Color(0xFF34D399) : const Color(0xFF059669);
+    final bannerText = isDark ? const Color(0xFFECFDF5) : const Color(0xFF064E3B);
+
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.86,
+      minChildSize: 0.55,
+      maxChildSize: 0.95,
+      builder: (ctx, scrollController) => Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).dividerColor,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Icon(Icons.sos, color: dangerIconColor, size: 26),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        widget.strings.get('sos_dispatch_title'),
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                if (_statusFeedback != null) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: bannerBg,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: bannerBorder),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.check_circle_outline, size: 18, color: bannerText),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _statusFeedback!,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: bannerText,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                ],
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView(
+              controller: scrollController,
+              padding: const EdgeInsets.fromLTRB(18, 6, 18, 28),
+              children: [
+                Text(
+                  widget.strings.get('sos_dispatch_sub'),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 12),
+                // พิกัดตัวใหญ่สำหรับอ่านออกเสียงให้เจ้าหน้าที่ 1784 ฟังระหว่างคุยสาย
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: previewBg,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${widget.request.lat.toStringAsFixed(6)}, ${widget.request.lng.toStringAsFixed(6)}',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: previewText,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      if (widget.assessment.amphoeTh != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          [
+                            if (widget.assessment.tumbonTh != null)
+                              widget.strings.tumbonName(
+                                widget.assessment.tumbonTh!,
+                                widget.assessment.tumbonEn,
+                              ),
+                            widget.strings.amphoe(widget.assessment.amphoeTh!),
+                          ].join(', '),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: previewText,
+                          ),
+                        ),
+                      ],
+                      const Divider(height: 16),
+                      SelectableText(
+                        widget.message,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          height: 1.45,
+                          color: previewText,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                // 1. ส่ง SMS จริง (ทำงานได้แม้เน็ตล่ม)
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(AppConfig.colorDanger),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    onPressed: () => _runAction(widget.onSendSms),
+                    icon: const Icon(Icons.sms),
+                    label: Text(
+                      widget.strings.get('sos_dispatch_sms'),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // 2. ส่งต่อผ่าน LINE (ใช้สีเขียวเข้ม #04783A เพื่อให้คอนทราสต์ขาว >= 4.5:1 ตาม WCAG AA)
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF04783A),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    onPressed: () => _runAction(widget.onShareLine),
+                    icon: const Icon(Icons.chat),
+                    label: Text(
+                      widget.strings.get('sos_dispatch_line'),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // 3. คัดลอกข้อความ + พิกัด
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => _runAction(widget.onCopy),
+                    icon: const Icon(Icons.copy),
+                    label: Text(widget.strings.get('sos_dispatch_copy')),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // ปุ่มลัดคัดลอกแล้วเปิด LINE ทางการทันที
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: lineColor,
+                        side: BorderSide(color: lineColor),
+                      ),
+                      onPressed: () =>
+                          _runAction(() => widget.onCopyAndOpenLine(AppConfig.lineDdpmUrl)),
+                      icon: const Icon(Icons.chat_bubble_outline, size: 16),
+                      label: Text(
+                        widget.strings.get('sos_dispatch_copy_ddpm'),
+                        style: const TextStyle(fontSize: 12.5),
+                      ),
+                    ),
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: lineColor,
+                        side: BorderSide(color: lineColor),
+                      ),
+                      onPressed: () => _runAction(
+                        () => widget.onCopyAndOpenLine(AppConfig.lineYalaCityUrl),
+                      ),
+                      icon: const Icon(Icons.chat_bubble_outline, size: 16),
+                      label: Text(
+                        widget.strings.get('sos_dispatch_copy_city'),
+                        style: const TextStyle(fontSize: 12.5),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  widget.strings.get('sos_dispatch_call_section'),
+                  style: Theme.of(context)
+                      .textTheme
+                      .labelLarge
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    FilledButton.tonalIcon(
+                      onPressed: () =>
+                          _runAction(() => widget.onCall(AppConfig.emergencyDDPM)),
+                      icon: const Icon(Icons.call, size: 16),
+                      label: const Text('1784'),
+                    ),
+                    FilledButton.tonalIcon(
+                      onPressed: () =>
+                          _runAction(() => widget.onCall(AppConfig.emergencyYalaCenter)),
+                      icon: const Icon(Icons.call, size: 16),
+                      label: const Text(AppConfig.emergencyYalaCenterDisplay),
+                    ),
+                    FilledButton.tonalIcon(
+                      onPressed: () =>
+                          _runAction(() => widget.onCall(AppConfig.emergencyMedical)),
+                      icon: const Icon(Icons.local_hospital, size: 16),
+                      label: const Text('1669'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -379,6 +957,7 @@ class _LocationCard extends StatelessWidget {
     required this.strings,
     required this.status,
     required this.position,
+    required this.assessment,
     required this.errorText,
     required this.onRetry,
     required this.onOpenSettings,
@@ -387,6 +966,7 @@ class _LocationCard extends StatelessWidget {
   final AppStrings strings;
   final LocationStatus status;
   final Position? position;
+  final UserPinAssessment? assessment;
   final String? errorText;
   final VoidCallback onRetry;
   final VoidCallback onOpenSettings;
@@ -432,7 +1012,13 @@ class _LocationCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '±${position!.accuracy.toStringAsFixed(0)} ${strings.get('unit_m')} (1784)',
+                [
+                  '±${position!.accuracy.toStringAsFixed(0)} ${strings.get('unit_m')}',
+                  if (assessment?.amphoeTh != null)
+                    strings.amphoe(assessment!.amphoeTh!),
+                  if (assessment?.elevationMsl != null)
+                    '${assessment!.elevationMsl!.toStringAsFixed(1)} ${strings.get('unit_msl')}',
+                ].join(' · '),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ] else if (status == LocationStatus.searching) ...[
@@ -574,8 +1160,9 @@ class _CallButtons extends StatelessWidget {
     String? fbUrl,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final lineColor = isDark ? const Color(0xFF4ADE80) : const Color(0xFF06C755);
-    final fbColor = isDark ? const Color(0xFF60A5FA) : const Color(0xFF1877F2);
+    // WCAG AA >= 4.5:1 on both Light & Dark surfaces
+    final lineColor = isDark ? const Color(0xFF4ADE80) : const Color(0xFF04783A);
+    final fbColor = isDark ? const Color(0xFF60A5FA) : const Color(0xFF145DBF);
     final dangerIconColor = isDark ? const Color(0xFFFF8A80) : const Color(AppConfig.colorDanger);
 
     return Padding(
@@ -657,14 +1244,17 @@ class _RequestList extends StatelessWidget {
     required this.strings,
     required this.requests,
     required this.onAdvance,
+    required this.onResend,
   });
 
   final AppStrings strings;
   final List<SosRequest> requests;
   final ValueChanged<String> onAdvance;
+  final ValueChanged<SosRequest> onResend;
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -687,7 +1277,7 @@ class _RequestList extends StatelessWidget {
                         Icon(
                           request.status.icon,
                           size: 18,
-                          color: request.status.colorFor(Theme.of(context).brightness),
+                          color: request.status.colorFor(brightness),
                         ),
                         const SizedBox(width: 6),
                         Expanded(
@@ -699,7 +1289,7 @@ class _RequestList extends StatelessWidget {
                         Text(
                           strings.sosStatusLabel(request.status),
                           style: TextStyle(
-                            color: request.status.colorFor(Theme.of(context).brightness),
+                            color: request.status.colorFor(brightness),
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -707,22 +1297,266 @@ class _RequestList extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${request.lat.toStringAsFixed(5)}, ${request.lng.toStringAsFixed(5)}'
-                      ' · ${strings.relativeTime(request.createdAt)}',
+                      [
+                        '${request.lat.toStringAsFixed(5)}, ${request.lng.toStringAsFixed(5)}',
+                        if (request.amphoeTh != null)
+                          strings.amphoe(request.amphoeTh!),
+                        strings.relativeTime(request.createdAt),
+                        if (request.dispatchedVia != null)
+                          strings.sosDispatchedViaLabel(request.dispatchedVia!),
+                      ].join(' · '),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    if (request.status.next != null)
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () => onAdvance(request.id),
-                          child: Text('→ ${strings.sosStatusLabel(request.status.next!)}'),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton.icon(
+                          onPressed: () => onResend(request),
+                          icon: const Icon(Icons.send, size: 15),
+                          label: Text(strings.get('sos_dispatch_resend')),
                         ),
-                      ),
+                        if (request.status.next != null)
+                          TextButton(
+                            onPressed: () => onAdvance(request.id),
+                            child: Text('→ ${strings.sosStatusLabel(request.status.next!)}'),
+                          ),
+                      ],
+                    ),
                     const Divider(),
                   ],
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CommunityReportCard extends StatelessWidget {
+  const _CommunityReportCard({
+    required this.strings,
+    required this.selectedAmphoe,
+    required this.selectedType,
+    required this.depthController,
+    required this.noteController,
+    required this.submitting,
+    required this.configured,
+    required this.recentReports,
+    required this.onAmphoeChanged,
+    required this.onTypeChanged,
+    required this.onSubmit,
+  });
+
+  final AppStrings strings;
+  final String selectedAmphoe;
+  final String selectedType;
+  final TextEditingController depthController;
+  final TextEditingController noteController;
+  final bool submitting;
+  final bool configured;
+  final List<CommunityReport> recentReports;
+  final ValueChanged<String?> onAmphoeChanged;
+  final ValueChanged<String> onTypeChanged;
+  final VoidCallback onSubmit;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final infoBg = isDark ? const Color(0xFF0F2942) : const Color(0xFFEFF6FF);
+    final infoBorder = isDark ? const Color(0xFF38BDF8) : const Color(0xFF93C5FD);
+    final infoText = isDark ? const Color(0xFFE0F2FE) : const Color(0xFF1E3A8A);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.campaign_outlined,
+                  color: isDark ? const Color(0xFF38BDF8) : const Color(AppConfig.colorPrimary),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    strings.get('community_report_title'),
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              strings.get('community_report_sub'),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: infoBg,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: infoBorder),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.shield_outlined, size: 16, color: infoText),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      strings.get('community_report_pdpa_note'),
+                      style: TextStyle(fontSize: 12, color: infoText, height: 1.35),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              key: ValueKey('community-amphoe-$selectedAmphoe'),
+              initialValue: AppConfig.riskAmphoeTh.contains(selectedAmphoe)
+                  ? selectedAmphoe
+                  : AppConfig.riskAmphoeTh.first,
+              decoration: InputDecoration(
+                labelText: strings.get('community_report_amphoe'),
+                border: const OutlineInputBorder(),
+                isDense: true,
+              ),
+              items: [
+                for (final amp in AppConfig.riskAmphoeTh)
+                  DropdownMenuItem(
+                    value: amp,
+                    child: Text(strings.amphoe(amp)),
+                  ),
+              ],
+              onChanged: onAmphoeChanged,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              strings.get('community_report_type'),
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                for (final type in kCommunityReportTypes)
+                  ChoiceChip(
+                    label: Text(strings.communityReportTypeLabel(type)),
+                    selected: selectedType == type,
+                    onSelected: (_) => onTypeChanged(type),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: depthController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: strings.get('community_report_depth_label'),
+                hintText: strings.get('community_report_depth_hint'),
+                prefixIcon: const Icon(Icons.water),
+                border: const OutlineInputBorder(),
+                isDense: true,
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: noteController,
+              maxLength: 280,
+              maxLines: 2,
+              decoration: InputDecoration(
+                labelText: strings.get('community_report_note_label'),
+                hintText: strings.get('community_report_note_hint'),
+                prefixIcon: const Icon(Icons.edit_note),
+                border: const OutlineInputBorder(),
+                isDense: true,
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.tonalIcon(
+                onPressed: submitting ? null : onSubmit,
+                icon: submitting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.send_outlined),
+                label: Text(
+                  submitting
+                      ? strings.get('community_report_submitting')
+                      : strings.get('community_report_submit_btn'),
+                ),
+              ),
+            ),
+            if (!configured) ...[
+              const SizedBox(height: 8),
+              Text(
+                strings.get('community_report_not_configured'),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+            if (recentReports.isNotEmpty) ...[
+              const Divider(height: 22),
+              Text(
+                strings.get('community_recent_title'),
+                style: Theme.of(context)
+                    .textTheme
+                    .labelLarge
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 6),
+              for (final rep in recentReports.take(5))
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.water_drop_outlined, size: 16),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              [
+                                strings.amphoe(rep.amphoeTh),
+                                strings.communityReportTypeLabel(rep.reportType),
+                                if (rep.waterDepthCm != null)
+                                  '~${rep.waterDepthCm} ${strings.get('unit_cm')}',
+                              ].join(' · '),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                            if (rep.noteTh != null && rep.noteTh!.isNotEmpty)
+                              Text(
+                                rep.noteTh!,
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            Text(
+                              strings.relativeTime(rep.createdAt),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
           ],
         ),
       ),

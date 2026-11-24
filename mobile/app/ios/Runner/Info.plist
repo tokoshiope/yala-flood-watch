@@ -42,6 +42,7 @@
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>tel</string>
+		<string>sms</string>
 		<string>https</string>
 		<string>http</string>
 		<string>maps</string>

@@ -141,6 +141,9 @@ void main() {
         AppConfig.sosLogPrefsKey: '[]',
         AppConfig.gpsConsentPrefsKey: true,
         AppConfig.subscribedTopicPrefsKey: 'yala_flood_mueang_yala',
+        AppConfig.pinnedLocationPrefsKey: '{"lat":6.54,"lng":101.28,"isGps":true}',
+        AppConfig.communityDeviceSaltKey: '0123456789abcdef0123456789abcdef0123456789abcdef',
+        AppConfig.communityLastReportAtKey: '2026-11-24T12:00:00Z',
       });
       final prefs = await SharedPreferences.getInstance();
       final store = LocalStore(prefs);
@@ -152,6 +155,9 @@ void main() {
       expect(prefs.getString(AppConfig.sosLogPrefsKey), isNull);
       expect(prefs.getBool(AppConfig.gpsConsentPrefsKey), isNull);
       expect(prefs.getString(AppConfig.subscribedTopicPrefsKey), isNull);
+      expect(prefs.getString(AppConfig.pinnedLocationPrefsKey), isNull);
+      expect(prefs.getString(AppConfig.communityDeviceSaltKey), isNull);
+      expect(prefs.getString(AppConfig.communityLastReportAtKey), isNull);
     });
 
     test('NotificationService มี FCM Topic ASCII ครบทั้ง 8 อำเภอของยะลา', () {

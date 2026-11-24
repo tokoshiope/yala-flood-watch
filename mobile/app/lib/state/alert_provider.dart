@@ -13,13 +13,14 @@ import 'package:yala_flood_app/models/risk_level.dart';
 import 'package:yala_flood_app/models/sos_request.dart';
 import 'package:yala_flood_app/models/station.dart';
 import 'package:yala_flood_app/services/alert_engine.dart';
+import 'package:yala_flood_app/services/community_report_service.dart';
 import 'package:yala_flood_app/services/local_store.dart';
 import 'package:yala_flood_app/services/notification_service.dart';
 import 'package:yala_flood_app/services/rain_forecast_service.dart';
 import 'package:yala_flood_app/services/snapshot_service.dart';
 import 'package:yala_flood_app/services/thai_water_service.dart';
 
-/// ศูนย์รวม state ของแอพ: สถานี, 5-Source Snapshot, GeoJSON 8 อำเภอ, แจ้งเตือน, ภาษา 4 ภาษา และ SOS
+/// ศูนย์รวม state ของแอพ: สถานี, 5-Source Snapshot, GeoJSON 8 อำเภอ, แจ้งเตือน, ภาษา 4 ภาษา, SOS และรายงานชุมชน
 class AlertProvider extends ChangeNotifier {
   AlertProvider({
     required ThaiWaterService waterService,
@@ -28,13 +29,15 @@ class AlertProvider extends ChangeNotifier {
     LocalStore? localStorage,
     NotificationService? notificationService,
     SnapshotService? snapshotService,
+    CommunityReportService? communityReportService,
     // ignore: prefer_initializing_formals
   })  : _waterService = waterService,
         _rainService = rainService ?? RainForecastService(),
         _engine = engine ?? const AlertEngine(),
         _store = localStorage,
         _notifications = notificationService ?? NotificationService.instance,
-        _snapshotService = snapshotService ?? SnapshotService();
+        _snapshotService = snapshotService ?? SnapshotService(),
+        _communityReports = communityReportService ?? CommunityReportService();
 
   final ThaiWaterService _waterService;
   final RainForecastService _rainService;
@@ -42,6 +45,7 @@ class AlertProvider extends ChangeNotifier {
   final LocalStore? _store;
   final NotificationService _notifications;
   final SnapshotService _snapshotService;
+  final CommunityReportService _communityReports;
 
   List<Station> _stations = const <Station>[];
   List<AlertItem> _alerts = const <AlertItem>[];
@@ -55,6 +59,8 @@ class AlertProvider extends ChangeNotifier {
   List<ElevationBandZone> _elevationZones = const <ElevationBandZone>[];
   DemElevationGrid? _demGrid;
   ({double lat, double lng, bool isGps})? _pinnedCoords;
+  List<CommunityReport> _recentCommunityReports = const <CommunityReport>[];
+  DateTime? _lastCommunityReportAt;
   bool _gpsConsentGranted = false;
   int _dataResetVersion = 0;
 
@@ -79,6 +85,7 @@ class AlertProvider extends ChangeNotifier {
     _disposed = true;
     _waterService.close();
     _snapshotService.close();
+    _communityReports.close();
     super.dispose();
   }
 
@@ -94,6 +101,9 @@ class AlertProvider extends ChangeNotifier {
   List<VillageZoneBoundary> get villageZones => _villageZones;
   List<ElevationBandZone> get elevationZones => _elevationZones;
   DemElevationGrid? get demGrid => _demGrid;
+  bool get communityReportConfigured => _communityReports.isConfigured;
+  List<CommunityReport> get recentCommunityReports => _recentCommunityReports;
+  DateTime? get lastCommunityReportAt => _lastCommunityReportAt;
   bool get gpsConsentGranted => _gpsConsentGranted;
   int get dataResetVersion => _dataResetVersion;
   bool get loading => _loading;
@@ -194,7 +204,16 @@ class AlertProvider extends ChangeNotifier {
   UserPinAssessment? get userPinAssessment {
     final pin = _pinnedCoords;
     if (pin == null) return null;
-    final pt = LatLng(pin.lat, pin.lng);
+    return evaluateCoordinates(pin.lat, pin.lng, isGps: pin.isGps);
+  }
+
+  /// ประเมินพิกัดใด ๆ ในจังหวัดยะลาแบบออฟไลน์ (ใช้ร่วมกันทั้งหมุดแผนที่และข้อความ SOS)
+  UserPinAssessment evaluateCoordinates(
+    double lat,
+    double lng, {
+    bool isGps = true,
+  }) {
+    final pt = LatLng(lat, lng);
 
     String? matchedAmphoe;
     for (final b in _boundaries) {
@@ -217,13 +236,13 @@ class AlertProvider extends ChangeNotifier {
     }
 
     // ความสูงภูมิประเทศจริงจาก Copernicus DEM grid (ออฟไลน์) หรือ fallback หมู่บ้านใกล้สุด
-    double? elevMsl = _demGrid?.elevationAt(pin.lat, pin.lng);
+    double? elevMsl = _demGrid?.elevationAt(lat, lng);
     if (elevMsl == null && _villages.isNotEmpty) {
       VillagePoint? nearestV;
       var bestDist = double.infinity;
       for (final v in _villages) {
         if (v.elevationMsl == null) continue;
-        final d = _haversineKm(pin.lat, pin.lng, v.lat, v.lon);
+        final d = _haversineKm(lat, lng, v.lat, v.lon);
         if (d < bestDist) {
           bestDist = d;
           nearestV = v;
@@ -239,7 +258,7 @@ class AlertProvider extends ChangeNotifier {
     var nearestDist = double.infinity;
     for (final st in _stations) {
       if (!st.hasCoordinate) continue;
-      final d = _haversineKm(pin.lat, pin.lng, st.lat!, st.lng!);
+      final d = _haversineKm(lat, lng, st.lat!, st.lng!);
       if (d < nearestDist) {
         nearestDist = d;
         nearestSt = st;
@@ -250,9 +269,9 @@ class AlertProvider extends ChangeNotifier {
     final elevEval = elevationFloodLevel(elevMsl, amphoeForEval);
 
     return UserPinAssessment(
-      lat: pin.lat,
-      lng: pin.lng,
-      isGps: pin.isGps,
+      lat: lat,
+      lng: lng,
+      isGps: isGps,
       level: elevEval.level,
       amphoeTh: matchedAmphoe,
       tumbonTh: matchedTumbon,
@@ -404,6 +423,7 @@ class AlertProvider extends ChangeNotifier {
       _sosRequests = store.loadSosRequests();
       _gpsConsentGranted = store.loadGpsConsent();
       _pinnedCoords = store.loadPinnedLocation();
+      _lastCommunityReportAt = store.loadCommunityLastReportAt();
     }
     // โหลดขอบเขตแผนที่ทั้ง 3 ระดับ, ชั้นความสูง DEM และแคชในเครื่องแบบขนานเพื่อให้เปิดหน้าจอได้ทันที
     final results = await Future.wait<dynamic>([
@@ -467,12 +487,19 @@ class AlertProvider extends ChangeNotifier {
       }
       _demGrid ??= await _snapshotService.loadDemGrid();
       final snapFuture = _snapshotService.loadSnapshot();
+      final reportsFuture = _communityReports.isConfigured
+          ? _communityReports.fetchRecentReports()
+          : Future<List<CommunityReport>>.value(const <CommunityReport>[]);
       final result = await _waterService.fetch(forceRefresh: force);
       _stations = result.stations;
       _lastUpdated = result.updatedAt;
       _source = result.source;
       _noticeTh = result.messageTh;
       _snapshot = await snapFuture ?? _snapshot;
+      final fetchedReports = await reportsFuture;
+      if (fetchedReports.isNotEmpty) {
+        _recentCommunityReports = fetchedReports;
+      }
 
       final rain = await _loadRain();
       final newAlerts = _engine.evaluate(
@@ -601,6 +628,50 @@ class AlertProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// บันทึกช่องทางส่งออกจริงของคำขอ SOS (sms / line / clipboard / call)
+  void updateSosDispatchedVia(String id, String channel) {
+    _sosRequests = _sosRequests.map((request) {
+      if (request.id != id) return request;
+      return request.copyWith(dispatchedVia: channel);
+    }).toList();
+    _store?.saveSosRequests(_sosRequests);
+    notifyListeners();
+  }
+
+  /// โหลดรายงานสถานการณ์น้ำจากชุมชน (วิวไม่ระบุตัวตน public_community_reports)
+  Future<void> refreshCommunityReports() async {
+    if (!_communityReports.isConfigured) return;
+    final list = await _communityReports.fetchRecentReports();
+    _recentCommunityReports = list;
+    notifyListeners();
+  }
+
+  /// ส่งรายงานสถานการณ์น้ำชุมชน (Tier C · ไม่เก็บชื่อ/เบอร์โทร · ปัดเศษพิกัด ~110 ม. · ลบอัตโนมัติ 90 วัน)
+  Future<CommunitySubmitResult> submitCommunityReport({
+    required String amphoeTh,
+    required String reportType,
+    required double lat,
+    required double lng,
+    int? waterDepthCm,
+    String? noteTh,
+  }) async {
+    final result = await _communityReports.submitReport(
+      amphoeTh: amphoeTh,
+      reportType: reportType,
+      lat: lat,
+      lng: lng,
+      store: _store,
+      waterDepthCm: waterDepthCm,
+      noteTh: noteTh,
+    );
+    if (result.ok) {
+      _lastCommunityReportAt = DateTime.now();
+      await refreshCommunityReports();
+    }
+    notifyListeners();
+    return result;
+  }
+
   void setSelectedStation(String? code) {
     _selectedStationCode = code;
     notifyListeners();
@@ -618,6 +689,7 @@ class AlertProvider extends ChangeNotifier {
     _settings = const AlertSettings();
     _gpsConsentGranted = false;
     _pinnedCoords = null;
+    _lastCommunityReportAt = null;
     _dataResetVersion++;
     await _store?.deleteAllUserData();
     await _waterService.clearCache();

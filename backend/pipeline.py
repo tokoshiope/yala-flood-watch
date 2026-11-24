@@ -25,7 +25,7 @@ import math
 import os
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -494,6 +494,54 @@ def fetch_glofas_flood() -> list[dict]:
             ],
         })
     return out
+
+
+def fetch_community_reports_60m(
+    now: datetime,
+    *,
+    supabase_url: str | None = None,
+    service_key: str | None = None,
+) -> dict[str, int]:
+    """Fetch Tier C verified community reports (trust_score >= 3, last 60 min) per Yala amphoe.
+    Returns {} when Supabase credentials are not configured; raises on network/HTTP error for graceful degradation."""
+    base = (supabase_url if supabase_url is not None else os.environ.get("SUPABASE_URL", "")).strip().rstrip("/")
+    key = (service_key if service_key is not None else os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")).strip()
+    if not base or not key:
+        return {}
+    if not base.startswith("https://"):
+        raise ValidationError("SUPABASE_URL must use https://")
+
+    cutoff_utc = (_ict(now) - timedelta(minutes=60)).astimezone(timezone.utc).isoformat(timespec="seconds")
+    url = f"{base}/rest/v1/community_reports"
+    params = {
+        "select": "amphoe_th,trust_score",
+        "created_at": f"gte.{cutoff_utc}",
+        "trust_score": "gte.3",
+        "limit": "500",
+    }
+    headers = {
+        "apikey": key,
+        "Authorization": f"Bearer {key}",
+        "Accept": "application/json",
+    }
+    r = requests.get(url, params=params, headers=headers, timeout=10)
+    r.raise_for_status()
+    rows = r.json()
+    if not isinstance(rows, list):
+        return {}
+
+    allowed_amphoes = FLASH_FLOOD_AMPHOES | URBAN_BASIN_AMPHOES
+    counts: dict[str, int] = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        trust = _to_int(row.get("trust_score")) or 0
+        if trust < 3:
+            continue
+        amp = str(row.get("amphoe_th") or "").strip()
+        if amp in allowed_amphoes:
+            counts[amp] = counts.get(amp, 0) + 1
+    return counts
 
 
 # ── Formula v3 Core Engine (Research-Calibrated, 100% Parity with Dart AlertEngine) ──
@@ -976,6 +1024,7 @@ def normalize(
     banglang_dam: dict | None = None,
     glofas_flood: list[dict] | None = None,
     rain_degraded: bool = False,
+    community_reports_by_amphoe: dict[str, int] | None = None,
 ) -> tuple[list[dict], dict]:
     """Normalize ThaiWater waterlevel rows, apply registry fallback, and score with Formula v3."""
     now_ict = _ict(now or datetime.now(ICT))
@@ -1122,7 +1171,7 @@ def normalize(
             glofas_peak_ratio=glofas_ratio,
             dam_signal=dam_sig,
             dam_spillway_active=dam_spill,
-            community_reports_60m=0,
+            community_reports_60m=(community_reports_by_amphoe or {}).get(amphoe, 0),
             is_flash_flood=is_flash,
             is_urban_basin=is_urban,
             has_water_gauge=True,
@@ -1189,6 +1238,7 @@ def build_amphoe_summaries(
     weather_by_amphoe: dict[str, dict],
     banglang_dam: dict | None,
     glofas_flood: list[dict] | None = None,
+    community_reports_by_amphoe: dict[str, int] | None = None,
 ) -> list[dict]:
     """Produce unified Early Warning assessments for ALL 8 Yala amphoes (including Kabang)."""
     summaries: list[dict] = []
@@ -1255,7 +1305,7 @@ def build_amphoe_summaries(
                 glofas_peak_ratio=glofas_ratio,
                 dam_signal=dam_sig,
                 dam_spillway_active=dam_spill,
-                community_reports_60m=0,
+                community_reports_60m=(community_reports_by_amphoe or {}).get(amp_name, 0),
                 is_flash_flood=bool(meta.get("is_flash_flood", False)),
                 is_urban_basin=(amp_name in URBAN_BASIN_AMPHOES),
                 has_water_gauge=False,
@@ -1467,6 +1517,25 @@ def run_pipeline(sync_mobile_asset: bool = False, now: datetime | None = None) -
             degraded.append("open_meteo_flood")
             source_health["open_meteo_flood"] = {"status": "degraded", "tier": "B", "error": str(e)}
 
+        # 6. Optional Tier C: Verified Community Reports (trust_score >= 3, last 60 min)
+        community_reports_by_amphoe: dict[str, int] = {}
+        if os.environ.get("SUPABASE_URL", "").strip() and os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip():
+            try:
+                t5 = time.monotonic()
+                community_reports_by_amphoe = fetch_community_reports_60m(now_ict)
+                source_health["supabase_community_reports"] = {
+                    "status": "ok",
+                    "tier": "C",
+                    "verified_reports_60m": sum(community_reports_by_amphoe.values()),
+                    "latency_ms": round((time.monotonic() - t5) * 1000),
+                }
+            except Exception as e:
+                source_health["supabase_community_reports"] = {
+                    "status": "degraded",
+                    "tier": "C",
+                    "error": str(e),
+                }
+
         # Normalize, validate (Fail-Closed), and score all stations + 8 amphoes
         stations, stats = normalize(
             water_rows,
@@ -1478,6 +1547,7 @@ def run_pipeline(sync_mobile_asset: bool = False, now: datetime | None = None) -
             banglang_dam=banglang_dam,
             glofas_flood=glofas_flood,
             rain_degraded=("thaiwater_rain_24h" in degraded),
+            community_reports_by_amphoe=community_reports_by_amphoe,
         )
         validate(stations, stats)
 
@@ -1488,6 +1558,7 @@ def run_pipeline(sync_mobile_asset: bool = False, now: datetime | None = None) -
             weather_by_amphoe,
             banglang_dam,
             glofas_flood=glofas_flood,
+            community_reports_by_amphoe=community_reports_by_amphoe,
         )
 
         body = build_snapshot(

@@ -76,6 +76,27 @@ def _upload_object(
         raise P.ValidationError(f"Supabase upload failed ({resp.status_code}) for {object_path}: {resp.text[:200]}")
 
 
+def _purge_expired_reports(supabase_url: str, service_key: str) -> int | None:
+    """Invoke PDPA 90-day retention RPC `purge_expired_reports` (best-effort, non-fatal)."""
+    base = supabase_url.strip().rstrip("/")
+    if not base.startswith("https://"):
+        return None
+    url = f"{base}/rest/v1/rpc/purge_expired_reports"
+    headers = {
+        "Authorization": f"Bearer {service_key}",
+        "apikey": service_key,
+        "Content-Type": "application/json",
+    }
+    try:
+        resp = requests.post(url, headers=headers, json={}, timeout=10)
+        if resp.status_code == 200:
+            val = resp.json()
+            return int(val) if isinstance(val, int) and not isinstance(val, bool) else 0
+    except Exception:
+        return None
+    return None
+
+
 def publish(snapshot_dir: Path, bucket: str = "snapshots", dry_run: bool = False) -> int:
     try:
         manifest, snap_path, latest_path, manifest_path = verify_snapshot_bundle(snapshot_dir)
@@ -97,11 +118,15 @@ def publish(snapshot_dir: Path, bucket: str = "snapshots", dry_run: bool = False
         if not supabase_url or not service_key:
             print("PUBLISH_SKIPPED: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set", file=sys.stderr)
             return 1
+        if not supabase_url.startswith("https://"):
+            raise P.ValidationError("SUPABASE_URL must use https://")
 
         for obj_path, fpath, cc in uploads:
             _upload_object(supabase_url, service_key, bucket, obj_path, fpath, cc)
 
-        print(f"PUBLISHED_OK bucket={bucket} hash={manifest['content_hash'][:12]} files={len(uploads)}")
+        purged = _purge_expired_reports(supabase_url, service_key)
+        purge_note = f" purged_expired_reports={purged}" if purged is not None else ""
+        print(f"PUBLISHED_OK bucket={bucket} hash={manifest['content_hash'][:12]} files={len(uploads)}{purge_note}")
         return 0
     except Exception as e:
         print(f"PUBLISH_FAIL_CLOSED: {e}", file=sys.stderr)

@@ -3,13 +3,14 @@ set -euo pipefail
 
 # Yala Flood Watch — iOS Pre-Flight Verification & Release IPA Builder
 # Usage:
-#   ./scripts/release_preflight.sh                                       # Pre-flight checks only
-#   ./scripts/release_preflight.sh "https://<proj>.supabase.co/storage/v1/object/public/snapshots"  # Build signed IPA
+#   ./scripts/release_preflight.sh                                                               # Pre-flight checks only
+#   ./scripts/release_preflight.sh "https://<proj>.supabase.co/storage/v1/object/public/snapshots" "<SUPABASE_ANON_KEY>"  # Build signed IPA
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 ROOT_DIR="$(cd "${APP_DIR}/../.." && pwd)"
 CDN_BASE="${1:-}"
+ANON_KEY="${2:-}"
 FLUTTER_BIN="${FLUTTER_BIN:-/Users/tokyo/flutter-sdk/bin/flutter}"
 
 if ! command -v "${FLUTTER_BIN}" >/dev/null 2>&1; then
@@ -46,8 +47,14 @@ echo "==> [5/6] Running Flutter Unit & Widget Tests..."
 
 if [[ -n "${CDN_BASE}" ]]; then
   echo "==> [6/6] Building Release iOS IPA pointing to ${CDN_BASE}..."
-  "${FLUTTER_BIN}" build ipa --release \
-    --dart-define="YALA_SNAPSHOT_CDN_BASE=${CDN_BASE}"
+  if [[ -n "${ANON_KEY}" ]]; then
+    "${FLUTTER_BIN}" build ipa --release \
+      --dart-define="YALA_SNAPSHOT_CDN_BASE=${CDN_BASE}" \
+      --dart-define="YALA_SUPABASE_ANON_KEY=${ANON_KEY}"
+  else
+    "${FLUTTER_BIN}" build ipa --release \
+      --dart-define="YALA_SNAPSHOT_CDN_BASE=${CDN_BASE}"
+  fi
   echo "    IPA ready at: ${APP_DIR}/build/ios/ipa/"
 else
   echo "==> [6/6] Pre-flight PASSED! To build a release IPA, pass your Supabase CDN URL as argument #1."

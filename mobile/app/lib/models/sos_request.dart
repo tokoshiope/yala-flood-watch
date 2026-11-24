@@ -10,6 +10,8 @@ class SosRequest {
     required this.lng,
     required this.phone,
     this.note = '',
+    this.amphoeTh,
+    this.dispatchedVia,
     this.status = SosStatus.pending,
     this.statusHistory = const <SosStatus>[],
   });
@@ -22,6 +24,12 @@ class SosRequest {
   final String phone;
   final String note;
 
+  /// อำเภอที่ตรวจพบจากพิกัด (ถ้าอยู่ใน จ.ยะลา)
+  final String? amphoeTh;
+
+  /// ช่องทางที่ผู้ใช้เลือกส่งออกจริง (เช่น sms / line / clipboard / call)
+  final String? dispatchedVia;
+
   /// สถานะล่าสุด
   final SosStatus status;
 
@@ -31,6 +39,8 @@ class SosRequest {
   SosRequest copyWith({
     SosStatus? status,
     List<SosStatus>? statusHistory,
+    String? amphoeTh,
+    String? dispatchedVia,
   }) =>
       SosRequest(
         id: id,
@@ -40,6 +50,8 @@ class SosRequest {
         lng: lng,
         phone: phone,
         note: note,
+        amphoeTh: amphoeTh ?? this.amphoeTh,
+        dispatchedVia: dispatchedVia ?? this.dispatchedVia,
         status: status ?? this.status,
         statusHistory: statusHistory ?? this.statusHistory,
       );
@@ -52,6 +64,8 @@ class SosRequest {
         'lng': lng,
         'phone': phone,
         'note': note,
+        if (amphoeTh != null) 'amphoeTh': amphoeTh,
+        if (dispatchedVia != null) 'dispatchedVia': dispatchedVia,
         'status': status.name,
         'statusHistory': statusHistory.map((s) => s.name).toList(),
       };
@@ -66,6 +80,8 @@ class SosRequest {
         lng: (json['lng'] as num?)?.toDouble() ?? 0,
         phone: json['phone'] as String? ?? '',
         note: json['note'] as String? ?? '',
+        amphoeTh: json['amphoeTh'] as String?,
+        dispatchedVia: json['dispatchedVia'] as String?,
         status: SosStatus.values.firstWhere(
           (s) => s.name == json['status'],
           orElse: () => SosStatus.pending,
@@ -83,7 +99,7 @@ class SosRequest {
 }
 
 enum SosStatus {
-  pending('รอตอบรับ', Icons.hourglass_top, Color(0xFFF9A825)),
+  pending('รอตอบรับ', Icons.hourglass_top, Color(0xFF9A6700)),
   accepted('รับเรื่องแล้ว', Icons.assignment_turned_in, Color(0xFF0E5FA6)),
   inProgress('กำลังส่งช่วยเหลือ', Icons.local_shipping, Color(0xFFEF6C00)),
   resolved('ช่วยเหลือแล้ว', Icons.check_circle, Color(0xFF2E7D32));

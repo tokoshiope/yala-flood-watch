@@ -9,7 +9,7 @@ class AppConfig {
   static const String appName = 'แจ้งเตือนน้ำท่วมยะลา';
   static const String appNameEn = 'Yala Flood Watch';
   static const String packageName = 'net.yala.floodapp';
-  static const String appVersion = '0.5.0';
+  static const String appVersion = '1.0.0';
   static const int formulaVersion = 3;
 
   // ── จังหวัดยะลา ────────────────────────────────────────────────────────
@@ -28,6 +28,50 @@ class AppConfig {
     'YALA_SNAPSHOT_CDN_BASE',
     defaultValue: '',
   );
+
+  /// กำหนดค่าผ่าน `--dart-define=YALA_SUPABASE_URL=https://<project>.supabase.co`
+  /// (หากไม่ระบุ จะดึง origin `https://<project>.supabase.co` จาก YALA_SNAPSHOT_CDN_BASE อัตโนมัติ)
+  static const String supabaseUrl = String.fromEnvironment(
+    'YALA_SUPABASE_URL',
+    defaultValue: '',
+  );
+
+  /// Public Supabase anon key สำหรับเรียกเฉพาะ RPC `submit_community_report` (RLS + Rate-Limited) และวิวไม่ระบุตัวตน
+  static const String supabaseAnonKey = String.fromEnvironment(
+    'YALA_SUPABASE_ANON_KEY',
+    defaultValue: '',
+  );
+
+  /// URL ฐานของ Supabase Project (HTTPS เท่านั้น)
+  static String get effectiveSupabaseBaseUrl =>
+      resolveSupabaseBaseUrl(
+        explicitUrl: supabaseUrl,
+        snapshotCdnUrl: snapshotCdnBaseUrl,
+      );
+
+  static String resolveSupabaseBaseUrl({
+    required String explicitUrl,
+    required String snapshotCdnUrl,
+  }) {
+    final direct = explicitUrl.trim().replaceAll(RegExp(r'/+$'), '');
+    if (direct.isNotEmpty) {
+      final parsed = Uri.tryParse(direct);
+      if (parsed != null && parsed.scheme == 'https' && parsed.host.isNotEmpty) {
+        return '${parsed.scheme}://${parsed.authority}';
+      }
+      return '';
+    }
+    final cdn = snapshotCdnUrl.trim();
+    if (cdn.isEmpty) return '';
+    final parsed = Uri.tryParse(cdn);
+    if (parsed != null &&
+        parsed.scheme == 'https' &&
+        parsed.host.isNotEmpty &&
+        parsed.path.contains('/storage/v1/object/public/')) {
+      return '${parsed.scheme}://${parsed.authority}';
+    }
+    return '';
+  }
 
   static String get snapshotLatestUrl =>
       snapshotCdnBaseUrl.isEmpty ? '' : '$snapshotCdnBaseUrl/latest.json';
@@ -150,6 +194,8 @@ class AppConfig {
   static const String gpsConsentPrefsKey = 'yala_flood_gps_consent_v1';
   static const String subscribedTopicPrefsKey = 'yala_flood_subscribed_topic_v1';
   static const String pinnedLocationPrefsKey = 'yala_flood_pinned_location_v1';
+  static const String communityDeviceSaltKey = 'yala_flood_community_salt_v1';
+  static const String communityLastReportAtKey = 'yala_flood_community_last_report_v1';
   static const int maxStoredAlerts = 100;
   static const int maxStoredSosRequests = 50;
 
