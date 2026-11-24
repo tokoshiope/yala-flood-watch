@@ -111,3 +111,13 @@
   6. ซ่อนศัพท์เทคนิค (`formula_version`, สูตร `W/R/F/D/C`, คะแนนดิบ, `SHA-256`, `Degraded`) ออกจากหน้าจอประชาชน ขณะยังคงตรรกะ `formula_version = 2` และชุดทดสอบ parity เบื้องหลัง 100%
   7. เพิ่มสวิตช์แยกในหน้าตั้งค่า: **เปิด/ปิดเสียงแจ้งเตือน** (`!quietMode`) และ **เปิด/ปิดข้อความ Notification** (`pushEnabled`)
 - **กระทบ:** `backend/registry/yala_subdistricts.geojson`, `backend/registry/yala_villages.json`, `backend/registry/contacts.yaml`, `backend/registry/shelters.yaml`, `mobile/preview/serve.py`, `mobile/preview/index.html`, `mobile/app/ios/Runner/Info.plist`, `mobile/app/lib/`, `mobile/app/assets/geo/`, `web/`
+
+## DEC-016 — ปิดงานวิศวกรรม Phase 3 & 4 Pre-Release ครบทุกชิ้น (iOS App Store Readiness, FCM Topic Engine, Privacy Manifest, Launch Kit และ Independent QA `PASS`)
+- **วันที่:** 2026-11-24
+- **สถานะ:** ✅ อนุมัติโดย Founder (แยกดำเนินงานคู่ขนาน Track 1 Founder / Track 2 AI Team) · Independent QA **`PASS`** (`docs/qa/audit-2026-11-24-v3-pre-release.md`)
+- **ตัดสินใจ:**
+  1. **iOS App Store Readiness:** สร้างไอคอนแอปจริง 15 ขนาด (No-Alpha, `1024×1024` ผ่าน `sips`), สร้างและลงทะเบียน `PrivacyInfo.xcprivacy` ใน `Runner.xcodeproj/project.pbxproj` (`plutil -lint OK`), เพิ่ม `ITSAppUsesNonExemptEncryption=false` และ `UIBackgroundModes=[remote-notification]`, และจัดให้ Bundle ID (`net.yala.floodapp`) และเวอร์ชัน (`0.4.0+4`) ตรงกันทุกไฟล์
+  2. **FCM Topic Push รายอำเภอ (ASCII Standard):** จัดทำระบบติดตามหัวข้อ `yala_flood_all` + 8 อำเภอ (`yala_flood_<slug>`) ตรงกัน 100% ระหว่าง `mobile/app/lib/services/notification_service.dart` และ `backend/notify_fcm.py` (รองรับ Cooldown 30 นาที, หมดอายุ Hysteresis 2 ชม., Escalation ทันที, เก็บสถานะข้ามรอบด้วย `actions/cache@v4`, และ Fail-Closed เมื่อ SHA-256 ไม่ตรง) พร้อมรองรับการปิดเสียงจริงบน iOS/Android
+  3. **Accessibility & Fail-Closed Client Cache:** เพิ่ม `largeTextMode` (โหมดตัวอักษรใหญ่ผู้สูงอายุ) + 4-language `Locale` binding ใน `main.dart`, อัปเกรด `SnapshotService` ให้ตรวจ `manifest.json` `content_hash` + `province.code == '95'` และแคช Snapshot ที่ผ่านการตรวจในเครื่อง (`AppConfig.cacheSnapshotKey`), และจำกัด `community_reports` RLS ไม่ให้เปิดเผย `device_hash` (สร้าง `public_community_reports` view)
+  4. **CI/CD & Founder Launch Kit:** เพิ่ม `.github/workflows/ci.yml`, สคริปต์ `mobile/app/scripts/release_preflight.sh`, และชุดเอกสารพร้อมใช้ (`docs/launch/founder-action-guide.md`, `docs/launch/app-store-metadata.md`, `docs/launch/ddpm-yala-verification-letter.md`)
+- **กระทบ:** `mobile/app/ios/`, `mobile/app/lib/`, `mobile/app/scripts/`, `backend/notify_fcm.py`, `supabase/migrations/`, `.github/workflows/`, `docs/launch/`, `docs/qa/`

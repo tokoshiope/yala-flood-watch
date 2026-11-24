@@ -373,3 +373,79 @@ def test_publish_supabase_dry_run_and_tamper_fail_closed(tmp_path):
     tampered = {**payload, "province": {"code": "95", "name": "TAMPERED"}}
     (tmp_path / "latest.json").write_text(json.dumps(tampered, ensure_ascii=False), encoding="utf-8")
     assert PUB.publish(tmp_path, dry_run=True) == 1
+
+
+def test_notify_fcm_topic_parity_cooldown_and_tamper_fail_closed(tmp_path):
+    import notify_fcm as N
+
+    # 1. All 8 amphoes map to valid ASCII FCM topics matching Dart NotificationService
+    reg_amphoes = set(_amphoes_registry().keys())
+    assert set(N.AMPHOE_TOPIC_MAP.keys()) == reg_amphoes
+    for topic in [N.TOPIC_ALL_YALA, *N.AMPHOE_TOPIC_MAP.values()]:
+        assert topic.isascii() and " " not in topic and ":" not in topic
+
+    # 2. Build citizen-friendly messages (zero formula/score jargon) + 30m cooldown + escalation
+    snap = {
+        "province": {"code": "95", "name": "ยะลา"},
+        "amphoes": [
+            {
+                "amphoe": "เมืองยะลา",
+                "assessment": {
+                    "level": 3,
+                    "score": 48.5,
+                    "should_push": True,
+                    "action_th": "ยกของมีค่าขึ้นที่สูง เตรียมถุงยังชีพ",
+                    "lead_time_hours": "6–12 ชม.",
+                },
+            },
+            {
+                "amphoe": "เบตง",
+                "assessment": {
+                    "level": 2,
+                    "score": 24.0,
+                    "should_push": False,
+                    "action_th": "ฝนอย่างเดียวไม่ Push",
+                },
+            },
+        ],
+    }
+    t0 = 1_700_000_000.0
+    msgs = N.build_fcm_messages(snap, {}, now_ts=t0)
+    topics = {m["message"]["topic"] for m in msgs}
+    assert topics == {"yala_flood_mueang_yala", "yala_flood_all"}
+    for m in msgs:
+        text = m["message"]["notification"]["title"] + m["message"]["notification"]["body"]
+        assert "formula" not in text.lower()
+        assert "48.5" not in text
+
+    # Same level within 15 minutes -> suppressed by 30-min cooldown
+    state = {
+        "yala_flood_mueang_yala": {"level": 3, "sent_at": t0},
+        "yala_flood_all": {"level": 3, "sent_at": t0},
+    }
+    assert N.build_fcm_messages(snap, state, now_ts=t0 + 15 * 60) == []
+
+    # Escalation to level 4 after 5 minutes -> bypasses cooldown immediately
+    snap["amphoes"][0]["assessment"]["level"] = 4
+    esc_msgs = N.build_fcm_messages(snap, state, now_ts=t0 + 5 * 60)
+    assert len(esc_msgs) == 2
+
+    # HIGH-2 regression: After 2-hour hysteresis window expires, a prior Level 5 event
+    # MUST NOT permanently suppress a new Level 2–3 flood warning in a later storm.
+    old_lv5_state = {"yala_flood_mueang_yala": {"level": 5, "sent_at": t0}}
+    snap["amphoes"][0]["assessment"]["level"] = 3
+    later_msgs = N.build_fcm_messages(snap, old_lv5_state, now_ts=t0 + N.HYSTERESIS_SECONDS + 60)
+    assert any(m["message"]["topic"] == "yala_flood_mueang_yala" for m in later_msgs)
+
+    # Reconcile state prunes topics once they return to Level 1 (normal)
+    normal_snap = {
+        "province": {"code": "95", "name": "ยะลา"},
+        "amphoes": [{"amphoe": "เมืองยะลา", "assessment": {"level": 1, "should_push": False}}],
+    }
+    pruned = N.reconcile_state(normal_snap, old_lv5_state, [], now_ts=t0 + 600)
+    assert "yala_flood_mueang_yala" not in pruned
+
+    # 3. Fail-closed on tampered latest.json
+    (tmp_path / "latest.json").write_text(json.dumps(snap), encoding="utf-8")
+    (tmp_path / "manifest.json").write_text(json.dumps({"content_hash": "0" * 64}), encoding="utf-8")
+    assert N.main(["--snapshot-dir", str(tmp_path), "--dry-run"]) == 1

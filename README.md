@@ -1,7 +1,7 @@
-# 🌊 น้ำท่วมยะลา (Yala Flood Watch)
+# 🌊 แจ้งเตือนน้ำท่วมยะลา (Yala Flood Watch)
 
 > **One Founder. AI-powered. Early Flood Warning Built for Every Household in Yala.**
-> แอปพลิเคชันแจ้งเตือนภัยน้ำท่วมล่วงหน้า **เฉพาะจังหวัดยะลา (8 อำเภอ · `province_code=95`)** — พัฒนาเน้น **iOS เป็นอันดับแรก** ใช้งานฟรี 100% เชื่อมต่อฐานข้อมูลอุทกวิทยาและอุตุนิยมวิทยาจริง 5 แหล่ง พร้อมระบบประเมินเวลาน้ำเดินทางจากเขื่อนบางลาง 6–12 ชั่วโมง
+> แอปพลิเคชันแจ้งเตือนภัยน้ำท่วมล่วงหน้า **เฉพาะจังหวัดยะลา (8 อำเภอ · 58 ตำบล · 449 หมู่บ้าน · `province_code=95`)** — พัฒนาเน้น **iOS เป็นอันดับแรก** ใช้งานฟรี 100% เชื่อมต่อฐานข้อมูลอุทกวิทยาและอุตุนิยมวิทยาจริง 5 แหล่ง พร้อมแผนที่เฉพาะยะลา 3 ระดับความสูง (Copernicus DEM) และประเมินเวลาน้ำเดินทางจากเขื่อนบางลาง 6–12 ชั่วโมง
 
 > **คำชี้แจงด้านความปลอดภัย (Life-Safety Disclaimer):** แอปนี้เป็นระบบสนับสนุนการเฝ้าระวังและแจ้งเตือนภัยล่วงหน้าอิสระ **ไม่ใช่ช่องทางการแจ้งเหตุกู้ภัยหลักของทางราชการ** หากประสบเหตุฉุกเฉินหรือน้ำท่วมวิกฤต กรุณาโทร **1784** (สายด่วนนิรภัย กรม ปภ.), **073-203559** (ปภ.ยะลา), **073-212345** (ปภ.เทศบาลนครยะลา) หรือ **1669** (เจ็บป่วยฉุกเฉิน) ทันที
 
@@ -109,7 +109,7 @@ open ios/Runner.xcworkspace
 
 - [x] **Phase 0: Inception & Baseline Docs** — PRD 1,011 บรรทัด, Wireframe 14 จอ, เอกสารฐาน 01–04
 - [x] **Phase 1: Multi-Source Data Foundation (v2)** — เชื่อม 5 ฐานข้อมูลจริง (14 สถานีน้ำ + 87 สถานีฝน + เขื่อนบางลาง + Open-Meteo 72h + GloFAS 7d), สูตร `formula_version = 2`, Fail-Closed Pipeline + Unit Tests
-- [x] **Phase 1.5: iOS-First App Core & Interactive Prototype** — สร้างโฟลเดอร์ `ios/` + Info.plist, แก้ `AlertEngine` v2 Parity, แก้เบอร์ฉุกเฉิน 1784/073-203559/073-212345, PDPA Consent & Delete Data, Interactive iOS Simulator Preview
-- [ ] **Phase 2: Cloud Bridge & Legal Web** — เชื่อม Supabase Storage CDN, GitHub Pages Privacy/Terms, ยืนยันพิกัดจุดอพยพจริงจาก ปภ.ยะลา
-- [ ] **Phase 3: iOS TestFlight Beta & Push (APNs/FCM)** — ทดสอบ Push จริงบน iPhone, Critical Alert / Silent Mode, แปลภาษามลายูท้องถิ่น (Yawi)
-- [ ] **Phase 4: Independent QA Sign-Off & App Store Launch** — ผ่าน Gate 3 + ยื่น Apple App Store (ฟรี 100%)
+- [x] **Phase 1.5: iOS-First App Core & Interactive Prototype** — โฟลเดอร์ `ios/` + Info.plist, `AlertEngine` v2 Parity, เบอร์ฉุกเฉิน 1784/073-203559/073-212345 + LINE/FB, PDPA Consent & Delete Data, Interactive iOS Simulator Preview
+- [x] **Phase 2: Cloud Bridge, UX v3 & Legal Web** — แผนที่เฉพาะยะลา 3 ระดับความสูง (`8 อำเภอ → 58 ตำบล → 449 หมู่บ้าน`), Supabase Schema + RLS + Atomic CDN Publisher (`backend/publish_supabase.py`), เว็บไซต์ PDPA/Terms (`web/`), 4 ภาษา (`th/en/zh/ms`)
+- [x] **Phase 3 (AI Engineering Ready): iOS App Store & Push Preparation** — ไอคอนแอป 15 ขนาด (No-Alpha), `PrivacyInfo.xcprivacy`, `ITSAppUsesNonExemptEncryption`, FCM Topic รายอำเภอ (`notification_service.dart` ↔ `backend/notify_fcm.py`), โหมดตัวอักษรใหญ่, CI/CD (`.github/workflows/ci.yml`), และ Launch Kit (`docs/launch/founder-action-guide.md`, `app-store-metadata.md`, `ddpm-yala-verification-letter.md`)
+- [ ] **Founder Execution & Gate 3 Launch:** ตั้งค่า GitHub/Supabase/Firebase/Xcode Signing ตาม [`docs/launch/founder-action-guide.md`](docs/launch/founder-action-guide.md) → ทดสอบ TestFlight → ยื่น Apple App Store (ฟรี 100%)

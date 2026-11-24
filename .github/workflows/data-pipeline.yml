@@ -27,12 +27,27 @@ jobs:
         run: python backend/pipeline.py --sync-mobile-asset
       - name: Verify Snapshot Bundle (Dry-Run)
         run: python backend/publish_supabase.py --snapshot-dir backend/output --dry-run
+      - name: Verify FCM Push Payload (Dry-Run)
+        run: python backend/notify_fcm.py --snapshot-dir backend/output --dry-run
       - name: Publish Snapshot to Supabase CDN (when secrets configured)
         if: ${{ secrets.SUPABASE_URL != '' && secrets.SUPABASE_SERVICE_ROLE_KEY != '' }}
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: python backend/publish_supabase.py --snapshot-dir backend/output
+      - name: Restore FCM Cooldown State Cache
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON != '' }}
+        uses: actions/cache@v4
+        with:
+          path: backend/output/fcm_state.json
+          key: fcm-state-${{ github.run_id }}
+          restore-keys: |
+            fcm-state-
+      - name: Dispatch FCM Topic Push Alerts (when Firebase secret configured)
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON != '' }}
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+        run: python backend/notify_fcm.py --snapshot-dir backend/output --state-file backend/output/fcm_state.json
       - name: Upload snapshot artifacts
         if: success()
         uses: actions/upload-artifact@v4

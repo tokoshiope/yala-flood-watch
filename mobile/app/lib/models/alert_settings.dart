@@ -12,6 +12,7 @@ class AlertSettings {
     this.rainScoreEnabled = true,
     this.refreshMinutes = 15,
     this.languageCode = 'th',
+    this.largeTextMode = false,
   });
 
   final String? selectedAmphoeTh;
@@ -26,6 +27,9 @@ class AlertSettings {
   /// รหัสภาษา UI และแผนที่ Google Maps: 'th' | 'en' | 'zh' | 'ms'
   final String languageCode;
 
+  /// โหมดตัวอักษรใหญ่สำหรับผู้สูงอายุ (เสริมจาก iOS Dynamic Type)
+  final bool largeTextMode;
+
   AlertSettings copyWith({
     String? selectedAmphoeTh,
     String? selectedTumbonTh,
@@ -38,6 +42,7 @@ class AlertSettings {
     bool? rainScoreEnabled,
     int? refreshMinutes,
     String? languageCode,
+    bool? largeTextMode,
   }) =>
       AlertSettings(
         selectedAmphoeTh:
@@ -51,6 +56,7 @@ class AlertSettings {
         rainScoreEnabled: rainScoreEnabled ?? this.rainScoreEnabled,
         refreshMinutes: refreshMinutes ?? this.refreshMinutes,
         languageCode: languageCode ?? this.languageCode,
+        largeTextMode: largeTextMode ?? this.largeTextMode,
       );
 
   AlertSettings clearAmphoe() => AlertSettings(
@@ -63,6 +69,7 @@ class AlertSettings {
         rainScoreEnabled: rainScoreEnabled,
         refreshMinutes: refreshMinutes,
         languageCode: languageCode,
+        largeTextMode: largeTextMode,
       );
 
   Map<String, dynamic> toJson() => {
@@ -75,6 +82,7 @@ class AlertSettings {
         'rainScoreEnabled': rainScoreEnabled,
         'refreshMinutes': refreshMinutes,
         'languageCode': languageCode,
+        'largeTextMode': largeTextMode,
       };
 
   factory AlertSettings.fromJson(Map<String, dynamic> json) {
@@ -90,6 +98,7 @@ class AlertSettings {
       rainScoreEnabled: json['rainScoreEnabled'] as bool? ?? true,
       refreshMinutes: _intOr(json['refreshMinutes'], 15),
       languageCode: validLang,
+      largeTextMode: json['largeTextMode'] as bool? ?? false,
     );
   }
 

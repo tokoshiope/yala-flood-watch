@@ -1208,7 +1208,7 @@ function mountYalaOnlyMap() {
         color: '#ffffff',
         weight: 2,
         fillOpacity: 0.95,
-      }).bindTooltip(`${v.moo > 0 ? 'หมู่ ' + v.moo + ' ' : ''}${v.name_th} · สูง ${v.elevation_msl ?? '-'} ม.รทก. (${ev.text})`).addTo(map);
+      }).bindTooltip(`${v.moo > 0 ? 'หมู่ ' + esc(v.moo) + ' ' : ''}${esc(v.name_th)} · สูง ${esc(v.elevation_msl ?? '-')} ม.รทก. (${esc(ev.text)})`).addTo(map);
     }
   }
 }

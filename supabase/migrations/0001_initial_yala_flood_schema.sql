@@ -46,12 +46,30 @@ CREATE INDEX IF NOT EXISTS idx_community_reports_rate_limit
 
 ALTER TABLE public.community_reports ENABLE ROW LEVEL SECURITY;
 
--- Anyone may read verified/recent aggregate reports (no PII columns exist)
+-- Restrict raw table SELECT (contains device_hash) to service_role only;
+-- expose anonymized public_community_reports view without device_hash for anon/authenticated.
 DROP POLICY IF EXISTS "Public read recent community reports" ON public.community_reports;
-CREATE POLICY "Public read recent community reports"
+CREATE POLICY "Service role read community reports"
   ON public.community_reports FOR SELECT
-  TO anon, authenticated
-  USING (expires_at > now());
+  TO service_role
+  USING (true);
+
+CREATE OR REPLACE VIEW public.public_community_reports AS
+SELECT
+  id,
+  created_at,
+  expires_at,
+  amphoe_th,
+  report_type,
+  lat,
+  lon,
+  water_depth_cm,
+  note_th,
+  trust_score
+FROM public.community_reports
+WHERE expires_at > now();
+
+GRANT SELECT ON public.public_community_reports TO anon, authenticated;
 
 -- Direct INSERT blocked for anon — must go through rate-limited RPC below
 DROP POLICY IF EXISTS "Deny direct anon insert" ON public.community_reports;

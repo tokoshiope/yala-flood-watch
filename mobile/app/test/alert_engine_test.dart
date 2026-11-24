@@ -9,6 +9,7 @@ import 'package:yala_flood_app/models/rain_forecast.dart';
 import 'package:yala_flood_app/models/risk_level.dart';
 import 'package:yala_flood_app/models/station.dart';
 import 'package:yala_flood_app/services/alert_engine.dart';
+import 'package:yala_flood_app/services/notification_service.dart';
 import 'package:yala_flood_app/services/snapshot_service.dart';
 
 Station _station({
@@ -404,6 +405,33 @@ void main() {
       expect(AppConfig.lineDdpmUrl, 'https://line.me/R/ti/p/@1784DDPM');
       expect(AppConfig.lineYalaCityUrl, 'https://line.me/R/ti/p/@yalacity');
       expect(AppConfig.fbDdpmUrl, 'https://www.facebook.com/DDPMNews');
+
+      // ตรวจสอบความตรงกันของ FCM Topic ASCII ทั้ง 8 อำเภอ + largeTextMode persistence
+      final asciiTopicRegex = RegExp(r'^[a-zA-Z0-9\-_.~%]+$');
+      expect(asciiTopicRegex.hasMatch(NotificationService.topicAllYala), isTrue);
+      for (final amp in AppConfig.riskAmphoeTh) {
+        final topic = NotificationService.topicForAmphoe(amp);
+        expect(topic, isNot(NotificationService.topicAllYala));
+        expect(asciiTopicRegex.hasMatch(topic), isTrue);
+      }
+      final large = const AlertSettings().copyWith(largeTextMode: true);
+      expect(AlertSettings.fromJson(large.toJson()).largeTextMode, isTrue);
+
+      // MEDIUM-1 regression: SnapshotService fail-closed validation (province 95 + 8 amphoes + manifest hash)
+      final validSnap = <String, dynamic>{
+        'province': {'code': '95', 'name': 'ยะลา'},
+        'amphoes': List.generate(8, (i) => {'amphoe': AppConfig.riskAmphoeTh[i]}),
+        'content_hash': 'abc123',
+      };
+      expect(SnapshotService.isValidYalaSnapshot(validSnap, expectedManifestHash: 'abc123'), isTrue);
+      expect(SnapshotService.isValidYalaSnapshot(validSnap, expectedManifestHash: 'tampered'), isFalse);
+      expect(
+        SnapshotService.isValidYalaSnapshot(
+          {...validSnap, 'province': {'code': '10'}},
+          expectedManifestHash: 'abc123',
+        ),
+        isFalse,
+      );
     });
   });
 }

@@ -179,6 +179,14 @@ class SettingsScreen extends StatelessWidget {
                 provider.updateSettings(settings.copyWith(pushEnabled: value)),
           ),
           SwitchListTile(
+            secondary: const Icon(Icons.text_fields),
+            title: Text(strings.get('large_text_toggle')),
+            subtitle: Text(strings.get('large_text_sub')),
+            value: settings.largeTextMode,
+            onChanged: (value) =>
+                provider.updateSettings(settings.copyWith(largeTextMode: value)),
+          ),
+          SwitchListTile(
             secondary: const Icon(Icons.cloud_outlined),
             title: const Text('ประเมินร่วมกับฝนจริงและพยากรณ์ฝน'),
             subtitle: const Text('ช่วยเตือนภัยล่วงหน้าในพื้นที่ฝนตกหนักและท้ายเขื่อนบางลาง'),

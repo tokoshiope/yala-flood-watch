@@ -23,6 +23,20 @@ class _SosScreenState extends State<SosScreen> {
   LocationStatus _locationStatus = LocationStatus.idle;
   String? _locationError;
   bool _sending = false;
+  int _lastHandledResetVersion = 0;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final resetVer = context.watch<AlertProvider>().dataResetVersion;
+    if (resetVer != _lastHandledResetVersion) {
+      _lastHandledResetVersion = resetVer;
+      _position = null;
+      _locationStatus = LocationStatus.idle;
+      _locationError = null;
+      _phoneController.clear();
+    }
+  }
 
   @override
   void dispose() {
@@ -174,14 +188,6 @@ class _SosScreenState extends State<SosScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AlertProvider>();
-    // LOW-1 fix: หากผู้ใช้กด "ลบข้อมูลทั้งหมดของฉัน (PDPA)" ในหน้าตั้งค่า ให้ล้างพิกัด/เบอร์ในหน่วยความจำทันที
-    if (!provider.gpsConsentGranted &&
-        (_position != null || _phoneController.text.isNotEmpty)) {
-      _position = null;
-      _locationStatus = LocationStatus.idle;
-      _locationError = null;
-      _phoneController.clear();
-    }
     return Scaffold(
       appBar: AppBar(title: const Text('ขอความช่วยเหลือ (SOS)')),
       body: ListView(

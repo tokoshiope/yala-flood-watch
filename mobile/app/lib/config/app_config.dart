@@ -32,6 +32,9 @@ class AppConfig {
   static String get snapshotLatestUrl =>
       snapshotCdnBaseUrl.isEmpty ? '' : '$snapshotCdnBaseUrl/latest.json';
 
+  static String get snapshotManifestUrl =>
+      snapshotCdnBaseUrl.isEmpty ? '' : '$snapshotCdnBaseUrl/manifest.json';
+
   static const String thaiWaterBaseUrl =
       'https://api-v3.thaiwater.net/api/v1/thaiwater30/public';
   static const String thaiWaterWaterLevelPath = '/waterlevel';

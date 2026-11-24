@@ -36,11 +36,14 @@
 - [ ] Founder ตั้งค่า Supabase Project / GitHub Secrets / GitHub Pages ตาม `docs/launch/phase2-cloud-setup-runbook.md` — WAITING FOUNDER
 - [ ] ขอพิกัดศูนย์พักพิงรายตำบลและเบอร์ตรงที่ว่าการอำเภออีก 7 อำเภอจาก ปภ.ยะลา (`pending_ddpm_verify` → `verified`) — WAITING FOUNDER
 
-## Phase 3 — iOS TestFlight Beta & APNs/FCM Push `[TODO]`
-- [ ] ตั้งค่า `GoogleService-Info.plist` + APNs Key + Firebase Cloud Messaging topic รายอำเภอ (`yala_flood:{amphoe}`)
-- [ ] ทดสอบ Build ลงเครื่อง iPhone จริงผ่าน Xcode / TestFlight (Offline mode, Local+Remote Push, Dynamic Type ผู้สูงอายุ)
-- [ ] เพิ่มรองรับภาษามลายูท้องถิ่น (Yawi/Malay) สำหรับประกาศเตือนภัยหลัก
+## Phase 3 — iOS App Store Readiness, Push Engine & Accessibility `[DONE — AI Team · Ready for Founder TestFlight]`
+- [x] สร้างไอคอน iOS จริงครบ 15 ขนาด (`1024×1024` No-Alpha) + `PrivacyInfo.xcprivacy` (ลงทะเบียนใน `project.pbxproj` + `plutil -lint OK`) + `ITSAppUsesNonExemptEncryption=false` + `UIBackgroundModes=[remote-notification]` + จัด Bundle ID (`net.yala.floodapp`) และเวอร์ชัน (`0.4.0+4`) ให้ตรงกัน — DONE (2026-11-24 · `DEC-016`)
+- [x] พัฒนาระบบ FCM Topic รายอำเภอ (`yala_flood_all` + 8 อำเภอ ASCII) ตรงกัน 100% ระหว่าง `NotificationService` และ `backend/notify_fcm.py` (30m Cooldown + 2h Hysteresis decay + SHA-256 Fail-Closed + `actions/cache@v4` state) + รองรับปิดเสียงจริงบน iOS/Android — DONE (2026-11-24)
+- [x] เพิ่มโหมดตัวอักษรใหญ่สำหรับผู้สูงอายุ (`largeTextMode`) + Dynamic 4-Language Locale (`th`/`en`/`zh`/`ms`) + Fail-Closed Mobile CDN Snapshot Verification & Local Cache (`SnapshotService`) + ป้องกัน `device_hash` ใน Supabase view (`public_community_reports`) — DONE (2026-11-24)
+- [x] สร้าง CI Workflow (`.github/workflows/ci.yml`), สคริปต์ `mobile/app/scripts/release_preflight.sh`, และชุด Launch Kit ครบชุด (`docs/launch/founder-action-guide.md`, `app-store-metadata.md`, `ddpm-yala-verification-letter.md`) — DONE (2026-11-24)
+- [ ] **Founder:** ตั้งค่า Firebase APNs Key (`.p8`) + วาง `GoogleService-Info.plist` + เปิด Capability Push Notifications ใน Xcode — WAITING FOUNDER
+- [ ] **Founder:** รัน `./scripts/release_preflight.sh "<SUPABASE_CDN_URL>"` / Xcode Archive และทดสอบบน iPhone จริงผ่าน TestFlight — WAITING FOUNDER
 
-## Phase 4 — Gate 3 Release Sign-Off & App Store Launch `[TODO]`
-- [ ] ผ่าน Independent QA Re-Audit (`PASS`) + Founder Gate 3 Sign-Off
-- [ ] ส่ง Apple App Store Review (ฟรี 100% ไม่คิดค่าบริการ)
+## Phase 4 — Independent QA Sign-Off & App Store Launch `[READY FOR FOUNDER GATE 3]`
+- [x] **Independent Pre-Release v3 / Gate 3 QA Audit & Re-Audit (Context แยก):** ตรวจพบ 3 HIGH + 3 MEDIUM + 2 LOW → แก้ไขครบทั้งหมดและผ่าน Re-Audit Verdict **`PASS`** (`docs/qa/audit-2026-11-24-v3-pre-release.md`, `pytest 28/28`, `flutter analyze 0 issues`, `flutter test 45/45`) — DONE (2026-11-24)
+- [ ] **Founder Gate 3 Sign-Off & Submission:** กรอก App Store Connect ตาม `docs/launch/app-store-metadata.md` และส่งตรวจ Apple App Store (ฟรี 100%) — WAITING FOUNDER

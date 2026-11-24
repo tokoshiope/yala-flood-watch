@@ -125,6 +125,18 @@ class AppStrings {
       'zh': '返回也拉全府',
       'ms': 'Kembali ke Wilayah Yala',
     },
+    'large_text_toggle': {
+      'th': 'โหมดตัวอักษรใหญ่ (ผู้สูงอายุ)',
+      'en': 'Large Text Mode',
+      'zh': '大字体模式 (长辈关怀)',
+      'ms': 'Mod Tulisan Besar',
+    },
+    'large_text_sub': {
+      'th': 'ขยายขนาดตัวอักษรให้อ่านง่ายชัดเจนยิ่งขึ้น',
+      'en': 'Increase text size across screens for easier reading',
+      'zh': '放大界面字体便于阅读',
+      'ms': 'Besarkan teks untuk kemudahan membaca',
+    },
     'settings_title': {'th': 'ตั้งค่า', 'en': 'Settings', 'zh': '设置', 'ms': 'Tetapan'},
   };
 

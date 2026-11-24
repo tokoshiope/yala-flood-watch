@@ -12,6 +12,7 @@ import 'package:yala_flood_app/screens/station_detail_screen.dart';
 import 'package:yala_flood_app/services/deep_link_service.dart';
 import 'package:yala_flood_app/services/local_store.dart';
 import 'package:yala_flood_app/services/notification_service.dart';
+import 'package:yala_flood_app/services/snapshot_service.dart';
 import 'package:yala_flood_app/services/thai_water_service.dart';
 import 'package:yala_flood_app/state/alert_provider.dart';
 
@@ -26,11 +27,16 @@ Future<void> main() async {
   final provider = AlertProvider(
     waterService: waterService,
     localStorage: LocalStore(preferences),
+    snapshotService: SnapshotService(preferences: preferences),
   );
 
-  // แจ้งเตือนในเครื่อง + Push (Push ข้ามได้ถ้ายังไม่ตั้งค่า Firebase)
+  // แจ้งเตือนในเครื่อง + Push รายอำเภอ (Push ข้ามได้อัตโนมัติถ้ายังไม่วาง GoogleService-Info.plist)
+  final savedSettings = LocalStore(preferences).loadSettings();
   await NotificationService.instance.initialize();
-  await NotificationService.instance.initializePush();
+  await NotificationService.instance.initializePush(
+    pushEnabled: savedSettings.pushEnabled,
+    selectedAmphoeTh: savedSettings.selectedAmphoeTh,
+  );
 
   runApp(YalaFloodApp(provider: provider));
 }
@@ -71,31 +77,56 @@ class _YalaFloodAppState extends State<YalaFloodApp> {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<AlertProvider>.value(
       value: widget.provider,
-      child: MaterialApp(
-        title: AppConfig.appName,
-        debugShowCheckedModeBanner: false,
-        navigatorKey: navigatorKey,
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(AppConfig.colorPrimary),
-          ),
-        ),
-        darkTheme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(AppConfig.colorPrimary),
-            brightness: Brightness.dark,
-          ),
-        ),
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: const [
-          Locale('th', 'TH'),
-          Locale('en', 'US'),
-        ],
-        locale: const Locale('th', 'TH'),
-        initialRoute: '/',
-        onGenerateRoute: _generateRoute,
+      child: Consumer<AlertProvider>(
+        builder: (context, provider, _) {
+          final settings = provider.settings;
+          final locale = switch (settings.languageCode) {
+            'en' => const Locale('en', 'US'),
+            'zh' => const Locale('zh'),
+            'ms' => const Locale('ms'),
+            _ => const Locale('th', 'TH'),
+          };
+          return MaterialApp(
+            title: AppConfig.appName,
+            debugShowCheckedModeBanner: false,
+            navigatorKey: navigatorKey,
+            theme: ThemeData(
+              useMaterial3: true,
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: const Color(AppConfig.colorPrimary),
+              ),
+            ),
+            darkTheme: ThemeData(
+              useMaterial3: true,
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: const Color(AppConfig.colorPrimary),
+                brightness: Brightness.dark,
+              ),
+            ),
+            localizationsDelegates: GlobalMaterialLocalizations.delegates,
+            supportedLocales: const [
+              Locale('th', 'TH'),
+              Locale('en', 'US'),
+              Locale('zh'),
+              Locale('ms'),
+            ],
+            locale: locale,
+            builder: (context, child) {
+              if (!settings.largeTextMode || child == null) {
+                return child ?? const SizedBox.shrink();
+              }
+              final mq = MediaQuery.of(context);
+              final currentScale = mq.textScaler.scale(1.0);
+              final boosted = currentScale < 1.25 ? 1.25 : currentScale;
+              return MediaQuery(
+                data: mq.copyWith(textScaler: TextScaler.linear(boosted)),
+                child: child,
+              );
+            },
+            initialRoute: '/',
+            onGenerateRoute: _generateRoute,
+          );
+        },
       ),
     );
   }

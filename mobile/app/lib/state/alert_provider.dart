@@ -49,6 +49,7 @@ class AlertProvider extends ChangeNotifier {
   List<SubdistrictBoundary> _subdistricts = const <SubdistrictBoundary>[];
   List<VillagePoint> _villages = const <VillagePoint>[];
   bool _gpsConsentGranted = false;
+  int _dataResetVersion = 0;
 
   bool _loading = false;
   bool _initialized = false;
@@ -68,6 +69,7 @@ class AlertProvider extends ChangeNotifier {
   List<SubdistrictBoundary> get subdistricts => _subdistricts;
   List<VillagePoint> get villages => _villages;
   bool get gpsConsentGranted => _gpsConsentGranted;
+  int get dataResetVersion => _dataResetVersion;
   bool get loading => _loading;
   bool get initialized => _initialized;
   String? get errorTh => _errorTh;
@@ -227,6 +229,10 @@ class AlertProvider extends ChangeNotifier {
     _villages = await _snapshotService.loadYalaVillages();
     _snapshot = await _snapshotService.loadSnapshot();
     _initialized = true;
+    await _notifications.syncTopicSubscription(
+      pushEnabled: _settings.pushEnabled,
+      selectedAmphoeTh: _settings.selectedAmphoeTh,
+    );
     await refresh();
   }
 
@@ -312,6 +318,10 @@ class AlertProvider extends ChangeNotifier {
     _settings = next;
     notifyListeners();
     _store?.saveSettings(next);
+    _notifications.syncTopicSubscription(
+      pushEnabled: next.pushEnabled,
+      selectedAmphoeTh: next.selectedAmphoeTh,
+    );
     final newAlerts = _engine.evaluate(
       stations: _stations,
       settings: _settings,
@@ -384,6 +394,7 @@ class AlertProvider extends ChangeNotifier {
 
   Future<void> clearCache() async {
     await _waterService.clearCache();
+    await _snapshotService.clearSnapshotCache();
     notifyListeners();
   }
 
@@ -392,8 +403,14 @@ class AlertProvider extends ChangeNotifier {
     _sosRequests = const <SosRequest>[];
     _settings = const AlertSettings();
     _gpsConsentGranted = false;
+    _dataResetVersion++;
     await _store?.deleteAllUserData();
     await _waterService.clearCache();
+    await _snapshotService.clearSnapshotCache();
+    await _notifications.syncTopicSubscription(
+      pushEnabled: _settings.pushEnabled,
+      selectedAmphoeTh: _settings.selectedAmphoeTh,
+    );
     notifyListeners();
   }
 
