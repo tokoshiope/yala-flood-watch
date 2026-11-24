@@ -40,6 +40,8 @@ class AlertSettings {
   AlertSettings copyWith({
     String? selectedAmphoeTh,
     String? selectedTumbonTh,
+    bool clearAmphoe = false,
+    bool clearTumbon = false,
     int? warningLevel,
     int? dangerLevel,
     bool? quietMode,
@@ -48,8 +50,10 @@ class AlertSettings {
     int? refreshMinutes,
   }) =>
       AlertSettings(
-        selectedAmphoeTh: selectedAmphoeTh ?? this.selectedAmphoeTh,
-        selectedTumbonTh: selectedTumbonTh ?? this.selectedTumbonTh,
+        selectedAmphoeTh:
+            clearAmphoe ? null : (selectedAmphoeTh ?? this.selectedAmphoeTh),
+        selectedTumbonTh:
+            clearTumbon ? null : (selectedTumbonTh ?? this.selectedTumbonTh),
         warningLevel: warningLevel ?? this.warningLevel,
         dangerLevel: dangerLevel ?? this.dangerLevel,
         quietMode: quietMode ?? this.quietMode,

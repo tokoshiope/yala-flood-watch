@@ -4,94 +4,112 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:yala_flood_app/config/app_config.dart';
 import 'package:yala_flood_app/models/shelter.dart';
 
-/// ข้อมูลตัวอย่างจุดอพยพ 8 อำเภอของจังหวัดยะลา
-///
-/// ตัวเลขจำนวนคนและพิกัดเป็นค่าตัวอย่างเพื่อให้ UI ใช้งานได้ครบ
-/// เมื่อจังหวัดยะลาเปิดตัวฐานข้อมูลจุดอพยพจริง ให้ดึงจาก API แทน
-const List<Shelter> kSampleShelters = [
+/// ศูนย์พักพิงชั่วคราว จ.ยะลา ตรงกับ backend/registry/shelters.yaml (v2)
+/// แยกชัดเจนระหว่างจุดที่อ้างอิงชื่อทางการเทศบาลนครยะลา กับจุดประสานงานอำเภอที่รอยืนยันพิกัด ปภ.ยะลา
+const List<Shelter> kYalaShelters = [
   Shelter(
-    nameTh: 'วัดเมืองยะลา',
+    nameTh: 'อาคารเรียนรู้ TK Park ยะลา (หลังเก่า)',
     amphoeTh: 'เมืองยะลา',
-    addressTh: 'ต.ตาเซะ อ.เมืองยะลา',
-    lat: 6.5420,
-    lng: 101.2810,
-    capacity: 250,
-    phone: '073212345',
-    notesTh: 'มีลานจอดรถ และห้องน้ำ',
+    addressTh: 'เขตเทศบาลนครยะลา อ.เมืองยะลา · [ชื่อทางการ · รอตรวจพิกัดละเอียด]',
+    lat: 6.5415,
+    lng: 101.2812,
+    phone: AppConfig.emergencyYalaMunicipality,
+    notesTh: 'ศูนย์พักพิงชั่วคราวหลักเทศบาลนครยะลา (ที่มา: กรมประชาสัมพันธ์/เทศบาลนครยะลา)',
   ),
   Shelter(
-    nameTh: 'โรงเรียนบ้านสะพานท่าสาป',
+    nameTh: 'โรงเรียนเทศบาล 2 (มลายูบางกอก)',
     amphoeTh: 'เมืองยะลา',
-    addressTh: 'ต.สะเตง อ.เมืองยะลา',
-    lat: 6.5527,
-    lng: 101.2662,
-    capacity: 150,
-    notesTh: 'อาคาร 2 ชั้น รับได้ ~150 คน',
+    addressTh: 'เขตเทศบาลนครยะลา อ.เมืองยะลา · [ชื่อทางการ · รอตรวจพิกัดละเอียด]',
+    lat: 6.5468,
+    lng: 101.2896,
+    phone: AppConfig.emergencyYalaMunicipality,
+    notesTh: 'ศูนย์พักพิงชั่วคราวเขตเทศบาลนครยะลา โทร 073-212345 ตรวจสถานะเปิดรับ',
   ),
   Shelter(
-    nameTh: 'วัดรามัน',
+    nameTh: 'โรงเรียนเทศบาล 3 (วัดพุทธภูมิ)',
+    amphoeTh: 'เมืองยะลา',
+    addressTh: 'เขตเทศบาลนครยะลา อ.เมืองยะลา · [ชื่อทางการ · รอตรวจพิกัดละเอียด]',
+    lat: 6.5398,
+    lng: 101.2775,
+    phone: AppConfig.emergencyYalaMunicipality,
+    notesTh: 'ศูนย์พักพิงชั่วคราวเขตเทศบาลนครยะลา',
+  ),
+  Shelter(
+    nameTh: 'มัสยิดกลางประจำจังหวัดยะลา',
+    amphoeTh: 'เมืองยะลา',
+    addressTh: 'ถ.สิโรรส ต.สะเตง อ.เมืองยะลา · [ชื่อทางการ · รอตรวจพิกัดละเอียด]',
+    lat: 6.5482,
+    lng: 101.2837,
+    phone: AppConfig.emergencyYalaMunicipality,
+    notesTh: 'ศูนย์พักพิงชั่วคราวเขตเทศบาลนครยะลา',
+  ),
+  Shelter(
+    nameTh: 'จุดประสานงานที่ว่าการอำเภอรามัน',
     amphoeTh: 'รามัน',
-    addressTh: 'ต.ตะโล๊ะหะลอ อ.รามัน',
+    addressTh: 'อ.รามัน จ.ยะลา · [รอตรวจพิกัดรายตำบลจาก ปภ.ยะลา]',
     lat: 6.4785,
     lng: 101.4238,
-    capacity: 200,
-    notesTh: 'อยู่เชิงเขา เหมาะกับน้ำท่วมลุ่มน้ำปัตตานี',
+    phone: AppConfig.emergencyYalaCenter,
+    notesTh: 'โทร ปภ.ยะลา 073-203559 หรือ 1784 เพื่อตรวจสอบศูนย์พักพิงที่เปิดรับล่าสุด',
   ),
   Shelter(
-    nameTh: 'โรงเรียนยะหาวิทยา',
+    nameTh: 'จุดประสานงานที่ว่าการอำเภอยะหา',
     amphoeTh: 'ยะหา',
-    addressTh: 'ต.บาโร๊ะ อ.ยะหา',
+    addressTh: 'อ.ยะหา จ.ยะลา · [รอตรวจพิกัดรายตำบลจาก ปภ.ยะลา]',
     lat: 6.4767,
     lng: 101.1400,
-    capacity: 180,
-    notesTh: 'มีห้องพยาบาลเบื้องต้น',
+    phone: AppConfig.emergencyYalaCenter,
+    notesTh: 'โทร ปภ.ยะลา 073-203559 หรือ 1784',
   ),
   Shelter(
-    nameTh: 'สนามกีฬากรงปินัง',
+    nameTh: 'จุดประสานงานที่ว่าการอำเภอกรงปินัง',
     amphoeTh: 'กรงปินัง',
-    addressTh: 'ต.กรงปินัง อ.กรงปินัง',
+    addressTh: 'อ.กรงปินัง จ.ยะลา · [รอตรวจพิกัดรายตำบลจาก ปภ.ยะลา]',
     lat: 6.4167,
     lng: 101.2833,
-    capacity: 300,
-    notesTh: 'พื้นที่กว้าง รับได้หลายร้อยคน',
+    phone: AppConfig.emergencyYalaCenter,
+    notesTh: 'โทร ปภ.ยะลา 073-203559 หรือ 1784',
   ),
   Shelter(
-    nameTh: 'วัดเบตง',
-    amphoeTh: 'เบตง',
-    addressTh: 'ต.เบตง อ.เบตง',
-    lat: 5.9206,
-    lng: 101.1821,
-    capacity: 220,
-    notesTh: 'ใกล์จังหวัดใหม่',
-  ),
-  Shelter(
-    nameTh: 'โรงเรียนบ้านบันนังสตา',
+    nameTh: 'จุดประสานงานที่ว่าการอำเภอบันนังสตา',
     amphoeTh: 'บันนังสตา',
-    addressTh: 'ต.บันนังสตา อ.บันนังสตา',
+    addressTh: 'อ.บันนังสตา จ.ยะลา · [รอตรวจพิกัดรายตำบลจาก ปภ.ยะลา]',
     lat: 6.2620,
     lng: 101.2680,
-    capacity: 160,
-    notesTh: 'อาคาร 3 ชั้น',
+    phone: AppConfig.emergencyYalaCenter,
+    notesTh: 'โทร ปภ.ยะลา 073-203559 หรือ 1784',
   ),
   Shelter(
-    nameTh: 'ศาลาประชาคมธารโต',
+    nameTh: 'จุดประสานงานเทศบาลเมืองเบตง',
+    amphoeTh: 'เบตง',
+    addressTh: 'อ.เบตง จ.ยะลา · [รอตรวจพิกัดรายตำบลจาก ปภ.ยะลา]',
+    lat: 5.7743,
+    lng: 101.0723,
+    phone: AppConfig.emergencyYalaCenter,
+    notesTh: 'โทร ปภ.ยะลา 073-203559 หรือ 1784',
+  ),
+  Shelter(
+    nameTh: 'จุดประสานงานที่ว่าการอำเภอธารโต',
     amphoeTh: 'ธารโต',
-    addressTh: 'ต.คีรีเขต อ.ธารโต',
+    addressTh: 'อ.ธารโต จ.ยะลา · [รอตรวจพิกัดรายตำบลจาก ปภ.ยะลา]',
     lat: 6.1525,
     lng: 101.0809,
-    capacity: 120,
-    notesTh: 'มีเสบียงและน้ำดื่มสำรอง',
+    phone: AppConfig.emergencyYalaCenter,
+    notesTh: 'โทร ปภ.ยะลา 073-203559 หรือ 1784',
   ),
   Shelter(
-    nameTh: 'โรงเรียนกาบัง',
+    nameTh: 'จุดประสานงานที่ว่าการอำเภอกาบัง',
     amphoeTh: 'กาบัง',
-    addressTh: 'ต.กาบัง อ.กาบัง',
+    addressTh: 'อ.กาบัง จ.ยะลา · [รอตรวจพิกัดรายตำบลจาก ปภ.ยะลา]',
     lat: 6.4590,
     lng: 101.0230,
-    capacity: 140,
-    notesTh: 'จุดสูง เข้าถึงได้ทางหลวง',
+    phone: AppConfig.emergencyYalaCenter,
+    notesTh: 'โทร ปภ.ยะลา 073-203559 หรือ 1784',
   ),
 ];
+
+/// Alias คงไว้เพื่อความเข้ากันย้อนหลังกับโค้ดเดิม
+const List<Shelter> kSampleShelters = kYalaShelters;
 
 /// หน้าจุดอพยพ
 class SheltersScreen extends StatefulWidget {
@@ -105,19 +123,18 @@ class _SheltersScreenState extends State<SheltersScreen> {
   String? _amphoe;
 
   List<String> get _amphoes {
-    final set = kSampleShelters.map((s) => s.amphoeTh).toSet().toList()..sort();
+    final set = kYalaShelters.map((s) => s.amphoeTh).toSet().toList()..sort();
     return set;
   }
 
   List<Shelter> get _filtered {
-    if (_amphoe == null) return kSampleShelters;
-    return kSampleShelters.where((s) => s.amphoeTh == _amphoe).toList();
+    if (_amphoe == null) return kYalaShelters;
+    return kYalaShelters.where((s) => s.amphoeTh == _amphoe).toList();
   }
 
   Future<void> _openMap(Shelter shelter) async {
     final uri = Uri.parse(
-      '${AppConfig.googleMapsUrl}${shelter.lat},${shelter.lng}'
-      '&query=${Uri.encodeComponent(shelter.nameTh)}',
+      '${AppConfig.googleMapsUrl}${shelter.lat},${shelter.lng}',
     );
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && mounted) {
@@ -129,13 +146,18 @@ class _SheltersScreenState extends State<SheltersScreen> {
 
   Future<void> _call(String phone) async {
     final uri = Uri(scheme: 'tel', path: phone);
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('ไม่สามารถโทรได้จากเครื่องนี้ ($phone)')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('จุดอพยพ')),
+      appBar: AppBar(title: const Text('ศูนย์พักพิง / จุดอพยพ')),
       body: Column(
         children: [
           Container(
@@ -144,11 +166,11 @@ class _SheltersScreenState extends State<SheltersScreen> {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
             child: const Row(
               children: [
-                Icon(Icons.info_outline, size: 16, color: Color(0xFF0E5FA6)),
+                Icon(Icons.verified_outlined, size: 16, color: Color(0xFF0E5FA6)),
                 SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'ข้อมูลตัวอย่าง ก่อนใช้จริงควรสอบถามเส้นทางกับ ศูนย์ปภ.ยะลา',
+                    'จุดเขตเทศบาลนครยะลาอ้างอิงประกาศทางการ · ก่อนเดินทางโปรดโทร ปภ.ยะลา 073-203559 หรือ 073-212345 ตรวจสถานะเปิดรับ',
                     style: TextStyle(fontSize: 12),
                   ),
                 ),
@@ -164,7 +186,7 @@ class _SheltersScreenState extends State<SheltersScreen> {
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: ChoiceChip(
-                    label: const Text('ทั้งหมด'),
+                    label: const Text('ทั้ง 8 อำเภอ'),
                     selected: _amphoe == null,
                     onSelected: (_) => setState(() => _amphoe = null),
                   ),
@@ -202,15 +224,7 @@ class _SheltersScreenState extends State<SheltersScreen> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(shelter.addressTh),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(Icons.groups, size: 16),
-                            const SizedBox(width: 4),
-                            Text(shelter.capacityLabel),
-                          ],
-                        ),
+                        Text(shelter.addressTh, style: const TextStyle(fontSize: 12.5)),
                         if (shelter.notesTh.isNotEmpty) ...[
                           const SizedBox(height: 4),
                           Text(
@@ -225,7 +239,7 @@ class _SheltersScreenState extends State<SheltersScreen> {
                               child: OutlinedButton.icon(
                                 onPressed: () => _openMap(shelter),
                                 icon: const Icon(Icons.map_outlined, size: 18),
-                                label: const Text('เส้นทาง'),
+                                label: const Text('เปิดแผนที่'),
                               ),
                             ),
                             if (shelter.phone != null) ...[
@@ -234,7 +248,7 @@ class _SheltersScreenState extends State<SheltersScreen> {
                                 child: FilledButton.icon(
                                   onPressed: () => _call(shelter.phone!),
                                   icon: const Icon(Icons.phone, size: 18),
-                                  label: const Text('โทร'),
+                                  label: const Text('โทรสอบถาม'),
                                 ),
                               ),
                             ],

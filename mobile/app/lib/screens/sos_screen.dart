@@ -1,5 +1,5 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -7,7 +7,8 @@ import 'package:yala_flood_app/config/app_config.dart';
 import 'package:yala_flood_app/models/sos_request.dart';
 import 'package:yala_flood_app/state/alert_provider.dart';
 
-/// หน้า SOS ขอความช่วยเหลือ: ปุ่มใหญ่, พิกัด GPS, เบอร์ฉุกเฉิน และสถานะคำขอ
+/// หน้า SOS ขอความช่วยเหลือ: เบอร์ฉุกเฉินยืนยันแล้ว (1784 / 073-203559 / 073-212345 / 1669),
+/// PDPA Consent ก่อนขอพิกัด GPS และบันทึกคำขอในเครื่องแบบโปร่งใส
 class SosScreen extends StatefulWidget {
   const SosScreen({super.key});
 
@@ -24,15 +25,39 @@ class _SosScreenState extends State<SosScreen> {
   bool _sending = false;
 
   @override
-  void initState() {
-    super.initState();
-    _locate();
-  }
-
-  @override
   void dispose() {
     _phoneController.dispose();
     super.dispose();
+  }
+
+  /// ขออนุญาตและแสดงคำชี้แจง PDPA ก่อนเรียก GPS (ไม่ดึงอัตโนมัติใน initState)
+  Future<void> _requestConsentAndLocate() async {
+    final provider = context.read<AlertProvider>();
+    if (!provider.gpsConsentGranted) {
+      final approved = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('ขอความยินยอมใช้พิกัด GPS (PDPA)'),
+          content: const Text(
+            'แอปจะอ่านพิกัดของคุณเฉพาะขณะเปิดหน้านี้เท่านั้น เพื่อบันทึกประกอบคำขอ SOS ในเครื่องของคุณ '
+            'โดยไม่มีการส่งออกหรือติดตามตำแหน่งพื้นหลัง คุณสามารถลบประวัติได้ทุกเมื่อในหน้าตั้งค่า',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('ไม่ยินยอม'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('ยินยอมและค้นหาพิกัด'),
+            ),
+          ],
+        ),
+      );
+      if (approved != true || !mounted) return;
+      await provider.setGpsConsent(true);
+    }
+    await _locate();
   }
 
   Future<void> _locate() async {
@@ -47,16 +72,17 @@ class _SosScreenState extends State<SosScreen> {
       }
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
+        if (!mounted) return;
         setState(() {
           _locationStatus = LocationStatus.denied;
           _locationError =
-              'ยังไม่ได้รับสิทธิ์ตำแหน่ง กดปุ่ม "เปิดการตั้งค่าตำแหน่ง" '
-              'แล้วอนุญาตแอพนี้ เพื่อให้เราส่งพิกัดไปพร้อมคำขอ';
+              'ยังไม่ได้รับสิทธิ์ตำแหน่ง กด "เปิดการตั้งค่าตำแหน่ง" เพื่ออนุญาตเฉพาะขณะใช้งาน (When In Use)';
         });
         return;
       }
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
+        if (!mounted) return;
         setState(() {
           _locationStatus = LocationStatus.denied;
           _locationError = 'GPS ของเครื่องยังปิดอยู่ กรุณาเปิดบริการตำแหน่ง';
@@ -103,7 +129,7 @@ class _SosScreenState extends State<SosScreen> {
     if (_position == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('ยังไม่มีพิกัด กรุณารอดึงตำแหน่ง หรือกด "ค้นหาตำแหน่งอีกครั้ง"'),
+          content: Text('กรุณากด "ค้นหาพิกัด GPS" เพื่อยืนยันตำแหน่งก่อนบันทึกคำขอ'),
         ),
       );
       return;
@@ -123,13 +149,13 @@ class _SosScreenState extends State<SosScreen> {
       statusHistory: const [SosStatus.pending],
     );
     context.read<AlertProvider>().addSosRequest(request);
-    await Future<void>.delayed(const Duration(milliseconds: 400));
+    await Future<void>.delayed(const Duration(milliseconds: 300));
     if (!mounted) return;
     setState(() => _sending = false);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
-          'บันทึกคำขอแล้ว กรุณาโทร 1677 ด้วยตนเองด้วย เพื่อยืนยันและแจ้งพิกัด',
+          'บันทึกคำขอและพิกัดไว้ในเครื่องแล้ว (ยังไม่ส่งตรงถึงศูนย์) กรุณาโทร 1784 หรือ 073-203559 ทันที',
         ),
       ),
     );
@@ -138,11 +164,23 @@ class _SosScreenState extends State<SosScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AlertProvider>();
+    // LOW-1 fix: หากผู้ใช้กด "ลบข้อมูลทั้งหมดของฉัน (PDPA)" ในหน้าตั้งค่า ให้ล้างพิกัด/เบอร์ในหน่วยความจำทันที
+    if (!provider.gpsConsentGranted &&
+        (_position != null || _phoneController.text.isNotEmpty)) {
+      _position = null;
+      _locationStatus = LocationStatus.idle;
+      _locationError = null;
+      _phoneController.clear();
+    }
     return Scaffold(
       appBar: AppBar(title: const Text('ขอความช่วยเหลือ (SOS)')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
+          const _SafetyBanner(),
+          const SizedBox(height: 12),
+          _CallButtons(onCall: _call),
+          const SizedBox(height: 12),
           _SosButton(onPressed: _sending ? null : _sendSos),
           const SizedBox(height: 12),
           _TypeSelector(
@@ -154,7 +192,7 @@ class _SosScreenState extends State<SosScreen> {
             status: _locationStatus,
             position: _position,
             errorTh: _locationError,
-            onRetry: _locate,
+            onRetry: _requestConsentAndLocate,
             onOpenSettings: _openLocationSettings,
           ),
           const SizedBox(height: 12),
@@ -162,19 +200,18 @@ class _SosScreenState extends State<SosScreen> {
             controller: _phoneController,
             keyboardType: TextInputType.phone,
             decoration: const InputDecoration(
-              labelText: 'เบอร์โทรที่ติดต่อได้ (ถ้ามี)',
+              labelText: 'เบอร์โทรที่ติดต่อได้ (เก็บในเครื่องเท่านั้น)',
               hintText: 'เช่น 0812345678',
               prefixIcon: Icon(Icons.phone),
               border: OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 12),
-          _CallButtons(onCall: _call),
-          const SizedBox(height: 12),
-          const _SosNote(),
           if (provider.sosRequests.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            _RequestList(requests: provider.sosRequests, onAdvance: provider.advanceSosStatus),
+            const SizedBox(height: 12),
+            _RequestList(
+              requests: provider.sosRequests,
+              onAdvance: provider.advanceSosStatus,
+            ),
           ],
         ],
       ),
@@ -184,6 +221,35 @@ class _SosScreenState extends State<SosScreen> {
 
 enum LocationStatus { idle, searching, ready, denied, error }
 
+class _SafetyBanner extends StatelessWidget {
+  const _SafetyBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFEBEE),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFEF9A9A)),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.health_and_safety, color: Color(0xFFB71C1C), size: 22),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              AppConfig.lifeSafetyDisclaimerTh,
+              style: TextStyle(fontSize: 12.5, color: Color(0xFF7F0000), height: 1.4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _SosButton extends StatelessWidget {
   const _SosButton({required this.onPressed});
 
@@ -192,31 +258,33 @@ class _SosButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 150,
+      height: 132,
       width: double.infinity,
       child: FilledButton(
         style: FilledButton.styleFrom(
           backgroundColor: const Color(AppConfig.colorDanger),
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         ),
         onPressed: onPressed,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.sos, size: 54),
-            const SizedBox(height: 6),
+            const Icon(Icons.sos, size: 42),
+            const SizedBox(height: 4),
             Text(
-              'กดขอความช่วยเหลือ',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              'บันทึกคำขอ SOS พร้อมพิกัด (ในเครื่อง)',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w800,
                   ),
             ),
             const SizedBox(height: 4),
             const Text(
-              'ระบบจะแนบพิกัด GPS ของคุณไปด้วย',
-              style: TextStyle(color: Colors.white70, fontSize: 13),
+              'โหมดทดลองยังไม่ส่งตรงถึงศูนย์ · เหตุด่วนให้กดโทร 1784 / 073-203559 ด้านบน',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white70, fontSize: 12),
             ),
           ],
         ),
@@ -289,7 +357,7 @@ class _LocationCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'พิกัดของคุณ',
+                    'พิกัด GPS ของคุณ (ขอสิทธิ์เมื่อกดเท่านั้น)',
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                 ),
@@ -300,14 +368,14 @@ class _LocationCard extends StatelessWidget {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 else
-                  TextButton.icon(
+                  FilledButton.tonalIcon(
                     onPressed: onRetry,
-                    icon: const Icon(Icons.refresh, size: 16),
-                    label: const Text('ค้นหา'),
+                    icon: const Icon(Icons.my_location, size: 16),
+                    label: const Text('ค้นหาพิกัด GPS'),
                   ),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             if (status == LocationStatus.ready && position != null) ...[
               Text(
                 'ละติจูด ${position!.latitude.toStringAsFixed(6)}  '
@@ -316,15 +384,20 @@ class _LocationCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'ความแม่นยำประมาณ ${position!.accuracy.toStringAsFixed(0)} เมตร',
+                'ความแม่นยำประมาณ ${position!.accuracy.toStringAsFixed(0)} เมตร (แจ้งเจ้าหน้าที่เมื่อโทร 1784)',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ] else if (status == LocationStatus.searching) ...[
               const Text('กำลังค้นหาสัญญาณ GPS…'),
+            ] else if (status == LocationStatus.idle) ...[
+              Text(
+                'กดปุ่ม "ค้นหาพิกัด GPS" เพื่อให้แสดงพิกัดสำหรับแจ้งเจ้าหน้าที่กู้ภัย (ไม่เก็บพิกัดพื้นหลัง)',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             ] else ...[
               Text(
                 errorTh ?? 'ยังไม่สามารถระบุตำแหน่งได้',
-                style: const TextStyle(color: Color(0xFFC62828)),
+                style: const TextStyle(color: Color(0xFFB71C1C)),
               ),
               const SizedBox(height: 8),
               OutlinedButton.icon(
@@ -353,30 +426,69 @@ class _CallButtons extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('โทรศัพท์ฉุกเฉิน', style: Theme.of(context).textTheme.titleSmall),
+            Text('โทรศัพท์ฉุกเฉิน (ตรวจสอบยืนยันแล้ว)', style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 10),
             _callTile(
               context,
               number: AppConfig.emergencyDDPM,
-              title: 'กรมป้องกันและบรรเทาสาธารณภัย',
-              subtitle: 'ศูนย์เอราวัณ 1677 (24 ชม.)',
+              display: '1784',
+              title: 'สายด่วนนิรภัย กรม ปภ. (DDPM)',
+              subtitle: 'โทรฟรี 24 ชม. · LINE @1784DDPM',
+              icon: Icons.sos,
+              onCall: onCall,
+            ),
+            _callTile(
+              context,
+              number: AppConfig.emergencyYalaCenter,
+              display: AppConfig.emergencyYalaCenterDisplay,
+              title: AppConfig.emergencyYalaCenterLabel,
+              subtitle: '073-203559–64 / 073-203562',
+              icon: Icons.account_balance,
+              onCall: onCall,
+            ),
+            _callTile(
+              context,
+              number: AppConfig.emergencyYalaMunicipality,
+              display: AppConfig.emergencyYalaMunicipalityDisplay,
+              title: 'ปภ. เทศบาลนครยะลา',
+              subtitle: 'ช่วยเหลือน้ำท่วมเขตเมืองยะลา 24 ชม.',
+              icon: Icons.fire_truck,
+              onCall: onCall,
+            ),
+            _callTile(
+              context,
+              number: AppConfig.emergencyMedical,
+              display: '1669',
+              title: 'สายด่วนการแพทย์ฉุกเฉิน (สพฉ.)',
+              subtitle: 'เจ็บป่วยฉุกเฉิน / กู้ชีพ 24 ชม.',
               icon: Icons.local_hospital,
               onCall: onCall,
             ),
             _callTile(
               context,
               number: AppConfig.emergencyDisaster,
-              title: 'หน่วยงานป้องกันภัยพิบัติ',
-              subtitle: 'สายด่วน 199',
+              display: '199',
+              title: 'แจ้งเหตุเพลิงไหม้ / สาธารณภัย',
+              subtitle: 'สายด่วน 199 (24 ชม.)',
               icon: Icons.emergency,
               onCall: onCall,
             ),
             _callTile(
               context,
-              number: AppConfig.emergencyYalaCenter,
-              title: AppConfig.emergencyYalaCenterLabel,
-              subtitle: 'เบอร์ติดต่อฉุกเฉินของจังหวัด',
-              icon: Icons.account_balance,
+              number: AppConfig.emergencyPolice,
+              display: '191',
+              title: 'เหตุด่วนเหตุร้าย (ตำรวจ)',
+              subtitle: 'สายด่วนตำรวจ 191 (24 ชม.)',
+              icon: Icons.local_police,
+              onCall: onCall,
+            ),
+            _callTile(
+              context,
+              number: AppConfig.emergencyVolunteer,
+              display: '1677',
+              title: 'ร่วมด้วยช่วยกัน (อาสาสมัคร)',
+              subtitle: 'เครือข่ายอาสาสมัคร 24 ชม. (ไม่ใช่เบอร์ ปภ.)',
+              icon: Icons.volunteer_activism,
               onCall: onCall,
             ),
           ],
@@ -388,6 +500,7 @@ class _CallButtons extends StatelessWidget {
   Widget _callTile(
     BuildContext context, {
     required String number,
+    required String display,
     required String title,
     required String subtitle,
     required IconData icon,
@@ -396,52 +509,14 @@ class _CallButtons extends StatelessWidget {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: CircleAvatar(
-        backgroundColor: const Color(0x14C62828),
+        backgroundColor: const Color(0x14B71C1C),
         child: Icon(icon, color: const Color(AppConfig.colorDanger)),
       ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(subtitle),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+      subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
       trailing: FilledButton(
         onPressed: () => onCall(number),
-        child: Text(number),
-      ),
-    );
-  }
-}
-
-class _SosNote extends StatelessWidget {
-  const _SosNote();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF8E1),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFFFE082)),
-      ),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.info_outline, size: 18, color: Color(0xFF6D4C00)),
-              SizedBox(width: 6),
-              Text(
-                'สำคัญ',
-                style: TextStyle(fontWeight: FontWeight.w700),
-              ),
-            ],
-          ),
-          SizedBox(height: 6),
-          Text(
-            'การกดปุ่ม SOS บันทึกคำขอและพิกัดไว้ในเครื่องของคุณ แต่ยังไม่ได้ส่งไปยัง'
-            'ศูนย์ปภ.ยะลาโดยตรง กรุณาโทร 1677 ด้วยตนเองเพื่อยืนยัน '
-            'สถานะในแอพเป็นการจำลองไว้ก่อน เมื่อเชื่อมระบบจริงจะได้สถานะจากเครื่องศูนย์',
-            style: TextStyle(fontSize: 13, color: Color(0xFF6D4C00)),
-          ),
-        ],
+        child: Text(display),
       ),
     );
   }
@@ -461,7 +536,7 @@ class _RequestList extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('คำขอของคุณ', style: Theme.of(context).textTheme.titleSmall),
+            Text('บันทึกคำขอในเครื่อง (จำลอง)', style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 8),
             for (final request in requests)
               Padding(
@@ -494,28 +569,12 @@ class _RequestList extends StatelessWidget {
                       ' · ${thaiRelativeTime(request.createdAt)}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    const SizedBox(height: 4),
-                    Wrap(
-                      spacing: 6,
-                      children: [
-                        for (final status in request.statusHistory)
-                          Chip(
-                            label: Text(
-                              status.labelTh,
-                              style: const TextStyle(fontSize: 11),
-                            ),
-                            visualDensity: VisualDensity.compact,
-                          ),
-                      ],
-                    ),
                     if (request.status.next != null)
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: () => onAdvance(request.id),
-                          child: Text(
-                            'จำลองอัปเดตเป็น "${request.status.next!.labelTh}"',
-                          ),
+                          child: Text('จำลองอัปเดตเป็น "${request.status.next!.labelTh}"'),
                         ),
                       ),
                     const Divider(),

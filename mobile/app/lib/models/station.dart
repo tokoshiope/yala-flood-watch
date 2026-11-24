@@ -158,8 +158,13 @@ class Station {
     return level;
   }
 
-  /// ตลิ่งอ้างอิง: ซ้าย → ขวา → ต่ำสุด
-  double? get bankLevel => leftBank ?? rightBank ?? minBank;
+  /// ตลิ่งอ้างอิง: ซ้าย → ขวา → ต่ำสุด (ข้ามค่า <= 0 ให้ตรงกับ backend/pipeline.py)
+  double? get bankLevel {
+    for (final candidate in [leftBank, rightBank, minBank]) {
+      if (candidate != null && candidate > 0) return candidate;
+    }
+    return null;
+  }
 
   /// ตลิ่งที่ใช้ได้จริง (มากกว่า 0)
   bool get hasBank => (bankLevel ?? 0) > 0;

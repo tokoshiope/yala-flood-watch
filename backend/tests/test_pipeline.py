@@ -1,8 +1,8 @@
-import json
 import copy
+import json
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from datetime import datetime, timedelta
 
 import pytest
 import yaml
@@ -19,16 +19,18 @@ def _rows_sample(n=2, minutes_ago=5, at=None):
         rows.append({
             "id": 100 + i,
             "waterlevel_datetime": t,
-            "waterlevel_msl": "10.5",
-            "waterlevel_msl_previous": "10.4",
+            "waterlevel_msl": "12.50",
+            "waterlevel_msl_previous": "12.40",
             "situation_level": 3,
             "storage_percent": "55.0",
             "station": {
                 "tele_station_oldcode": f"T{i}",
                 "tele_station_name": {"th": f"สถานี{i}"},
-                "tele_station_lat": 6.5, "tele_station_long": 101.2, "left_bank": 13.85,
+                "tele_station_lat": 6.5,
+                "tele_station_long": 101.2,
+                "left_bank": 13.85,
             },
-            "geocode": {"amphoe_name": {"th": "เมืองยะลา"}},
+            "geocode": {"province_code": "95", "amphoe_name": {"th": "เมืองยะลา"}, "tumbon_name": {"th": "สะเตง"}},
             "river_name": {"th": "แม่น้ำปัตตานี"},
             "agency": {"agency_shortname": {"th": "สสน."}},
         })
@@ -40,26 +42,175 @@ def _registry():
         return yaml.safe_load(f)["stations"]
 
 
-def test_normalize_fields_and_flags():
+def _amphoes_registry():
+    with open(P.REGISTRY_DIR / "amphoes.yaml", encoding="utf-8") as f:
+        return yaml.safe_load(f)["amphoes"]
+
+
+# ── Formula v2 Exact Test Vectors (TV2-1 through TV2-9) ─────────────────────
+
+@pytest.mark.parametrize(
+    "case_id,kwargs,expected_score,expected_level,expected_push",
+    [
+        (
+            "TV2-1_normal",
+            dict(
+                level_msl=12.05, previous_msl=12.05, bank_m=13.85, h_normal_30d=11.85,
+                situation_level=1, stale=False, rain_1h_mm=6.0, forecast_24h_mm=12.0,
+                dam_signal=0.0, dam_spillway_active=False, community_reports_60m=0,
+                is_flash_flood=False,
+            ),
+            8.0, 1, False,
+        ),
+        (
+            "TV2-2_bank_full",
+            dict(
+                level_msl=13.85, previous_msl=13.85, bank_m=13.85,
+                situation_level=3, stale=False,
+            ),
+            45.0, 3, True,
+        ),
+        (
+            "TV2-3_max_crisis",
+            dict(
+                level_msl=14.0, previous_msl=13.65, bank_m=13.85,
+                situation_level=4, stale=False, rain_1h_mm=70.0, forecast_24h_mm=140.0,
+                dam_signal=1.0, dam_spillway_active=True, community_reports_60m=6,
+                is_flash_flood=True,
+            ),
+            100.0, 5, True,
+        ),
+        (
+            "TV2-4_rain_only_no_push",
+            dict(
+                level_msl=10.0, previous_msl=10.0, bank_m=13.85,
+                situation_level=None, stale=False, rain_1h_mm=54.0, forecast_24h_mm=36.0,
+                is_flash_flood=False,
+            ),
+            23.7, 2, False,
+        ),
+        (
+            "TV2-5_banglang_spillway_early_warning",
+            dict(
+                level_msl=12.25, previous_msl=12.25, bank_m=13.85,
+                situation_level=1, stale=False, rain_1h_mm=12.0, forecast_24h_mm=24.0,
+                dam_signal=1.0, dam_spillway_active=True, lead_time_hours="6–12 ชม.",
+            ),
+            26.0, 3, True,
+        ),
+        (
+            "TV2-6_kabang_no_water_gauge_extreme_rain",
+            dict(
+                level_msl=None, previous_msl=None, bank_m=None,
+                situation_level=None, stale=False, rain_1h_mm=51.0, forecast_24h_mm=72.0,
+                is_flash_flood=True, has_water_gauge=False,
+            ),
+            26.5, 3, True,
+        ),
+        (
+            "TV2-7_flash_rain_and_community",
+            dict(
+                level_msl=10.0, previous_msl=10.0, bank_m=13.85,
+                situation_level=None, stale=False, rain_1h_mm=45.0, community_reports_60m=3,
+                is_flash_flood=True,
+            ),
+            22.5, 4, True,
+        ),
+        (
+            "TV2-8_rapid_rise_bonus",
+            dict(
+                level_msl=12.85, previous_msl=12.50, bank_m=13.85,
+                situation_level=2, stale=False, is_flash_flood=True,
+            ),
+            29.3, 3, True,
+        ),
+        (
+            "TV2-9_no_bank_situation_floor",
+            dict(
+                level_msl=100.5, previous_msl=100.5, bank_m=None,
+                situation_level=4, stale=False,
+            ),
+            45.0, 4, True,
+        ),
+        (
+            "TV2-10_ieee754_boundary_39_95_to_40_0",
+            dict(
+                level_msl=10.0, previous_msl=10.0, bank_m=13.85,
+                situation_level=None, stale=False,
+                rain_1h_mm=42.0, forecast_24h_mm=42.0,
+                dam_signal=1.0, dam_spillway_active=False,
+                community_reports_60m=5, is_flash_flood=False,
+            ),
+            40.0, 3, True,
+        ),
+    ],
+)
+def test_formula_v2_vectors(case_id, kwargs, expected_score, expected_level, expected_push):
+    res = P.compute_alert_v2(**kwargs)
+    assert res["score"] == expected_score, f"{case_id}: expected score {expected_score}, got {res['score']}"
+    assert res["level"] == expected_level, f"{case_id}: expected level {expected_level}, got {res['level']}"
+    assert res["should_push"] is expected_push, f"{case_id}: expected push {expected_push}, got {res['should_push']}"
+
+
+# ── Normalization, Registry Fallback, Anomaly & Deduplication ───────────────
+
+def test_normalize_registry_bank_fallback_and_anomaly():
     reg = _registry()
-    regs = {"PAT002": reg["PAT002"]}
-    rows = _rows_sample(1)
+    regs = {"PAT002": reg["PAT002"], "BLGTU05": reg["BLGTU05"]}
+    rows = _rows_sample(2)
+    # PAT002 has left_bank_m=13.85 in registry; API sends 0 -> must fallback to registry!
     rows[0]["station"]["tele_station_oldcode"] = "PAT002"
-    rows[0]["situation_level"] = None
     rows[0]["station"]["left_bank"] = 0
+    rows[0]["situation_level"] = None
+    rows[0]["storage_percent"] = "-0.31"  # sensor anomaly
+    # BLGTU05 has left_bank_m=null in registry and 0 in API -> bank_missing=True
+    rows[1]["station"]["tele_station_oldcode"] = "BLGTU05"
+    rows[1]["station"]["left_bank"] = 0
+    rows[1]["situation_level"] = None
+
     st, stats = P.normalize(rows, regs)
-    s = st[0]
-    assert s["name"] == "สถานี0"
-    assert s["risk_zone"] == reg["PAT002"]["risk_zone"]
-    assert s["situation_missing"] is True and s["situation_level"] is None
-    assert s["bank_missing"] is True and s["bank_m"] is None
-    assert stats["no_situation"] == 1 and stats["no_bank"] == 1
+    assert st[0]["bank_m"] == 13.85
+    assert st[0]["bank_source"] == "registry_fallback"
+    assert st[0]["bank_missing"] is False
+    assert st[0]["storage_anomaly"] is True and st[0]["storage_percent"] is None
+    assert st[1]["bank_m"] is None and st[1]["bank_missing"] is True
+    assert stats["bank_from_registry"] == 1
+    assert stats["storage_anomaly"] == 1
+    assert stats["no_bank"] == 1
 
 
-def test_validate_happy_pass():
-    st, stats = P.normalize(_rows_sample(2), {"T0": {"risk_zone": "flash"}, "T1": {"risk_zone": "flash"}})
-    P.validate(st, stats)  # no raise
+def test_normalize_skips_duplicate_station_codes():
+    rows = _rows_sample(2)
+    rows[0]["station"]["tele_station_oldcode"] = "PAT002"
+    rows[1]["station"]["tele_station_oldcode"] = "PAT002"
+    st, stats = P.normalize(rows, _registry())
+    assert len(st) == 1
+    assert stats["duplicates_skipped"] == 1
 
+
+def test_stale_check_is_timezone_aware_under_utc_clock():
+    # Observed at 10:00 ICT (03:00 UTC); CI server clock is 04:30 UTC (11:30 ICT -> 90m old -> STALE)
+    now_utc = datetime(2026, 11, 24, 4, 30, tzinfo=timezone.utc)
+    rows = _rows_sample(1)
+    rows[0]["waterlevel_datetime"] = "2026-11-24 10:00"
+    st, stats = P.normalize(rows, {"T0": {}}, now=now_utc)
+    assert st[0]["stale"] is True
+    assert st[0]["age_minutes"] == 90.0
+    assert stats["stale"] == 1
+
+
+def test_stale_check_fresh_under_utc_clock():
+    # Observed at 10:00 ICT (03:00 UTC); CI server clock is 03:20 UTC (10:20 ICT -> 20m old -> FRESH)
+    now_utc = datetime(2026, 11, 24, 3, 20, tzinfo=timezone.utc)
+    rows = _rows_sample(1)
+    rows[0]["waterlevel_datetime"] = "2026-11-24 10:00"
+    st, stats = P.normalize(rows, {"T0": {}}, now=now_utc)
+    assert st[0]["stale"] is False
+    assert st[0]["age_minutes"] == 20.0
+    assert stats["stale"] == 0
+
+
+# ── Validation & Fail-Closed Tests ──────────────────────────────────────────
 
 def test_validate_empty_fails():
     with pytest.raises(P.ValidationError):
@@ -67,72 +218,92 @@ def test_validate_empty_fails():
 
 
 def test_validate_all_stale_fails_closed():
-    st, stats = P.normalize(_rows_sample(2, minutes_ago=60), {"T0": {}, "T1": {}})
+    st, stats = P.normalize(_rows_sample(2, minutes_ago=95), {"T0": {}, "T1": {}})
     with pytest.raises(P.ValidationError):
         P.validate(st, stats)
 
 
 def test_validate_out_of_bbox_fails():
     st, stats = P.normalize(_rows_sample(1), {"T0": {}})
-    st[0]["lat"] = 0
+    st[0]["lat"] = 13.75  # Bangkok, not Yala!
     with pytest.raises(P.ValidationError):
         P.validate(st, stats)
 
 
-def test_hash_deterministic():
-    p = P.build_snapshot([], {"emergency": {}}, {"items": []})
-    assert P.content_hash(p) == P.content_hash(copy.deepcopy(p))
+def test_kabang_covered_in_amphoe_summary_without_water_station():
+    amphoes_reg = _amphoes_registry()
+    rain_by_amp = {"กาบัง": {"gauge_count": 4, "fresh_gauge_count": 4, "max_rain_1h_mm": 52.0, "avg_rain_1h_mm": 30.0, "max_rain_24h_mm": 110.0, "avg_rain_24h_mm": 75.0, "stale": False, "latest_observed_at": "2026-11-24 15:00"}}
+    wx_by_amp = {"กาบัง": {"forecast_6h_mm": 25.0, "forecast_24h_mm": 75.0, "forecast_72h_mm": 120.0, "max_prob_24h_pct": 90, "hourly_next_24h": [], "daily_3d": []}}
+    summaries = P.build_amphoe_summaries(amphoes_reg, [], rain_by_amp, wx_by_amp, None)
+    assert len(summaries) == 8
+    kabang = next(a for a in summaries if a["amphoe"] == "กาบัง")
+    assert kabang["water_station_count"] == 0
+    assert kabang["assessment"]["level"] >= 3
+    assert kabang["assessment"]["should_push"] is True
 
 
-def test_main_fail_closed_on_bad_url(tmp_path, monkeypatch):
-    monkeypatch.setattr(P, "API_URL", "http://127.0.0.1:9/none")
-    monkeypatch.setattr(P, "OUT_DIR", tmp_path)
-    assert P.main() == 1
-    assert not (tmp_path / "latest.json").exists()  # ไม่เขียนทับ/สร้างไฟล์ว่าง
-
-
-def test_main_success_writes_outputs(tmp_path, monkeypatch):
+def test_deterministic_content_hash_excludes_volatile_fields():
     reg = _registry()
-    rows = _rows_sample(2)
+    t1 = datetime(2026, 11, 24, 15, 30, tzinfo=P.ICT)
+    t2 = datetime(2026, 11, 24, 15, 35, tzinfo=P.ICT)
+    rows = _rows_sample(2, at=datetime(2026, 11, 24, 15, 25, tzinfo=P.ICT))
+    rows[0]["station"]["tele_station_oldcode"] = "PAT002"
+    rows[1]["station"]["tele_station_oldcode"] = "PAT001"
+    s1, _ = P.normalize(rows, reg, now=t1)
+    s2, _ = P.normalize(copy.deepcopy(rows), reg, now=t2)
+    assert s1[0]["age_minutes"] != s2[0]["age_minutes"]
+    b1 = P.build_snapshot(s1, {"emergency": []}, {"items": []}, source_health={"thaiwater_waterlevel": {"status": "ok", "latency_ms": 100}})
+    b2 = P.build_snapshot(s2, {"emergency": []}, {"items": []}, source_health={"thaiwater_waterlevel": {"status": "ok", "latency_ms": 950}})
+    assert P.content_hash(b1) == P.content_hash(b2)
+    assert "generated_at" not in b1
+
+
+def test_single_null_stale_station_does_not_fail_healthy_province():
+    fixed = datetime(2026, 11, 24, 15, 30, tzinfo=P.ICT)
+    rows = _rows_sample(2, minutes_ago=10, at=fixed)
+    rows[1]["waterlevel_msl"] = None
+    rows[1]["waterlevel_datetime"] = "2026-11-24 12:00"  # stale + null on 1 sensor only
+    st, stats = P.normalize(rows, {"T0": {}, "T1": {}}, now=fixed)
+    P.validate(st, stats)  # should NOT fail-closed whole province
+    assert st[1].get("unusable_sensor") is True
+
+
+def test_main_fail_closed_preserves_existing_snapshot(tmp_path, monkeypatch):
+    existing = tmp_path / "latest.json"
+    existing.write_text('{"preserved": true}', encoding="utf-8")
+    monkeypatch.setattr(P, "fetch_raw", lambda url=None: (_ for _ in ()).throw(P.ValidationError("API down")))
+    monkeypatch.setattr(P, "OUT_DIR", tmp_path)
+    rc, payload = P.run_pipeline()
+    assert rc == 1 and payload is None
+    assert json.loads(existing.read_text(encoding="utf-8")) == {"preserved": True}
+
+
+def test_main_graceful_degradation_when_secondary_sources_fail(tmp_path, monkeypatch):
+    fixed = datetime(2026, 11, 24, 14, 0, tzinfo=P.ICT)
+    rows = _rows_sample(2, at=fixed)
     rows[0]["station"]["tele_station_oldcode"] = "PAT002"
     rows[1]["station"]["tele_station_oldcode"] = "PAT001"
     monkeypatch.setattr(P, "fetch_raw", lambda url=None: rows)
+    monkeypatch.setattr(P, "fetch_rain_raw", lambda url=None: (_ for _ in ()).throw(RuntimeError("rain timeout")))
+    monkeypatch.setattr(P, "fetch_banglang_dam", lambda url=None: (_ for _ in ()).throw(RuntimeError("dam timeout")))
+    monkeypatch.setattr(P, "fetch_open_meteo_weather", lambda reg: (_ for _ in ()).throw(RuntimeError("wx timeout")))
+    monkeypatch.setattr(P, "fetch_glofas_flood", lambda: (_ for _ in ()).throw(RuntimeError("glofas timeout")))
     monkeypatch.setattr(P, "OUT_DIR", tmp_path)
-    rc = P.main()
-    assert rc == 0
-    latest = json.loads((tmp_path / "latest.json").read_text(encoding="utf-8"))
+
+    rc, payload = P.run_pipeline(now=fixed)
+    assert rc == 0 and payload is not None
+    assert len(payload["degraded_sources"]) == 4
+    assert len(payload["amphoes"]) == 8
     man = json.loads((tmp_path / "manifest.json").read_text(encoding="utf-8"))
-    assert man["count"] >= 1
-    assert latest["content_hash"] == man["content_hash"]
-    assert latest["province"]["code"] == "95"
+    assert man["content_hash"] == payload["content_hash"]
+    assert man["formula_version"] == 2
 
 
-def test_stale_check_is_timezone_aware():
-    # ข้อมูลเวลา ICT; now ส่งเป็น ICT 10:00 แต่ observed string 08:00 = 2 ชม.ก่อนหน้า
-    now = datetime(2026, 11, 23, 10, 0, tzinfo=P.ICT)
-    rows = _rows_sample(1)
-    rows[0]["waterlevel_datetime"] = "2026-11-23 08:00"
-    st, stats = P.normalize(rows, {"T0": {}}, now=now)
-    assert st[0]["stale"] is True and stats["stale"] == 1
-
-
-def test_unknown_registry_flagged():
-    st, stats = P.normalize(_rows_sample(1), {}, now=datetime.now(P.ICT))
-    assert st[0]["registry_known"] is False
-    assert st[0]["risk_zone"] == "unknown"
-    assert stats["unknown_registry"] == 1
-
-
-def test_snapshot_body_hash_deterministic_fixed_now():
-    reg = _registry()
-    rows = _rows_sample(2)
-    rows[0]["station"]["tele_station_oldcode"] = "PAT002"
-    rows[1]["station"]["tele_station_oldcode"] = "PAT001"
-    fixed = datetime(2026, 11, 23, 12, 0, tzinfo=P.ICT)
-    s1, _ = P.normalize(rows, reg, now=fixed)
-    s2, _ = P.normalize(copy.deepcopy(rows), reg, now=fixed)
-    b1 = P.build_snapshot(s1, {"emergency": {}}, {"items": []})
-    b2 = P.build_snapshot(s2, {"emergency": {}}, {"items": []})
-    assert P.content_hash(b1) == P.content_hash(b2)
-    # generated_at ไม่มีใน body จึงไม่ทำให้ hash เดินตามเวลาจริง
-    assert "generated_at" not in b1
+def test_contacts_registry_has_verified_1784_and_yala_ddpm():
+    _, _, contacts, _ = P.load_registry()
+    by_id = {c["id"]: c for c in contacts["emergency"]}
+    assert by_id["ddpm_1784"]["phone"] == "1784"
+    assert by_id["yala_ddpm"]["phone"] == "073-203559"
+    assert by_id["yala_municipality"]["phone"] == "073-212345"
+    assert by_id["volunteer_1677"]["phone"] == "1677"
+    assert "ร่วมด้วยช่วยกัน" in by_id["volunteer_1677"]["name"]

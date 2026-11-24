@@ -1,0 +1,94 @@
+version: 1
+province_code: "95"
+province_name_th: ยะลา
+province_name_en: Yala
+amphoes:
+  เมืองยะลา:
+    name_en: Mueang Yala
+    lat: 6.5413
+    lon: 101.2803
+    basin: แม่น้ำปัตตานี
+    risk_zone: riverine
+    is_flash_flood: false
+    banglang_downstream: true
+    banglang_lead_time_hours: "6–12 ชม."
+    risk_villages_10yr: 84
+    key_station_codes: ["X.40A", "BLGTD03", "PAT002"]
+  รามัน:
+    name_en: Raman
+    lat: 6.4798
+    lon: 101.4238
+    basin: แม่น้ำสายบุรี
+    risk_zone: riverine
+    is_flash_flood: false
+    banglang_downstream: false
+    banglang_lead_time_hours: null
+    risk_villages_10yr: 85
+    key_station_codes: ["X.273"]
+  ยะหา:
+    name_en: Yaha
+    lat: 6.4748
+    lon: 101.1395
+    basin: คลองยะหา / ปัตตานี
+    risk_zone: riverine
+    is_flash_flood: false
+    banglang_downstream: false
+    banglang_lead_time_hours: null
+    risk_villages_10yr: 44
+    key_station_codes: ["BLGTD04"]
+  บันนังสตา:
+    name_en: Bannang Sata
+    lat: 6.2620
+    lon: 101.2680
+    basin: แม่น้ำปัตตานี (ท้ายเขื่อนบางลาง)
+    risk_zone: flash
+    is_flash_flood: true
+    banglang_downstream: true
+    banglang_lead_time_hours: "2–4 ชม."
+    risk_villages_10yr: 38
+    key_station_codes: ["BLGTU05", "BLGTD01", "BLGTD02", "PAT001", "BLGTU06"]
+  กรงปินัง:
+    name_en: Krong Pinang
+    lat: 6.4117
+    lon: 101.2778
+    basin: แม่น้ำปัตตานี
+    risk_zone: flash
+    is_flash_flood: true
+    banglang_downstream: true
+    banglang_lead_time_hours: "4–6 ชม."
+    risk_villages_10yr: 22
+    key_station_codes: ["FOP045"]
+  เบตง:
+    name_en: Betong
+    lat: 5.7853
+    lon: 101.0587
+    basin: ต้นแม่น้ำปัตตานี / คลองเบตง
+    risk_zone: flash
+    is_flash_flood: true
+    banglang_downstream: false
+    banglang_lead_time_hours: null
+    risk_villages_10yr: 40
+    key_station_codes: ["MOU454", "BLGTU02"]
+  ธารโต:
+    name_en: Than To
+    lat: 6.1525
+    lon: 101.0809
+    basin: เหนือเขื่อนบางลาง / คลองใหญ่
+    risk_zone: flash
+    is_flash_flood: true
+    banglang_downstream: false
+    banglang_lead_time_hours: null
+    risk_villages_10yr: 9
+    key_station_codes: ["X.77"]
+  กาบัง:
+    name_en: Kabang
+    lat: 6.4590
+    lon: 101.0230
+    basin: คลองกาบัง / ปัตตานีตอนบน
+    risk_zone: flash
+    is_flash_flood: true
+    banglang_downstream: false
+    banglang_lead_time_hours: null
+    risk_villages_10yr: null
+    key_station_codes: []
+    note: "ไม่มีสถานีโทรมาตรระดับน้ำในระบบ ThaiWater — ใช้สถานีฝนจริง 4 แห่ง + พยากรณ์ Open-Meteo"

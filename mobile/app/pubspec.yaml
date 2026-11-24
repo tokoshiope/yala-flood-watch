@@ -1,10 +1,10 @@
 name: yala_flood_app
 description: >-
-  แอพ "น้ำท่วมยะลา" — แอพฟรีเพื่อประชาชน แสดงระดับน้ำจาก ThaiWater API
-  พร้อมแผนที่ OSM, แจ้งเตือน, SOS และจุดอพยพของจังหวัดยะลา (รหัส 95)
+  แอพ "น้ำท่วมยะลา" (Yala Flood Watch) — iOS-First แอพฟรีเพื่อประชาชน
+  แจ้งเตือนภัยน้ำท่วมล่วงหน้าเฉพาะจังหวัดยะลา (รหัส 95) เชื่อมต่อ 5 ฐานข้อมูลจริง
 publish_to: 'none'
 
-version: 0.1.0+1
+version: 0.2.0+2
 
 environment:
   sdk: ^3.12.0
@@ -12,38 +12,20 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  # ภาษาไทยใน widget ที่เป็นภาษาอังกฤษ (วันเวลา เลข ฯลฯ)
   flutter_localizations:
     sdk: flutter
 
-  # Material Design (Flutter 3.47+ แยกจาก flutter/material แล้ว)
   material_ui: ^1.11.1
-
-  # เรียก ThaiWater API
   http: ^1.6.0
-
-  # แผนที่ OpenStreetMap
   flutter_map: ^8.3.2
   latlong2: ^0.10.1
-
-  # จัดการ state
   provider: ^6.1.5
-
-  # เก็บแคช/การตั้งค่า/ประวัติแจ้งเตือน
   shared_preferences: ^2.5.6
-
-  # GPS สำหรับ SOS
   geolocator: ^14.1.2
-
-  # โทร 1677 / 199 / ศูนย์ปภ.ยะลา และเปิดแผนที่
   url_launcher: ^6.3.3
-
-  # แจ้งเตือนในเครื่อง + Push
   flutter_local_notifications: ^23.0.4
   firebase_core: ^5.2.0
   firebase_messaging: ^17.1.0
-
-  # deep link yalaflood://
   app_links: ^7.2.2
 
 dev_dependencies:
@@ -54,4 +36,4 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/
+    - assets/snapshots/

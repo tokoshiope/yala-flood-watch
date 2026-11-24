@@ -10,6 +10,7 @@ analyzer:
     todo: ignore
   exclude:
     - build/**
+    - ios/**
 
 linter:
   rules:

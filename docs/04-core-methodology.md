@@ -1,9 +1,11 @@
 # 04 — หลักการคำนวณหลัก (Core Methodology)
 
-> **เอกสารฐาน 04 ของโครงการ** · `formula_version = 1`
-> **วันที่จัดทำ:** 23 พศ. 2568 · **สถานะ:** Draft — **รอ Gate 2 ยืนยันน้ำหนัก/เกณฑ์** (DEC-003)
-> **หมายเหตุความเข้ากัน:** โปรโตไทป์ปัจจุบัน (`mobile/app/lib/services/alert_engine.dart`) ใช้เกณฑ์ `situation_level` เป็นหลัก
-> สูตรในเอกสารนี้คือ **เป้าหมาย**ที่ pipeline จะคำนวณ และแอพจะแสดงผลเชิงขนาน (cross-check)
+> **เอกสารฐาน 04 ของโครงการ** · **อัปเกรดเป็น `formula_version = 2` (Approved by Founder: 2026-11-24 — `DEC-012`)**
+> **สเปกและ Test Vectors ล่าสุด (`formula_version = 2`):** ดู [`specs/spec-multisource-early-warning-v2.md`](specs/spec-multisource-early-warning-v2.md)
+> - สูตรหลัก v2: `Score = clamp(round_half_up(100 * (0.45*W + 0.22*R + 0.13*F + 0.10*D + 0.10*C), 1), 0, 100)`
+> - รองรับ Rate-of-Rise `dH/dt`, ฝนจริง 87 สถานี (`R`), พยากรณ์ฝน 24–72 ชม. (`F`), สัญญาณระบายน้ำ/Spillway เขื่อนบางลาง 6–12 ชม. (`D`), และกฎเขต Flash Flood ไร้สถานีน้ำ (อ.กาบัง)
+> - ทดสอบ Parity 100% ระหว่าง Python (`backend/pipeline.py`) และ Dart (`mobile/app/lib/services/alert_engine.dart`) ด้วย `TV2-1`–`TV2-9`
+> *(เนื้อหาด้านล่างคงบันทึก `formula_version = 1` เป็นประวัติอ้างอิง baseline)*
 
 ---
 

@@ -4,17 +4,49 @@ import 'package:provider/provider.dart';
 import 'package:yala_flood_app/config/app_config.dart';
 import 'package:yala_flood_app/state/alert_provider.dart';
 
-/// หน้าตั้งค่า: อำเภอ/ตำบล, เกณฑ์แจ้งเตือน, โหมดเงียบ และการโหลดข้อมูล
+/// หน้าตั้งค่า: อำเภอ/ตำบล, เกณฑ์แจ้งเตือน, โหมดเงียบ, PDPA ลบข้อมูลของฉัน และแหล่งที่มาข้อมูล 5 แหล่ง
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
+
+  Future<void> _confirmDeleteAll(BuildContext context, AlertProvider provider) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('ลบข้อมูลทั้งหมดในเครื่อง (PDPA)'),
+        content: const Text(
+          'การดำเนินการนี้จะลบประวัติแจ้งเตือน, ประวัติ SOS/พิกัดในเครื่อง, ความยินยอม GPS, '
+          'ข้อมูลแคช และการตั้งค่าทั้งหมดของคุณทันที ยืนยันหรือไม่?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('ยกเลิก'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(AppConfig.colorDanger),
+            ),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('ลบข้อมูลทั้งหมด'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await provider.deleteAllUserData();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ลบข้อมูลส่วนบุคคลและประวัติในเครื่องทั้งหมดแล้ว')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AlertProvider>();
     final settings = provider.settings;
-    final amphoes = provider.amphoes.isNotEmpty
-        ? provider.amphoes
-        : AppConfig.riskAmphoeTh;
+    final amphoes = AppConfig.riskAmphoeTh;
     final tumbons = <String>[...provider.tumbonsInSelectedAmphoe];
     if (settings.selectedTumbonTh != null &&
         !tumbons.contains(settings.selectedTumbonTh)) {
@@ -26,11 +58,11 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
-          _SectionTitle('พื้นที่ที่ติดตาม'),
+          const _SectionTitle('พื้นที่ที่ติดตาม'),
           DropdownButtonFormField<String?>(
             initialValue: settings.selectedAmphoeTh,
             decoration: const InputDecoration(
-              labelText: 'อำเภอ',
+              labelText: 'อำเภอ (ครบทั้ง 8 อำเภอของยะลา)',
               prefixIcon: Icon(Icons.location_city),
               border: OutlineInputBorder(),
             ),
@@ -39,9 +71,15 @@ class SettingsScreen extends StatelessWidget {
               for (final amphoe in amphoes)
                 DropdownMenuItem(value: amphoe, child: Text(amphoe)),
             ],
-            onChanged: (value) => provider.updateSettings(
-              settings.copyWith(selectedAmphoeTh: value, selectedTumbonTh: null),
-            ),
+            onChanged: (value) {
+              if (value == null) {
+                provider.updateSettings(settings.clearAmphoe());
+              } else {
+                provider.updateSettings(
+                  settings.copyWith(selectedAmphoeTh: value, clearTumbon: true),
+                );
+              }
+            },
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String?>(
@@ -58,11 +96,13 @@ class SettingsScreen extends StatelessWidget {
                   DropdownMenuItem(value: tumbon, child: Text(tumbon)),
             ],
             onChanged: (value) => provider.updateSettings(
-              settings.copyWith(selectedTumbonTh: value),
+              value == null
+                  ? settings.copyWith(clearTumbon: true)
+                  : settings.copyWith(selectedTumbonTh: value),
             ),
           ),
           const SizedBox(height: 20),
-          _SectionTitle('เกณฑ์การแจ้งเตือน'),
+          const _SectionTitle('เกณฑ์การแจ้งเตือน'),
           DropdownButtonFormField<int>(
             initialValue: settings.warningLevel,
             decoration: const InputDecoration(
@@ -73,7 +113,7 @@ class SettingsScreen extends StatelessWidget {
             items: const [
               DropdownMenuItem(value: 2, child: Text('ระดับ 2 — เฝ้าระวัง')),
               DropdownMenuItem(value: 3, child: Text('ระดับ 3 — เตือนภัย')),
-              DropdownMenuItem(value: 4, child: Text('ระดับ 4 — อันตราย')),
+              DropdownMenuItem(value: 4, child: Text('ระดับ 4 — เตือนภัยสูง/อันตราย')),
             ],
             onChanged: (value) => provider.updateSettings(
               settings.copyWith(warningLevel: value ?? 3),
@@ -89,14 +129,14 @@ class SettingsScreen extends StatelessWidget {
             ),
             items: const [
               DropdownMenuItem(value: 3, child: Text('ระดับ 3 ขึ้นไป')),
-              DropdownMenuItem(value: 4, child: Text('ระดับ 4')),
+              DropdownMenuItem(value: 4, child: Text('ระดับ 4 ขึ้นไป')),
             ],
             onChanged: (value) => provider.updateSettings(
               settings.copyWith(dangerLevel: value ?? 4),
             ),
           ),
           const SizedBox(height: 20),
-          _SectionTitle('การแจ้งเตือน'),
+          const _SectionTitle('การแจ้งเตือน'),
           SwitchListTile(
             secondary: const Icon(Icons.notifications_off_outlined),
             title: const Text('โหมดเงียบ'),
@@ -107,16 +147,16 @@ class SettingsScreen extends StatelessWidget {
           ),
           SwitchListTile(
             secondary: const Icon(Icons.notifications_active_outlined),
-            title: const Text('Push แจ้งเตือน'),
-            subtitle: const Text('เปิดรับข้อความจาก ศูนย์ปภ.ยะลา'),
+            title: const Text('แจ้งเตือนระดับน้ำในเครื่อง'),
+            subtitle: const Text('แจ้งเตือนอัตโนมัติเมื่อระดับความเสี่ยงเพิ่มสูงขึ้น (Cooldown 30 นาที)'),
             value: settings.pushEnabled,
             onChanged: (value) =>
                 provider.updateSettings(settings.copyWith(pushEnabled: value)),
           ),
           SwitchListTile(
             secondary: const Icon(Icons.cloud_outlined),
-            title: const Text('คำนวณค่าฝนร่วมด้วย'),
-            subtitle: const Text('ปรับระดับเตือนตามค่าฝนในอนาคต'),
+            title: const Text('คำนวณฝนจริง & พยากรณ์ฝนร่วมด้วย'),
+            subtitle: const Text('ใช้สูตร formula_version = 2 (ระดับน้ำ + ฝน 87 สถานี + เขื่อนบางลาง)'),
             value: settings.rainScoreEnabled,
             onChanged: (value) =>
                 provider.updateSettings(settings.copyWith(rainScoreEnabled: value)),
@@ -140,10 +180,10 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          _SectionTitle('ข้อมูล'),
+          const _SectionTitle('ความเป็นส่วนตัวและข้อมูล (PDPA)'),
           ListTile(
             leading: const Icon(Icons.cleaning_services_outlined),
-            title: const Text('ล้างข้อมูลสำรอง'),
+            title: const Text('ล้างข้อมูลสำรอง (Cache)'),
             subtitle: const Text('บังคับโหลดค่าใหม่จากเซิร์ฟเวอร์'),
             onTap: () async {
               await provider.clearCache();
@@ -160,16 +200,26 @@ class SettingsScreen extends StatelessWidget {
             subtitle: Text('มี ${provider.alerts.length} รายการ'),
             onTap: provider.clearAlerts,
           ),
+          ListTile(
+            leading: const Icon(Icons.delete_forever, color: Color(AppConfig.colorDanger)),
+            title: const Text(
+              'ลบข้อมูลของฉันทั้งหมด (PDPA)',
+              style: TextStyle(color: Color(AppConfig.colorDanger), fontWeight: FontWeight.w700),
+            ),
+            subtitle: const Text('ลบประวัติ SOS, พิกัดในเครื่อง, ความยินยอม GPS และแจ้งเตือนทั้งหมด'),
+            onTap: () => _confirmDeleteAll(context, provider),
+          ),
           const SizedBox(height: 20),
-          _SectionTitle('เกี่ยวกับ'),
+          const _SectionTitle('แหล่งข้อมูลและคำชี้แจง'),
           const ListTile(
             leading: Icon(Icons.info_outline),
-            title: Text('น้ำท่วมยะลา'),
+            title: Text('น้ำท่วมยะลา (Yala Flood Watch) v${AppConfig.appVersion}'),
             subtitle: Text(
-              'เวอร์ชัน ${AppConfig.appVersion}\n'
-              'ข้อมูลระดับน้ำ: ThaiWater (สสน.) จ.ยะลา (รหัส ${AppConfig.provinceCode})\n'
-              'แผนที่: OpenStreetMap\n'
-              'แอพฟรีเพื่อประชาชน',
+              'สูตรเตือนภัย: formula_version = ${AppConfig.formulaVersion}\n'
+              'โหมดแอปปัจจุบัน (Phase 1.5): ดึงระดับน้ำสด 14 สถานีจาก ThaiWater พร้อมสูตร v2 ในเครื่อง\n'
+              'โหมด 5 ฐานข้อมูลเต็มรูปแบบ (Pipeline & iOS Preview): ระดับน้ำ 14 สถานี + ฝนจริง 87 สถานี + เขื่อนบางลาง + Open-Meteo 72 ชม. + GloFAS 7 วัน (เชื่อม CDN เข้าแอปใน Phase 2)\n'
+              'แผนที่: OpenStreetMap · ฟรี 100% เพื่อประชาชน\n\n'
+              '${AppConfig.lifeSafetyDisclaimerTh}',
             ),
             isThreeLine: true,
           ),

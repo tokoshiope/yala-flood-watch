@@ -1,0 +1,54 @@
+{
+  "schema_version": 2,
+  "formula_version": 2,
+  "generated_at": "2026-11-24T16:18:15+07:00",
+  "count": 14,
+  "amphoe_count": 8,
+  "rain_gauge_count": 87,
+  "content_hash": "19698acd550b11d6e53fd6791b7c298b0697b6340f5927bb97dae37846c6b780",
+  "snapshot": "snapshot-20261124-161815-19698acd.json",
+  "degraded_sources": [],
+  "source_health": {
+    "thaiwater_waterlevel": {
+      "status": "ok",
+      "tier": "A",
+      "count": 14,
+      "latency_ms": 1255
+    },
+    "thaiwater_rain_24h": {
+      "status": "ok",
+      "tier": "A",
+      "count": 87,
+      "amphoes_covered": 8,
+      "latency_ms": 1174
+    },
+    "thaiwater_dam": {
+      "status": "ok",
+      "tier": "A",
+      "storage_percent": 54.3,
+      "spillway_active": false,
+      "latency_ms": 2728
+    },
+    "open_meteo_weather": {
+      "status": "ok",
+      "tier": "B",
+      "amphoes_covered": 8,
+      "latency_ms": 250
+    },
+    "open_meteo_flood": {
+      "status": "ok",
+      "tier": "B",
+      "checkpoints": 2,
+      "latency_ms": 302
+    }
+  },
+  "stats": {
+    "stale": 6,
+    "no_situation": 5,
+    "no_bank": 2,
+    "unknown_registry": 0,
+    "bank_from_registry": 0,
+    "storage_anomaly": 0,
+    "duplicates_skipped": 0
+  }
+}

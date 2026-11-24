@@ -5,7 +5,6 @@ on:
     - cron: "*/15 * * * *"   # ทุก 15 นาที
   workflow_dispatch:
 
-# กัน run ซ้อน (B-2): run ใหม่จะไม่ถูก cancel แต่รอคิว ป้องกันเขียน output ทับกัน
 concurrency:
   group: yala-flood-data-pipeline
   cancel-in-progress: false
@@ -22,16 +21,15 @@ jobs:
           cache: pip
       - name: Install deps
         run: pip install -r backend/requirements.txt
-      - name: Unit tests
+      - name: Hermetic Unit & Formula v2 Tests
         run: pytest -q backend/tests
-        working-directory: .
-      - name: Run pipeline (fail-closed)
-        run: python backend/pipeline.py
+      - name: Run Multi-Source Pipeline (fail-closed)
+        run: python backend/pipeline.py --sync-mobile-asset
       - name: Upload snapshot artifacts
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: yala-flood-snapshot
+          name: yala-flood-snapshot-${{ github.run_id }}
           path: |
             backend/output/latest.json
             backend/output/manifest.json

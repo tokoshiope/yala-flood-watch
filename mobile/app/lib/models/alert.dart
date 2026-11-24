@@ -14,32 +14,33 @@ class AlertItem {
     this.rainScore,
     this.amphoeTh,
     this.read = false,
+    this.score,
+    this.alertLevel,
+    this.waterSignal = false,
+    this.pushed = false,
+    this.leadTimeHours,
   });
 
-  /// รหัส unique: เวลา + รหัสสถานี + ระดับ
   final String id;
-
   final String stationCode;
   final String stationName;
   final RiskLevel level;
   final String title;
   final String message;
-
-  /// เวลาที่เราสร้างการแจ้งเตือน (เวลาเครื่อง)
   final DateTime createdAt;
-
   final double? waterLevelMsl;
-
-  /// คะแนนฝนที่ใช้ปรับระดับ (ถ้ามี)
   final int? rainScore;
-
   final String? amphoeTh;
-
   final bool read;
+  final double? score;
+  final AlertLevel? alertLevel;
+  final bool waterSignal;
+  final bool pushed;
+  final String? leadTimeHours;
 
   bool get isActionable => level.isAtLeastWarning;
 
-  AlertItem copyWith({bool? read}) => AlertItem(
+  AlertItem copyWith({bool? read, bool? pushed}) => AlertItem(
         id: id,
         stationCode: stationCode,
         stationName: stationName,
@@ -51,6 +52,11 @@ class AlertItem {
         rainScore: rainScore,
         amphoeTh: amphoeTh,
         read: read ?? this.read,
+        score: score,
+        alertLevel: alertLevel,
+        waterSignal: waterSignal,
+        pushed: pushed ?? this.pushed,
+        leadTimeHours: leadTimeHours,
       );
 
   Map<String, dynamic> toJson() => {
@@ -65,6 +71,11 @@ class AlertItem {
         'rainScore': rainScore,
         'amphoeTh': amphoeTh,
         'read': read,
+        'score': score,
+        'alertLevel': alertLevel?.value,
+        'waterSignal': waterSignal,
+        'pushed': pushed,
+        'leadTimeHours': leadTimeHours,
       };
 
   factory AlertItem.fromJson(Map<String, dynamic> json) => AlertItem(
@@ -88,9 +99,16 @@ class AlertItem {
             : null,
         amphoeTh: json['amphoeTh'] as String?,
         read: json['read'] as bool? ?? false,
+        score: json['score'] is num ? (json['score'] as num).toDouble() : null,
+        alertLevel: json['alertLevel'] is num
+            ? AlertLevel.fromValue((json['alertLevel'] as num).toInt())
+            : null,
+        waterSignal: json['waterSignal'] as bool? ?? false,
+        pushed: json['pushed'] as bool? ?? false,
+        leadTimeHours: json['leadTimeHours'] as String?,
       );
 
-  /// สร้างรหัสที่น่าจะ unique พอสำหรับเก็บในแคช
+  /// รหัส unique ตามสถานี + ระดับ + หน้าต่างเวลา (ระดับชั่วโมงเพื่อลดซ้ำระดับนาที)
   static String buildId(String stationCode, RiskLevel level, DateTime time) {
     final minute = time.toIso8601String().substring(0, 16);
     return '$stationCode-${level.name}-$minute';

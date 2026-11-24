@@ -1,0 +1,916 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>น้ำท่วมยะลา (Yala Flood Watch) — iOS Interactive Prototype & Live 5-Source Simulator</title>
+  <style>
+    :root {
+      --bg: #070d19;
+      --panel: #10192b;
+      --panel2: #15223b;
+      --border: #233354;
+      --text: #edf3ff;
+      --muted: #8ea4cc;
+      --ios-bg: #f2f4f8;
+      --ios-card: #ffffff;
+      --ios-text: #111827;
+      --ios-muted: #5b677d;
+      --ios-blue: #007aff;
+      --lv1: #2e7d32;
+      --lv2: #f9a825;
+      --lv3: #ef6c00;
+      --lv4: #e53935;
+      --lv5: #b71c1c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Noto Sans Thai", "Sarabun", sans-serif;
+      background: radial-gradient(circle at top left, #10203d, #070d19 60%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .layout {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 1020px) {
+      .layout { grid-template-columns: 1fr; justify-items: center; }
+    }
+
+    /* ── iPhone 16 Pro Shell ── */
+    .iphone-wrap { position: sticky; top: 16px; }
+    .iphone {
+      width: 398px;
+      height: 826px;
+      background: #0d1117;
+      border-radius: 52px;
+      padding: 12px;
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.65), inset 0 0 0 2px #364156;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .ios-screen {
+      flex: 1;
+      background: var(--ios-bg);
+      color: var(--ios-text);
+      border-radius: 42px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      font-size: 13.5px;
+    }
+    .ios-screen.elderly { font-size: 16px; }
+    .ios-screen.elderly .small { font-size: 13.5px !important; }
+    .ios-status {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      padding: 10px 22px 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      position: relative;
+      z-index: 10;
+    }
+    .dynamic-island {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 108px;
+      height: 26px;
+      background: #000;
+      border-radius: 20px;
+      z-index: 20;
+    }
+    .ios-push {
+      position: absolute;
+      top: 44px;
+      left: 12px;
+      right: 12px;
+      background: rgba(20, 24, 34, 0.95);
+      color: #fff;
+      border-radius: 18px;
+      padding: 11px 13px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+      z-index: 30;
+      transform: translateY(-140%);
+      transition: transform 0.35s cubic-bezier(.22, 1, .36, 1);
+      cursor: pointer;
+    }
+    .ios-push.show { transform: translateY(0); }
+    .ios-push-head { display: flex; justify-content: space-between; font-size: 11px; color: #93c5fd; font-weight: 700; margin-bottom: 3px; }
+    .ios-push-title { font-weight: 800; font-size: 13px; }
+    .ios-push-body { font-size: 12px; color: #e2e8f0; margin-top: 2px; line-height: 1.35; }
+
+    .ios-header {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 6px 16px 10px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .ios-title { font-size: 18px; font-weight: 800; color: #0b2545; }
+    .ios-sub { font-size: 11px; color: var(--ios-muted); }
+    .ios-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 12px 16px;
+    }
+    .ios-tabbar {
+      background: rgba(255, 255, 255, 0.96);
+      border-top: 1px solid #dce3ee;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      padding: 6px 4px 16px;
+    }
+    .ios-tab {
+      border: 0;
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      padding: 4px 0;
+      position: relative;
+    }
+    .ios-tab.active { color: var(--ios-blue); }
+    .ios-tab .ic { font-size: 18px; line-height: 1.1; }
+    .ios-tab.sos-tab .ic {
+      background: var(--lv5);
+      color: #fff;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .tab-badge {
+      position: absolute;
+      top: 0;
+      right: 12px;
+      background: var(--lv4);
+      color: #fff;
+      border-radius: 999px;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 1px 5px;
+    }
+
+    /* ── iOS Cards & Badges ── */
+    .card {
+      background: var(--ios-card);
+      border-radius: 16px;
+      padding: 12px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+      border: 1px solid #e6ecf5;
+    }
+    .sim-strip {
+      background: #fff3cd;
+      color: #7c2d12;
+      border: 1px solid #fbbf24;
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-size: 11.5px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .lv-1 { background: var(--lv1); }
+    .lv-2 { background: var(--lv2); color: #1f2937; }
+    .lv-3 { background: var(--lv3); }
+    .lv-4 { background: var(--lv4); }
+    .lv-5 { background: var(--lv5); }
+    .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .small { font-size: 11.5px; color: var(--ios-muted); }
+    .dam-card {
+      background: linear-gradient(135deg, #0b3b75, #145da0);
+      color: #fff;
+      border: 0;
+    }
+    .dam-card.spill {
+      background: linear-gradient(135deg, #991b1b, #dc2626);
+    }
+    .dam-card .small { color: rgba(255, 255, 255, 0.82); }
+    .dam-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .dam-metric {
+      background: rgba(255, 255, 255, 0.14);
+      border-radius: 10px;
+      padding: 6px 8px;
+    }
+    .dam-metric b { font-size: 14px; display: block; }
+    .amphoe-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .amp-tile {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid var(--lv1);
+      border-radius: 12px;
+      padding: 9px;
+      cursor: pointer;
+      transition: transform 0.12s;
+    }
+    .amp-tile:hover { transform: translateY(-1px); }
+    .amp-tile .name { font-weight: 800; font-size: 13px; }
+    .station-row {
+      padding: 9px 0;
+      border-bottom: 1px solid #edf2f7;
+      cursor: pointer;
+    }
+    .station-row:last-child { border-bottom: 0; }
+    .btn {
+      border: 0;
+      border-radius: 11px;
+      padding: 9px 12px;
+      font-weight: 700;
+      font-size: 12.5px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+    .btn-primary { background: var(--ios-blue); color: #fff; }
+    .btn-danger { background: var(--lv5); color: #fff; }
+    .btn-soft { background: #e8f0fe; color: #0e5fa6; }
+    .map-svg { width: 100%; height: 225px; background: #e6f0fa; border-radius: 12px; border: 1px solid #c7dbf1; }
+
+    /* ── iOS Bottom Sheet Modal ── */
+    .sheet-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      display: none;
+      align-items: flex-end;
+      z-index: 40;
+    }
+    .sheet-backdrop.open { display: flex; }
+    .sheet {
+      width: 100%;
+      max-height: 82%;
+      overflow-y: auto;
+      background: #fff;
+      color: var(--ios-text);
+      border-radius: 24px 24px 0 0;
+      padding: 14px 16px 24px;
+    }
+    .sheet-handle { width: 40px; height: 4px; background: #cbd5e1; border-radius: 99px; margin: 0 auto 10px; }
+    .sig-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 10px 0; }
+    .sig-box { background: #f1f5f9; border-radius: 10px; padding: 6px; text-align: center; }
+    .sig-box b { display: block; font-size: 13px; color: #0f172a; }
+    .bars { display: flex; align-items: flex-end; gap: 3px; height: 64px; margin-top: 8px; }
+    .bar-col { flex: 1; background: #38bdf8; border-radius: 3px 3px 0 0; min-height: 2px; }
+
+    /* ── Right Operations & Simulation Control Deck ── */
+    .deck-head { margin-bottom: 16px; }
+    .deck-head h1 { margin: 0 0 6px; font-size: 24px; }
+    .deck-head p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
+    .deck-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .deck-card h2 { margin: 0 0 10px; font-size: 15px; display: flex; align-items: center; justify-content: space-between; }
+    .scenario-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    @media (max-width: 640px) { .scenario-grid { grid-template-columns: 1fr; } }
+    .sc-btn {
+      background: var(--panel2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 11px 12px;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .sc-btn:hover { border-color: #38bdf8; }
+    .sc-btn.active { border-color: #38bdf8; background: #163056; box-shadow: 0 0 0 1px #38bdf8; }
+    .sc-btn b { display: block; font-size: 13px; margin-bottom: 3px; }
+    .sc-btn span { font-size: 11.5px; color: var(--muted); line-height: 1.4; display: block; }
+    .src-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+    .src-box {
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+    .dot-ok { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; margin-right: 5px; }
+    .dot-deg { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; margin-right: 5px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td { padding: 7px 8px; border-bottom: 1px solid var(--border); text-align: left; }
+    th { color: var(--muted); font-weight: 700; }
+    .refresh-btn {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #fff;
+      border: 0;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-weight: 700;
+      font-size: 12.5px;
+      cursor: pointer;
+    }
+    .refresh-btn:disabled { opacity: 0.55; cursor: wait; }
+    .code-tag {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: rgba(56, 189, 248, 0.14);
+      color: #7dd3fc;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <!-- LEFT: iPhone 16 Pro Interactive Prototype -->
+  <div class="iphone-wrap">
+    <div class="iphone">
+      <div class="dynamic-island"></div>
+      <div class="ios-screen" id="iosScreen">
+        <div class="ios-status">
+          <span id="iosClock">15:52</span>
+          <span>5G · ยะลา 🇹🇭</span>
+        </div>
+
+        <div class="ios-push" id="iosPush" onclick="hidePush(); switchTab('alerts');">
+          <div class="ios-push-head">
+            <span>🌊 น้ำท่วมยะลา · แจ้งเตือนล่วงหน้า</span>
+            <span>เมื่อสักครู่</span>
+          </div>
+          <div class="ios-push-title" id="pushTitle">แจ้งเตือนระดับน้ำ</div>
+          <div class="ios-push-body" id="pushBody"></div>
+        </div>
+
+        <div class="ios-header">
+          <div>
+            <div class="ios-title">🌊 น้ำท่วมยะลา</div>
+            <div class="ios-sub" id="iosUpdated">กำลังโหลดข้อมูลจาก 5 ฐานข้อมูลจริง…</div>
+          </div>
+          <span class="pill lv-1" id="iosTopBadge">ปกติ</span>
+        </div>
+
+        <div class="ios-content" id="iosContent"></div>
+
+        <div class="ios-tabbar">
+          <button class="ios-tab active" data-tab="home" onclick="switchTab('home')"><span class="ic">🗺️</span>หน้าหลัก</button>
+          <button class="ios-tab" data-tab="alerts" onclick="switchTab('alerts')"><span class="ic">🔔</span>แจ้งเตือน<span class="tab-badge" id="alertBadge" style="display:none">0</span></button>
+          <button class="ios-tab sos-tab" data-tab="sos" onclick="switchTab('sos')"><span class="ic">SOS</span>ฉุกเฉิน</button>
+          <button class="ios-tab" data-tab="shelters" onclick="switchTab('shelters')"><span class="ic">🏕️</span>จุดพักพิง</button>
+          <button class="ios-tab" data-tab="settings" onclick="switchTab('settings')"><span class="ic">⚙️</span>ตั้งค่า</button>
+        </div>
+
+        <div class="sheet-backdrop" id="sheetBackdrop" onclick="if(event.target===this) closeSheet()">
+          <div class="sheet">
+            <div class="sheet-handle"></div>
+            <div id="sheetBody"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Operations & Simulation Control Deck -->
+  <div>
+    <div class="deck-head">
+      <h1>🌊 Yala Flood Watch — iOS Interactive Prototype & 5-Source Engine</h1>
+      <p>
+        โมเดลทดลองที่เชื่อมต่อ <b>ฐานข้อมูลจริง 5 แหล่ง</b> (ThaiWater 14 สถานีวัดน้ำ + 87 สถานีฝนครบ 8 อำเภอ + เขื่อนบางลาง กฟผ./ชป. + Open-Meteo 72 ชม. + GloFAS 7 วัน)
+        คำนวณด้วยสูตร <span class="code-tag">formula_version = 2</span> ตรงกับโค้ด Flutter iOS 100%
+      </p>
+    </div>
+
+    <div class="deck-card">
+      <h2>
+        <span>🎛️ สลับโหมดข้อมูลจริง / จำลองเหตุการณ์เตือนภัยล่วงหน้า</span>
+        <button class="refresh-btn" id="refreshBtn" onclick="refreshLive()">🔄 ดึงข้อมูลสดจาก 5 API จริงตอนนี้</button>
+      </h2>
+      <div class="scenario-grid">
+        <button class="sc-btn active" id="sc-live" onclick="loadScenario('live')">
+          <b>🟢 ข้อมูลจริงวันนี้ (Live 5-Source)</b>
+          <span>ดึงจริงจาก ThaiWater (14 น้ำ + 87 ฝน + เขื่อนบางลาง) และ Open-Meteo / GloFAS</span>
+        </button>
+        <button class="sc-btn" id="sc-banglang_spillway" onclick="loadScenario('banglang_spillway')">
+          <b>🟠 จำลอง: เขื่อนบางลางเปิด Spillway</b>
+          <span>ทดสอบแจ้งเตือนล่วงหน้า 6–12 ชม. (บันนังสตา → กรงปินัง → เมืองยะลา X.40A)</span>
+        </button>
+        <button class="sc-btn" id="sc-kabang_flash" onclick="loadScenario('kabang_flash')">
+          <b>⚡ จำลอง: ฝนหนักฉับพลัน อ.กาบัง–บันนังสตา</b>
+          <span>ทดสอบ Flash Flood Override และ อ.กาบัง (0 สถานีน้ำ แต่ใช้ 4 สถานีฝน + พยากรณ์)</span>
+        </button>
+        <button class="sc-btn" id="sc-nov2025_crisis" onclick="loadScenario('nov2025_crisis')">
+          <b>🔴 จำลองวิกฤต: น้ำท่วมใหญ่ยะลา (แบบ พ.ย. 2568)</b>
+          <span>ระดับ 5 อันตราย อพยพทันที ครบ 8 อำเภอ + แจ้งเตือน iOS Push Banner</span>
+        </button>
+      </div>
+      <div id="scenarioDesc" style="margin-top:10px;font-size:12.5px;color:#93c5fd;"></div>
+    </div>
+
+    <div class="deck-card">
+      <h2>
+        <span>📡 สถานะการเชื่อมต่อฐานข้อมูลจริงทั้ง 5 แหล่ง</span>
+        <span class="code-tag" id="manifestHash">hash: —</span>
+      </h2>
+      <div class="src-grid" id="sourceHealthGrid"></div>
+    </div>
+
+    <div class="deck-card">
+      <h2><span>🌊 พยากรณ์ปริมาณน้ำท่าล่วงหน้า 7 วัน (Open-Meteo GloFAS v4 · m³/s)</span></h2>
+      <div id="glofasPanel"></div>
+    </div>
+
+    <div class="deck-card">
+      <h2><span>🧮 สูตรคำนวณ <span class="code-tag">formula_version = 2</span> & กติกาความน่าเชื่อถือ</span></h2>
+      <div style="font-size:12.5px;color:var(--muted);line-height:1.65">
+        • <b>Score (0–100)</b> = <span class="code-tag">0.45·W(ระดับน้ำ+dH/dt) + 0.22·R(ฝนจริง 87 สถานี) + 0.13·F(พยากรณ์ 24 ชม.) + 0.10·D(เขื่อนบางลาง) + 0.10·C(ชุมชน)</span><br/>
+        • <b>Agency Floor:</b> ไม่ลดระดับต่ำกว่า <span class="code-tag">situation_level</span> ของ สสน./กฟผ./ชป.<br/>
+        • <b>กัน False Alarm:</b> ฝนอย่างเดียวไม่ Push เว้นแต่มีสัญญาณน้ำ/เขื่อน/ชุมชน หรือกรณีเขต Flash Flood ไร้สถานีน้ำ (อ.กาบัง) ที่ฝนจริงหนักมากร่วมกับพยากรณ์หนัก<br/>
+        • <b>Zero-Hallucination Emergency Contacts:</b> สายด่วนนิรภัย ปภ. <b>1784</b> · ปภ.ยะลา <b>073-203559</b> · เทศบาลนครยะลา <b>073-212345</b> · สพฉ. <b>1669</b>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let SNAP = null;
+let ACTIVE_TAB = 'home';
+let CURRENT_SCENARIO = 'live';
+let SUB_AMPHOE = '';
+let ELDERLY_MODE = false;
+let GPS_CONSENT = false;
+let SOS_LOGS = [];
+let SHELTER_FILTER = '';
+let PUSH_TIMER = null;
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function lvColor(lv) {
+  return ({1:'#2e7d32',2:'#f9a825',3:'#ef6c00',4:'#e53935',5:'#b71c1c'})[lv] || '#64748b';
+}
+
+function updateClock() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  document.getElementById('iosClock').textContent = `${hh}:${mm}`;
+}
+setInterval(updateClock, 15000);
+updateClock();
+
+function showPush(title, body) {
+  document.getElementById('pushTitle').textContent = title;
+  document.getElementById('pushBody').textContent = body;
+  const el = document.getElementById('iosPush');
+  el.classList.add('show');
+  clearTimeout(PUSH_TIMER);
+  PUSH_TIMER = setTimeout(hidePush, 6500);
+}
+function hidePush() {
+  document.getElementById('iosPush').classList.remove('show');
+}
+
+function switchTab(tab) {
+  ACTIVE_TAB = tab;
+  document.querySelectorAll('.ios-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  renderPhone();
+}
+
+function openSheet(html) {
+  document.getElementById('sheetBody').innerHTML = html;
+  document.getElementById('sheetBackdrop').classList.add('open');
+}
+function closeSheet() {
+  document.getElementById('sheetBackdrop').classList.remove('open');
+}
+
+async function loadScenario(id) {
+  CURRENT_SCENARIO = id;
+  document.querySelectorAll('.sc-btn').forEach(b => b.classList.toggle('active', b.id === 'sc-' + id));
+  const res = await fetch('/api/scenario/' + encodeURIComponent(id));
+  SNAP = await res.json();
+  renderAll();
+  const topPush = getPushAlerts()[0];
+  if (topPush && (id !== 'live' || topPush.assessment.level >= 4)) {
+    showPush(
+      `ระดับ ${topPush.assessment.level} (${topPush.assessment.label_th}) · อ.${topPush.amphoe}`,
+      `${topPush.title} — ${topPush.assessment.action_th}`
+    );
+  }
+}
+
+async function refreshLive() {
+  const btn = document.getElementById('refreshBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ กำลังยิง 5 ฐานข้อมูลจริง…';
+  try {
+    const res = await fetch('/api/refresh', { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Refresh failed');
+    SNAP = data;
+    CURRENT_SCENARIO = 'live';
+    document.querySelectorAll('.sc-btn').forEach(b => b.classList.toggle('active', b.id === 'sc-live'));
+    renderAll();
+    showPush('อัปเดตข้อมูลสดสำเร็จ (5/5 แหล่ง)', `สถานีน้ำ ${SNAP.stations.length} แห่ง · สถานีฝน ${SNAP.rain_gauges_summary.total} แห่ง · เขื่อนบางลาง ${SNAP.banglang_dam?.storage_percent ?? '-'}%`);
+  } catch (e) {
+    alert('ดึงข้อมูลสดไม่สำเร็จ (Fail-Closed): ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔄 ดึงข้อมูลสดจาก 5 API จริงตอนนี้';
+  }
+}
+
+function getPushAlerts() {
+  if (!SNAP) return [];
+  const list = [];
+  for (const a of (SNAP.amphoes || [])) {
+    if (SUB_AMPHOE && a.amphoe !== SUB_AMPHOE) continue;
+    if (a.assessment.level >= 2) {
+      const lead = a.assessment.lead_time_hours ? ` · ล่วงหน้า ${a.assessment.lead_time_hours}` : '';
+      list.push({
+        amphoe: a.amphoe,
+        title: `อ.${a.amphoe}${lead}`,
+        subtitle: `ฝน 24 ชม. ${a.rain.max_rain_24h_mm} มม. · พยากรณ์ 24 ชม. ${a.weather_forecast.forecast_24h_mm} มม.`,
+        assessment: a.assessment,
+        raw: a,
+      });
+    }
+  }
+  return list.sort((x, y) => y.assessment.level - x.assessment.level || y.assessment.score - x.assessment.score);
+}
+
+function renderAll() {
+  if (!SNAP) return;
+  const maxLv = Math.max(...(SNAP.amphoes || []).map(a => a.assessment.level), 1);
+  const topMeta = ({1:'ปกติ',2:'เฝ้าระวัง',3:'เตือนภัย',4:'เตือนภัยสูง',5:'อันตราย'})[maxLv];
+  const badge = document.getElementById('iosTopBadge');
+  badge.className = `pill lv-${maxLv}`;
+  badge.textContent = `ระดับ ${maxLv} · ${topMeta}`;
+  document.getElementById('iosUpdated').textContent = `อัปเดต ${SNAP.generated_at?.replace('T',' ').slice(0,16) || '-'} ICT · v${SNAP.formula_version}`;
+
+  const pushCount = getPushAlerts().filter(x => x.assessment.should_push).length;
+  const ab = document.getElementById('alertBadge');
+  ab.style.display = pushCount > 0 ? 'inline-block' : 'none';
+  ab.textContent = pushCount;
+
+  const sim = SNAP.simulation_mode || {};
+  document.getElementById('scenarioDesc').textContent = `${sim.title_th || ''}: ${sim.description_th || ''}`;
+  document.getElementById('manifestHash').textContent = `sha256: ${(SNAP.content_hash || '').slice(0, 14)}…`;
+
+  renderDeckHealth();
+  renderGlofas();
+  renderPhone();
+}
+
+function renderDeckHealth() {
+  const h = SNAP.source_health || {};
+  const entries = [
+    ['thaiwater_waterlevel', '1. ThaiWater Waterlevel', d => `${d.count ?? 0} สถานีวัดระดับน้ำ · ${d.latency_ms ?? '-'} ms`],
+    ['thaiwater_rain_24h', '2. ThaiWater Rain 24h', d => `${d.count ?? 0} สถานีฝน (${d.amphoes_covered ?? 0}/8 อำเภอ) · ${d.latency_ms ?? '-'} ms`],
+    ['thaiwater_dam', '3. เขื่อนบางลาง (กฟผ./ชป.)', d => `ความจุ ${d.storage_percent ?? '-'}% · Spillway: ${d.spillway_active ? 'เปิด!' : 'ปกติ'} · ${d.latency_ms ?? '-'} ms`],
+    ['open_meteo_weather', '4. Open-Meteo Forecast 72h', d => `ครบ ${d.amphoes_covered ?? 0}/8 อำเภอ · ${d.latency_ms ?? '-'} ms`],
+    ['open_meteo_flood', '5. Open-Meteo GloFAS v4', d => `${d.checkpoints ?? 0} ลุ่มน้ำหลัก (7 วัน) · ${d.latency_ms ?? '-'} ms`],
+  ];
+  document.getElementById('sourceHealthGrid').innerHTML = entries.map(([k, label, fmt]) => {
+    const d = h[k] || { status: 'unknown' };
+    const ok = d.status === 'ok';
+    return `<div class="src-box">
+      <div style="font-weight:700;margin-bottom:4px"><span class="${ok ? 'dot-ok' : 'dot-deg'}"></span>${esc(label)} <span class="code-tag">Tier ${esc(d.tier || '-')}</span></div>
+      <div style="color:#8ea4cc">${ok ? esc(fmt(d)) : esc(d.error || 'Degraded')}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderGlofas() {
+  const list = SNAP.glofas_flood || [];
+  if (!list.length) {
+    document.getElementById('glofasPanel').innerHTML = '<div style="color:#8ea4cc;font-size:12.5px">ไม่มีข้อมูล GloFAS ในรอบนี้</div>';
+    return;
+  }
+  document.getElementById('glofasPanel').innerHTML = `<table>
+    <thead><tr><th>จุดพยากรณ์ลุ่มน้ำ</th><th>อำเภอ</th><th>ค่าเฉลี่ยปกติ (m³/s)</th><th>คาดการณ์สูงสุด 7 วัน</th><th>อัตราส่วนเทียบปกติ</th></tr></thead>
+    <tbody>${list.map(c => `<tr>
+      <td><b>${esc(c.name)}</b></td>
+      <td>${esc(c.amphoe)}</td>
+      <td>${c.mean_discharge_baseline ?? '-'}</td>
+      <td><b>${c.peak_discharge_7d ?? '-'} m³/s</b></td>
+      <td><span class="code-tag">${c.peak_vs_mean_ratio ?? '-'}x</span></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function renderPhone() {
+  const el = document.getElementById('iosContent');
+  document.getElementById('iosScreen').classList.toggle('elderly', ELDERLY_MODE);
+  if (ACTIVE_TAB === 'home') el.innerHTML = renderHomeTab();
+  else if (ACTIVE_TAB === 'alerts') el.innerHTML = renderAlertsTab();
+  else if (ACTIVE_TAB === 'sos') el.innerHTML = renderSosTab();
+  else if (ACTIVE_TAB === 'shelters') el.innerHTML = renderSheltersTab();
+  else el.innerHTML = renderSettingsTab();
+}
+
+function renderMiniMapSvg() {
+  const stations = SNAP.stations || [];
+  const dam = SNAP.banglang_dam;
+  const la0 = 5.70, la1 = 6.75, lo0 = 100.95, lo1 = 101.52;
+  const X = lo => 20 + ((lo - lo0) / (lo1 - lo0)) * 320;
+  const Y = la => 205 - ((la - la0) / (la1 - la0)) * 185;
+  let dots = '';
+  // Pattani river approximate spine
+  dots += `<polyline points="${X(101.06)},${Y(5.78)} ${X(101.18)},${Y(5.92)} ${X(101.27)},${Y(6.15)} ${X(101.27)},${Y(6.26)} ${X(101.28)},${Y(6.41)} ${X(101.26)},${Y(6.55)} ${X(101.29)},${Y(6.68)}" fill="none" stroke="#60a5fa" stroke-width="3" stroke-dasharray="4 3" opacity="0.75"/>`;
+  if (dam) {
+    const dx = X(dam.lon), dy = Y(dam.lat);
+    dots += `<rect x="${dx-7}" y="${dy-7}" width="14" height="14" rx="3" fill="${dam.spillway_active ? '#dc2626' : '#0b3b75'}" stroke="#fff" stroke-width="2"/>`;
+    dots += `<text x="${dx+10}" y="${dy+3}" font-size="9" font-weight="800" fill="#0b3b75">เขื่อนบางลาง ${dam.storage_percent ?? ''}%</text>`;
+  }
+  stations.forEach((s, i) => {
+    if (s.lat == null || s.lon == null) return;
+    const cx = X(s.lon), cy = Y(s.lat);
+    const col = lvColor(s.assessment.level);
+    dots += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="6.5" fill="${col}" stroke="#fff" stroke-width="1.8" style="cursor:pointer" onclick="showStationDetail(${i})"/>`;
+  });
+  return `<svg class="map-svg" viewBox="0 0 360 220">${dots}</svg>`;
+}
+
+function renderHomeTab() {
+  const sim = SNAP.simulation_mode || {};
+  const dam = SNAP.banglang_dam;
+  const amphoes = (SNAP.amphoes || []).filter(a => !SUB_AMPHOE || a.amphoe === SUB_AMPHOE);
+  const stations = (SNAP.stations || []).filter(s => !SUB_AMPHOE || s.amphoe === SUB_AMPHOE);
+
+  let html = '';
+  if (sim.is_simulated) {
+    html += `<div class="sim-strip">🧪 ${esc(sim.title_th)}</div>`;
+  }
+  if (dam) {
+    html += `<div class="card dam-card ${dam.spillway_active ? 'spill' : ''}">
+      <div class="row">
+        <div>
+          <div style="font-weight:800;font-size:14px">🏗️ เขื่อนบางลาง · เตือนภัยล่วงหน้า</div>
+          <div class="small">${esc(dam.agency)} · อัปเดต ${esc(dam.hourly_observed_at || dam.daily_observed_at || '-')}</div>
+        </div>
+        <span class="pill ${dam.spillway_active ? 'lv-5' : 'lv-1'}">${dam.spillway_active ? 'SPILLWAY เปิด!' : 'ปกติ'}</span>
+      </div>
+      <div class="dam-metrics">
+        <div class="dam-metric"><span class="small">ปริมาณกักเก็บ</span><b>${dam.storage_percent ?? '-'}%</b><span class="small">${dam.storage_mcm ?? '-'} ลบ.ม.</span></div>
+        <div class="dam-metric"><span class="small">ระบายออก/วัน</span><b>${dam.released_daily_mcm ?? '-'}</b><span class="small">ล้าน ลบ.ม.</span></div>
+        <div class="dam-metric"><span class="small">ถึงเมืองยะลา</span><b>6–12 ชม.</b><span class="small">บันนังสตา 2–4 ชม.</span></div>
+      </div>
+    </div>`;
+  }
+
+  html += `<div class="card">
+    <div class="row" style="margin-bottom:6px"><b>แผนที่สถานีโทรมาตร จ.ยะลา (${stations.length} น้ำ · ${SNAP.rain_gauges_summary?.total ?? 0} ฝน)</b><span class="small">แตะจุดเพื่อดูสูตร v2</span></div>
+    ${renderMiniMapSvg()}
+  </div>`;
+
+  html += `<div style="font-weight:800;font-size:13px;margin:8px 2px 6px">ภาพรวมแจ้งเตือนล่วงหน้า 8 อำเภอ (แตะเพื่อดูรายละเอียด)</div>
+  <div class="amphoe-grid">${amphoes.map(a => {
+    const lv = a.assessment.level;
+    return `<div class="amp-tile" style="border-left-color:${lvColor(lv)}" data-amphoe="${esc(a.amphoe)}" onclick="showAmphoeDetail(this.dataset.amphoe)">
+      <div class="row"><span class="name">${esc(a.amphoe)}</span><span class="pill lv-${lv}">Lv.${lv}</span></div>
+      <div class="small" style="margin-top:4px">คะแนน <b>${a.assessment.score}</b> · ฝน24h <b>${a.rain.max_rain_24h_mm}</b> มม.</div>
+      <div class="small">คาด24h <b>${a.weather_forecast.forecast_24h_mm}</b> มม. ${a.water_station_count === 0 ? '· 0 สถานีน้ำ' : ''}</div>
+      ${a.assessment.lead_time_hours ? `<div style="font-size:10.5px;color:#b91c1c;font-weight:700;margin-top:3px">⏱️ น้ำเขื่อนถึงใน ${esc(a.assessment.lead_time_hours)}</div>` : ''}
+    </div>`;
+  }).join('')}</div>`;
+
+  html += `<div class="card" style="margin-top:10px">
+    <div class="row" style="margin-bottom:4px"><b>สถานีวัดระดับน้ำ (${stations.length} แห่ง)</b><span class="small">เรียงตามความเสี่ยง</span></div>
+    ${[...stations].sort((a,b) => b.assessment.level - a.assessment.level || b.assessment.score - a.assessment.score).map(s => {
+      const idx = SNAP.stations.indexOf(s);
+      const rem = s.remaining_to_bank_m;
+      const remTxt = rem == null ? 'ไม่มีตลิ่ง' : (rem >= 0 ? `ต่ำกว่าตลิ่ง ${rem.toFixed(2)} ม.` : `ล้นตลิ่ง ${(-rem).toFixed(2)} ม.!`);
+      return `<div class="station-row" onclick="showStationDetail(${idx})">
+        <div class="row">
+          <div><b>${esc(s.name)}</b> <span class="small">(${esc(s.oldcode)})</span></div>
+          <span class="pill lv-${s.assessment.level}">${esc(s.assessment.label_th)} · ${s.assessment.score}</span>
+        </div>
+        <div class="small" style="margin-top:2px">อ.${esc(s.amphoe)} · น้ำ <b>${s.level_msl ?? '-'}</b> ม.รทก. · ${remTxt} · ${esc(s.agency)}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
+  return html;
+}
+
+function showAmphoeDetail(ampName) {
+  const a = (SNAP.amphoes || []).find(x => x.amphoe === ampName);
+  if (!a) return;
+  const sig = a.assessment.signals;
+  const hourly = (a.weather_forecast.hourly_next_24h || []).slice(0, 24);
+  const maxH = Math.max(...hourly.map(x => x.mm), 5);
+  openSheet(`
+    <div class="row">
+      <div><b style="font-size:17px">อ.${esc(a.amphoe)}</b><div class="small">${esc(a.basin)} · ${a.is_flash_flood ? 'เขตน้ำท่วมฉับพลัน' : 'เขตน้ำล้นตลิ่ง'}</div></div>
+      <span class="pill lv-${a.assessment.level}">ระดับ ${a.assessment.level} · ${esc(a.assessment.label_th)}</span>
+    </div>
+    <div style="margin-top:10px;padding:10px;border-radius:12px;background:#f8fafc;border:1px solid #e2e8f0">
+      <b>คำแนะนำ:</b> ${esc(a.assessment.action_th)}
+      <div class="small" style="margin-top:4px">Push: <b>${a.assessment.should_push ? '✅ ส่งแจ้งเตือนทันที' : '⏸ แสดงในแอปเท่านั้น (ไม่ส่ง Push ซ้ำซ้อน)'}</b></div>
+    </div>
+    <div style="font-weight:700;margin-top:12px">องค์ประกอบสูตร formula_version = 2 (คะแนน ${a.assessment.score}/100)</div>
+    <div class="sig-grid">
+      <div class="sig-box"><span class="small">W น้ำ</span><b>${sig.W.toFixed(2)}</b></div>
+      <div class="sig-box"><span class="small">R ฝนจริง</span><b>${sig.R.toFixed(2)}</b></div>
+      <div class="sig-box"><span class="small">F พยากรณ์</span><b>${sig.F.toFixed(2)}</b></div>
+      <div class="sig-box"><span class="small">D เขื่อน</span><b>${sig.D.toFixed(2)}</b></div>
+      <div class="sig-box"><span class="small">C ชุมชน</span><b>${sig.C.toFixed(2)}</b></div>
+    </div>
+    <div class="small">สถานีฝนจริง: <b>${a.rain.gauge_count} แห่ง</b> (สูงสุด 1 ชม. ${a.rain.max_rain_1h_mm} มม. / 24 ชม. ${a.rain.max_rain_24h_mm} มม.)</div>
+    <div class="small" style="margin-top:4px">พยากรณ์ Open-Meteo: 6 ชม. <b>${a.weather_forecast.forecast_6h_mm} มม.</b> · 24 ชม. <b>${a.weather_forecast.forecast_24h_mm} มม.</b> · 72 ชม. <b>${a.weather_forecast.forecast_72h_mm} มม.</b></div>
+    ${hourly.length ? `<div style="font-weight:700;margin-top:10px;font-size:12px">กราฟพยากรณ์ฝนรายชั่วโมง 24 ชม. ข้างหน้า</div>
+      <div class="bars">${hourly.map(h => `<div class="bar-col" title="${esc(h.time)}: ${esc(h.mm)} มม." style="height:${Math.max(4, (h.mm/maxH)*100)}%"></div>`).join('')}</div>` : ''}
+    ${a.note ? `<div class="small" style="margin-top:8px;color:#0e5fa6">ℹ️ ${esc(a.note)}</div>` : ''}
+  `);
+}
+
+function showStationDetail(idx) {
+  const s = SNAP.stations[idx];
+  if (!s) return;
+  const sig = s.assessment.signals;
+  openSheet(`
+    <div class="row">
+      <div><b style="font-size:16px">${esc(s.name)}</b><div class="small">${esc(s.oldcode)} · อ.${esc(s.amphoe)} ต.${esc(s.tumbon)} · ${esc(s.agency)}</div></div>
+      <span class="pill lv-${s.assessment.level}">Lv.${s.assessment.level} · ${s.assessment.score}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+      <div class="sig-box"><span class="small">ระดับน้ำล่าสุด</span><b>${s.level_msl ?? '-'} ม.รทก.</b><span class="small">dH: ${sig.dH_m >= 0 ? '+' : ''}${sig.dH_m} ม.</span></div>
+      <div class="sig-box"><span class="small">ระดับตลิ่ง (${esc(s.bank_source)})</span><b>${s.bank_m ?? 'ไม่มี'} ม.</b><span class="small">${s.remaining_to_bank_m != null ? `เหลือ ${s.remaining_to_bank_m} ม.` : '-'}</span></div>
+    </div>
+    <div class="sig-grid">
+      <div class="sig-box"><span class="small">W น้ำ</span><b>${sig.W.toFixed(2)}</b></div>
+      <div class="sig-box"><span class="small">R ฝนจริง</span><b>${sig.R.toFixed(2)}</b></div>
+      <div class="sig-box"><span class="small">F พยากรณ์</span><b>${sig.F.toFixed(2)}</b></div>
+      <div class="sig-box"><span class="small">D เขื่อน</span><b>${sig.D.toFixed(2)}</b></div>
+      <div class="sig-box"><span class="small">C ชุมชน</span><b>${sig.C.toFixed(2)}</b></div>
+    </div>
+    <div class="small">เวลาตรวจวัด (ICT): <b>${esc(s.observed_at || '-')}</b> ${s.stale ? '⚠️ ข้อมูลเก่าเกิน 60 นาที' : '✅ สด'}</div>
+    <div class="small">สถานีฝนใกล้สุด: ${esc(s.nearest_rain_gauge || '-')} (24h: ${s.rain_24h_mm} มม.)</div>
+    <div class="small" style="margin-top:4px">Flags: ${s.assessment.flags.length ? s.assessment.flags.map(f => `<span class="code-tag" style="color:#0369a1">${esc(f)}</span>`).join(' ') : 'ปกติ'}</div>
+    <div style="margin-top:10px;padding:10px;background:#f8fafc;border-radius:10px;font-size:12.5px"><b>คำแนะนำ:</b> ${esc(s.assessment.action_th)}</div>
+  `);
+}
+
+function renderAlertsTab() {
+  const alerts = getPushAlerts();
+  if (!alerts.length) {
+    return `<div class="card" style="text-align:center;padding:28px 14px">
+      <div style="font-size:32px">✅</div>
+      <b>ทุกอำเภออยู่ในเกณฑ์ปกติ (ระดับ 1)</b>
+      <div class="small" style="margin-top:6px">ลองกดโหมดจำลองเหตุการณ์ทางด้านขวา เพื่อทดสอบระบบแจ้งเตือนล่วงหน้าและ iOS Push Banner</div>
+    </div>`;
+  }
+  return alerts.map(a => `<div class="card" style="border-left:5px solid ${lvColor(a.assessment.level)};cursor:pointer" data-amphoe="${esc(a.amphoe)}" onclick="showAmphoeDetail(this.dataset.amphoe)">
+    <div class="row">
+      <b>${esc(a.title)}</b>
+      <span class="pill lv-${a.assessment.level}">Lv.${a.assessment.level} · ${esc(a.assessment.label_th)}</span>
+    </div>
+    <div style="margin-top:5px;font-size:12.5px">${esc(a.assessment.action_th)}</div>
+    <div class="small" style="margin-top:5px">${esc(a.subtitle)} · คะแนน <b>${a.assessment.score}/100</b></div>
+    <div class="small" style="margin-top:3px">${a.assessment.should_push ? '🔔 <b>ส่ง Push แจ้งเตือน</b> (มีสัญญาณหลักยืนยัน)' : 'ℹ️ แสดงในแอปเท่านั้น (ไม่ Push เพื่อกัน False Alarm)'}</div>
+  </div>`).join('');
+}
+
+function setShelterFilter(amphoe) {
+  SHELTER_FILTER = amphoe || '';
+  renderPhone();
+}
+
+function renderSosTab() {
+  const contacts = (SNAP.contacts && SNAP.contacts.emergency) || [];
+  return `
+    <div class="card" style="background:#fef2f2;border-color:#fca5a5">
+      <b style="color:#991b1b">⚠️ คำชี้แจงด้านความปลอดภัย</b>
+      <div class="small" style="color:#7f1d1d;margin-top:3px">${esc(SNAP.contacts?.disclaimer_th || '')}</div>
+    </div>
+    <div class="card">
+      <b style="display:block;margin-bottom:8px">📞 เบอร์ฉุกเฉินยืนยันแล้วครบ ${contacts.length} หน่วยงาน (กดโทรได้ทันที)</b>
+      ${contacts.map(c => `<div class="row" style="padding:7px 0;border-bottom:1px solid #f1f5f9">
+        <div>
+          <b style="font-size:12.5px">${esc(c.name)}</b>
+          <div class="small">${esc(c.hours || '')} ${c.channel ? '· ' + esc(c.channel) : ''}</div>
+        </div>
+        <a class="btn btn-danger" href="tel:${esc(c.phone)}">${esc(c.phone)}</a>
+      </div>`).join('')}
+    </div>
+    <div class="card">
+      <b>📍 บันทึกคำขอ SOS ในเครื่อง (โหมดทดลอง + PDPA)</b>
+      <div class="small" style="margin:6px 0">
+        <label style="display:flex;gap:6px;align-items:flex-start;cursor:pointer">
+          <input type="checkbox" ${GPS_CONSENT ? 'checked' : ''} onchange="GPS_CONSENT=this.checked;renderPhone()" />
+          <span>ยินยอมให้อ่านพิกัด GPS เฉพาะขณะเปิดหน้านี้ (When In Use · ไม่ส่งเซิร์ฟเวอร์)</span>
+        </label>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="simulateSos()">บันทึกคำขอ SOS ในเครื่อง (ยังไม่ส่งศูนย์)</button>
+      ${SOS_LOGS.map(l => `<div class="small" style="margin-top:8px;padding:7px;background:#f8fafc;border-radius:8px">📌 ${esc(l)}</div>`).join('')}
+    </div>
+  `;
+}
+
+function simulateSos() {
+  if (!GPS_CONSENT) {
+    alert('กรุณาติ๊กยินยอม PDPA ก่อนใช้พิกัด GPS');
+    return;
+  }
+  const ts = new Date().toLocaleTimeString('th-TH');
+  SOS_LOGS.unshift(`บันทึกในเครื่องเมื่อ ${ts} · พิกัดตัวอย่าง 6.54130, 101.28030 (โหมดทดลอง — กรุณาโทร 1784 / 073-203559)`);
+  renderPhone();
+}
+
+function renderSheltersTab() {
+  const all = SNAP.shelters || [];
+  const amphoes = [...new Set(all.map(s => s.amphoe))];
+  const filtered = SHELTER_FILTER ? all.filter(s => s.amphoe === SHELTER_FILTER) : all;
+  return `
+    <div class="card" style="background:#eff6ff;border-color:#bfdbfe">
+      <div class="small" style="color:#1e3a8a">🏕️ ${esc(SNAP.shelters_notice_th || '')}</div>
+    </div>
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px">
+      <button class="btn ${!SHELTER_FILTER ? 'btn-primary' : 'btn-soft'}" data-amphoe="" onclick="setShelterFilter(this.dataset.amphoe)">ทั้ง 8 อำเภอ</button>
+      ${amphoes.map(a => `<button class="btn ${SHELTER_FILTER===a ? 'btn-primary' : 'btn-soft'}" data-amphoe="${esc(a)}" onclick="setShelterFilter(this.dataset.amphoe)">${esc(a)}</button>`).join('')}
+    </div>
+    ${filtered.map(s => `<div class="card">
+      <div class="row">
+        <b>${esc(s.name)}</b>
+        <span class="pill ${s.verification_status==='official_name_coords_approx' ? 'lv-2' : 'lv-3'}">${s.verification_status==='official_name_coords_approx' ? 'ชื่อทางการ (พิกัดโดยประมาณ)' : 'รอตรวจ ปภ.'}</span>
+      </div>
+      <div class="small" style="margin-top:4px">${esc(s.address || ('อ.'+s.amphoe))}</div>
+      <div class="small" style="margin-top:2px">${esc(s.notes || '')}</div>
+      <div class="row" style="margin-top:8px">
+        <a class="btn btn-soft" style="flex:1" target="_blank" rel="noopener noreferrer" href="https://maps.apple.com/?ll=${encodeURIComponent(s.lat)},${encodeURIComponent(s.lng)}&q=${encodeURIComponent(s.name)}">🗺️ Apple Maps</a>
+        <a class="btn btn-primary" style="flex:1" href="tel:${esc(s.phone || '073203559')}">📞 โทร ${esc(s.phone || '073-203559')}</a>
+      </div>
+    </div>`).join('')}
+  `;
+}
+
+function renderSettingsTab() {
+  const amps = (SNAP.amphoes || []).map(a => a.amphoe);
+  return `
+    <div class="card">
+      <b>📍 อำเภอที่ติดตามแจ้งเตือน</b>
+      <select style="width:100%;margin-top:8px;padding:8px;border-radius:10px;border:1px solid #cbd5e1" onchange="SUB_AMPHOE=this.value;renderAll()">
+        <option value="">ทั้งจังหวัดยะลา (8 อำเภอ)</option>
+        ${amps.map(a => `<option value="${esc(a)}" ${SUB_AMPHOE===a ? 'selected' : ''}>อ.${esc(a)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="card">
+      <div class="row">
+        <div><b>👵 โหมดผู้สูงอายุ (ตัวอักษรใหญ่)</b><div class="small">ขยายขนาดข้อความทั้งแอปให้อ่านง่าย</div></div>
+        <input type="checkbox" ${ELDERLY_MODE ? 'checked' : ''} onchange="ELDERLY_MODE=this.checked;renderPhone()" />
+      </div>
+    </div>
+    <div class="card">
+      <b>🔐 ความเป็นส่วนตัว (PDPA)</b>
+      <div class="small" style="margin:6px 0">ข้อมูลทุกอย่างเก็บในเครื่องเท่านั้น ไม่มีเซิร์ฟเวอร์ติดตามพิกัด</div>
+      <button class="btn btn-danger" style="width:100%" onclick="GPS_CONSENT=false;SOS_LOGS=[];SUB_AMPHOE='';alert('ลบข้อมูลส่วนบุคคลในเครื่องทั้งหมดเรียบร้อยแล้ว');renderAll()">🗑️ ลบข้อมูลทั้งหมดของฉัน (PDPA)</button>
+    </div>
+    <div class="card">
+      <b>🔎 ตรวจสอบความถูกต้องของข้อมูล (Manifest)</b>
+      <div class="small" style="margin-top:4px">Formula: <b>v${SNAP.formula_version}</b> · Schema: <b>v${SNAP.schema_version}</b></div>
+      <div class="small">SHA-256: <code>${esc((SNAP.content_hash || '').slice(0, 24))}…</code></div>
+      <div class="small">Degraded Sources: <b>${(SNAP.degraded_sources || []).length === 0 ? '0 (ครบทั้ง 5 แหล่ง)' : esc(SNAP.degraded_sources.join(', '))}</b></div>
+    </div>
+  `;
+}
+
+loadScenario('live');
+</script>
+</body>
+</html>

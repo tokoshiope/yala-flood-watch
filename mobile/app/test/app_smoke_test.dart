@@ -36,6 +36,8 @@ void main() {
 
     expect(provider.stations.length, 14);
     expect(provider.warningStationCount, greaterThan(0));
+    // BLOCKER-2 regression: activeAlerts ต้องไม่ว่างหลัง refresh เพื่อป้องกันแบนเนอร์สีเขียว "สถานการณ์ดีขึ้นแล้ว" ระหว่างน้ำท่วม
+    expect(provider.activeAlerts, isNotEmpty);
 
     await tester.pumpWidget(
       ChangeNotifierProvider<AlertProvider>.value(

@@ -1,50 +1,40 @@
-# Yala Flood App — Task Board (Living File)
+# Yala Flood Watch — Task Board (Living File)
 
-> อัปเดตทุกครั้งที่จบงาน · Status: TODO / IN PROGRESS / IN QA / WAITING FOUNDER / DONE / BLOCKED
+> อัปเดตอัตโนมัติทุกครั้งที่จบงานตาม `AGENTS.md §2` · Status: `TODO` / `IN PROGRESS` / `IN QA` / `WAITING FOUNDER` / `DONE` / `BLOCKED`
 
-## Phase 0 — Inception & Baseline Docs  `[DONE]`
-- [x] A. Dashboard ข้อมูลจริง 14 สถานี — DONE (tools/dashboard) ตรวจสอบแล้ว
-- [x] B. Prototype Flutter 6 หน้า + tests 30/30 — DONE (mobile/app) ตรวจสอบ flutter analyze/test แล้ว
-- [x] C. PRD 1,011 บรรทัด — DONE (docs/PRD-yala-flood-app.md)
-- [x] D. Wireframe 14 จอ — DONE (design/wireframes)
-- [x] ย้ายโปรเจกต์ทั้งหมดไป `~/Documents/yala-flood-app/` — DONE (2026-11-23)
-- [x] เอกสารฐาน 01–04 + AGENTS.md + tasks/decisions/specs — DONE (257/217/323/327 = 1,124 บรรทัด ตรวจ wc -l แล้ว)
-- [x] แก้ PRD §9.6 test vectors ให้ตรงสูตร (87.5 / 2.5 / 20.5) — DONE 23 พ.ย. 2568
-- [x] git init + baseline commit c583f93 — DONE
-- [x] **Gate 1 + Gate 2** — ✅ Founder อนุมัติทั้ง 5 ข้อ (DEC-006)
+---
 
-## Phase 1 — Core Data / Backend Foundation  `[IN QA]`
-- [x] สถาปัตยกรรม pipeline: ThaiWater + TMD cron → normalize → snapshot JSON (+ manifest hash) — DONE (`backend/pipeline.py` + workflow) รันจริงได้ 14 สถานี hash=1d8bd901
-- [x] Validation gates (fail-closed) + unit tests — DONE **pytest 8/8 passed** (exit 0)
-- [x] Station/Shelter/Contact registry (dynamic) — DONE (14 สถานี 7 flash/5 riverine/2 dam)
-- [x] spec-data-pipeline.md — DONE
-- [x] commit `d45ff10` — DONE
-- [ ] **Independent QA audit** (context แยก) ของ pipeline + alert_engine.dart ก่อน Gate 3 — IN PROGRESS
+## Phase 0 — Inception & Baseline Docs `[DONE]`
+- [x] A. Prototype Dashboard + Wireframe 14 จอ + PRD 1,011 บรรทัด — DONE (2026-11-23)
+- [x] B. เอกสารฐาน `docs/01`–`04` + Living Files — DONE (2026-11-23)
+- [x] C. Gate 1 + Gate 2 รอบแรก (DEC-006) — DONE (2026-11-23)
 
-## Phase 2 — Cloud Bridge, CI/CD, Legal Web
-- [ ] GitHub repo private + workflows + Supabase/Storage free tier
-- [ ] web/ index + privacy + terms → GitHub Pages (HTTP 200)
+## Phase 1 — Multi-Source Data Foundation & Formula v2 `[DONE]`
+- [x] คัดลอกโปรเจกต์มาพัฒนาต่อที่ `/Users/tokyo/Documents/Yala Flood` (คง `yala-flood-app` เป็นสำรอง) — DONE (2026-11-24 · `DEC-009`)
+- [x] อัปเกรด `AGENTS.md` และ `README.md` เป็น **Life-Safety Hybrid 5-Agent Charter v2.0** (เหนือกว่าต้นแบบ GPF/EV in 1) — DONE (2026-11-24)
+- [x] แก้ไขเบอร์ฉุกเฉินวิกฤต (`1784` ปภ., `073-203559` ปภ.ยะลา, `073-212345` เทศบาลนครยะลา, `1669`, `199`, `191`, แยก `1677` ร่วมด้วยช่วยกัน) และระบุสถานะยืนยันศูนย์พักพิงใน `backend/registry/` — DONE (2026-11-24 · `DEC-013`)
+- [x] สร้างทะเบียน 8 อำเภอ `backend/registry/amphoes.yaml` พร้อมระยะเวลาน้ำเดินทางจากเขื่อนบางลาง — DONE (2026-11-24)
+- [x] อัปเกรด `backend/pipeline.py` เชื่อมต่อ **5 ฐานข้อมูลจริง (ฟรี 0 API key)**: ThaiWater Waterlevel (14), Rain 24h (87 ครบ 8 อำเภอ), Bang Lang Dam (กฟผ.+ชป.), Open-Meteo Weather 72h, Open-Meteo GloFAS v4 7 วัน — DONE (2026-11-24 · Live verified `stations=14 rain_gauges=87 amphoes=8 degraded=0`)
+- [x] Implement สูตร `formula_version = 2` + Fail-Closed + Atomic Write + Registry Fallback + Deterministic Hash — DONE (2026-11-24 · `pytest 23/23 passed` ใน sandbox ออฟไลน์)
+- [x] อัปเดต `.github/workflows/data-pipeline.yml` (CI pytest + unique artifact run_id + concurrency) — DONE (2026-11-24)
 
-## Phase 3 — Mobile MVP
-- [ ] ตัดสินใจ Stack (Flutter เดิม vs Expo RN) — รอ Gate 2
-- [ ] Android/iOS platform folders + รันบน emulator จริง + screenshot
-- [ ] Push notifications (FCM) + alert engine ตามสูตร
+## Phase 1.5 — iOS-First Flutter App Core & Interactive Prototype `[DONE]`
+- [x] สร้างโฟลเดอร์ iOS จริง (`mobile/app/ios/Runner.xcworkspace`) + ตั้งค่า `Info.plist` (ชื่อไทย, `NSLocationWhenInUseUsageDescription`, `LSApplicationQueriesSchemes`, `yalaflood://`) — DONE (2026-11-24 · `DEC-010`)
+- [x] ซ่อมและอัปเกรด `mobile/app/lib/services/alert_engine.dart` ให้ตรงสูตร `formula_version = 2` (100% Python ↔ Dart Parity, TV2-1..TV2-10, Hysteresis 2 ชม., Cooldown 30 นาที) — DONE (2026-11-24 · `flutter analyze 0 issues`, `flutter test 43/43 passed`)
+- [x] เชื่อม `NotificationService.showFloodAlert` เข้า `AlertProvider` + เพิ่ม PDPA GPS Consent Dialog ใน `SosScreen` + ปุ่ม "ลบข้อมูลทั้งหมดของฉัน (PDPA)" ใน `SettingsScreen` + แก้เบอร์ 1784/073-203559/073-212345/191 — DONE (2026-11-24)
+- [x] สร้าง Interactive iOS Prototype & Live Simulation Server (`mobile/preview/serve.py` + `index.html`) เชื่อม 5 ฐานข้อมูลจริง + 3 เหตุการณ์จำลองน้ำท่วมล่วงหน้า + อัปเกรด `tools/dashboard/index.html` — DONE (2026-11-24)
+- [x] **Independent QA / Hydrology / Security Audit (Context แยก)** + แก้ไขทุก BLOCKER/HIGH/MEDIUM (`docs/qa/audit-2026-11-24-v2.md`) — DONE (2026-11-24 · พบ 2 BLOCKER + 3 HIGH → แก้ครบและผ่าน `pytest 23/23` + `flutter test 43/43`)
 
-## Phase 4 — QA Audit & Beta
-- [ ] Independent QA audit (context แยก) → re-audit PASS
-- [ ] Real-device test: SOS, offline, push
+## Phase 2 — Cloud Bridge, Legal Web & Official Verification `[TODO]`
+- [ ] เชื่อม Supabase Storage Public CDN (atomic snapshot publish จาก GitHub Actions) + Postgres RLS สำหรับ Community Reports
+- [ ] สร้างหน้า `web/` (Landing + PDPA Privacy Policy + Terms + Life-Safety Disclaimer) ขึ้น GitHub Pages
+- [ ] ขอพิกัดศูนย์พักพิงรายตำบลและเบอร์ตรงที่ว่าการอำเภออีก 7 อำเภอจาก ปภ.ยะลา (`pending_ddpm_verify` → `verified`)
 
-## Phase 5 — Store & Launch
-- [ ] Accounts 15% tier, assets, listing pack, submit
+## Phase 3 — iOS TestFlight Beta & APNs/FCM Push `[TODO]`
+- [ ] ตั้งค่า `GoogleService-Info.plist` + APNs Key + Firebase Cloud Messaging topic รายอำเภอ (`yala_flood:{amphoe}`)
+- [ ] ทดสอบ Build ลงเครื่อง iPhone จริงผ่าน Xcode / TestFlight (Offline mode, Local+Remote Push, Dynamic Type ผู้สูงอายุ)
+- [ ] เพิ่มรองรับภาษามลายูท้องถิ่น (Yawi/Malay) สำหรับประกาศเตือนภัยหลัก
 
-## Backlog / ค้างจาก prototype
-- [ ] ฐานเบอร์โทรหน่วยงาน 8 อำเภอ + webhook ศูนย์ปภ.ยะลา (SOS ตอนนี้จำลอง)
-- [ ] จุดอพยพเป็นข้อมูลตัวอย่าง — ต้องใช้ข้อมูลจริงจาก ปภ.ยะลา
-- [ ] TMD rainfall/rain forecast endpoint จริง (ตอนนี้เป็น model เฉพาะ)
-- [ ] i18n ภาษายาลอ (ตัวอย่างข้อความ)
-
-## Backlog / พบจาก Data Audit (23 พ.ย. 2568)
-- [ ] 5 สถานีไม่มี `situation_level` → ใช้ fallback `W = situation/4` หรือฟัง `left_bank` (ดู docs/04 §2.1)
-- [ ] 2 สถานีไม่มีตลิ่ง (`left_bank = 0`: เขื่อนบางลาง, ฝายละแอ) → ต้องนิยาม W แยก (situation/4)
-- [x] cadence ข้อมูลจริง ~10–30 นาที (ไม่ใช่ 15 นาทีทุกสถานี) — fail-closed >30 นาที ถูกใส่ใน pipeline แล้ว
-- [x] git init — DONE (baseline c583f93)
+## Phase 4 — Gate 3 Release Sign-Off & App Store Launch `[TODO]`
+- [ ] ผ่าน Independent QA Re-Audit (`PASS`) + Founder Gate 3 Sign-Off
+- [ ] ส่ง Apple App Store Review (ฟรี 100% ไม่คิดค่าบริการ)

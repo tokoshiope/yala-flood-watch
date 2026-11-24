@@ -1,28 +1,102 @@
-version: 1
+version: 2
+verified_at: "2026-11-24"
+disclaimer_th: "แอปนี้ไม่ใช่ช่องทางกู้ภัยหลักของทางราชการ หากอยู่ในอันตรายเร่งด่วนให้โทร 1784 (ปภ.), 073-203559 (ปภ.ยะลา) หรือ 1669 (กู้ชีพ) ทันที"
 emergency:
-  ddpm_1677: '1677'
-  disaster_199: '199'
-  rescue_1669: '1669'
-  police_191: '191'
-provincial_center:
-  name: ศูนย์ป้องกันและบรรเทาสาธารณภัยจังหวัดยะลา (ปภ.ยะลา)
-  phone: null
-  note: ยังไม่มีเบอร์ตรง (ขอข้อมูล Founder) — ห้ามใช้ 1677 แทนเพราะ 1677 คือเบอร์ DDPM กลาง
-  status: placeholder
+  - id: ddpm_1784
+    name: สายด่วนนิรภัย กรม ปภ. (DDPM)
+    phone: "1784"
+    hours: "24 ชม. (โทรฟรี)"
+    channel: "LINE OA: @1784DDPM"
+    category: primary_disaster
+    verification_status: verified
+    source: "กรมป้องกันและบรรเทาสาธารณภัย (disaster.go.th)"
+  - id: yala_ddpm
+    name: สำนักงาน ปภ. จังหวัดยะลา
+    phone: "073-203559"
+    alt_phones: ["073-203562", "073-203559-64"]
+    hours: "สำนักงาน / ศูนย์บัญชาการเหตุการณ์"
+    category: provincial_disaster
+    verification_status: verified
+    source: "สำนักงานป้องกันและบรรเทาสาธารณภัยจังหวัดยะลา (disaster.go.th)"
+  - id: yala_municipality
+    name: งานป้องกันและบรรเทาสาธารณภัย เทศบาลนครยะลา
+    phone: "073-212345"
+    hours: "24 ชม."
+    category: municipal_rescue
+    verification_status: verified
+    source: "เทศบาลนครยะลา / Thai PBS"
+  - id: medical_1669
+    name: สายด่วนการแพทย์ฉุกเฉิน (สพฉ.)
+    phone: "1669"
+    hours: "24 ชม."
+    category: medical
+    verification_status: verified
+    source: "สถาบันการแพทย์ฉุกเฉินแห่งชาติ"
+  - id: fire_199
+    name: แจ้งเหตุเพลิงไหม้ / สาธารณภัย
+    phone: "199"
+    hours: "24 ชม."
+    category: disaster
+    verification_status: verified
+    source: "กรมป้องกันและบรรเทาสาธารณภัย"
+  - id: police_191
+    name: เหตุด่วนเหตุร้าย (ตำรวจ)
+    phone: "191"
+    hours: "24 ชม."
+    category: police
+    verification_status: verified
+    source: "สำนักงานตำรวจแห่งชาติ"
+  - id: yala_hospital
+    name: โรงพยาบาลยะลา
+    phone: "073-228934"
+    hours: "24 ชม."
+    category: medical
+    verification_status: verified
+    source: "โรงพยาบาลยะลา"
+  - id: army_mtb46
+    name: ศูนย์บรรเทาสาธารณภัย มทบ.46
+    phone: "073-340141"
+    hours: "24 ชม. ช่วงภัยพิบัติ"
+    category: rescue
+    verification_status: verified
+    source: "มณฑลทหารบกที่ 46"
+  - id: volunteer_1677
+    name: ศูนย์สื่อสารร่วมด้วยช่วยกัน (อาสาสมัคร)
+    phone: "1677"
+    hours: "24 ชม."
+    category: volunteer
+    verification_status: verified
+    source: "มูลนิธิร่วมด้วยช่วยกัน (ไม่ใช่เบอร์ ปภ.)"
 amphoe_centers:
-- amphoe: เมืองยะลา
-  phone: null
-- amphoe: รามัน
-  phone: null
-- amphoe: ยะหา
-  phone: null
-- amphoe: กรงปินัง
-  phone: null
-- amphoe: เบตง
-  phone: null
-- amphoe: บันนังสตา
-  phone: null
-- amphoe: ธารโต
-  phone: null
-- amphoe: กาบัง
-  phone: null
+  - amphoe: เมืองยะลา
+    phone: "073-212345"
+    note: "งาน ปภ. เทศบาลนครยะลา"
+    verification_status: verified
+  - amphoe: รามัน
+    phone: null
+    note: "รอยืนยันเบอร์ตรงที่ว่าการอำเภอ/ปภ.ท้องถิ่น — ช่วงนี้ติดต่อ ปภ.ยะลา 073-203559 หรือ 1784"
+    verification_status: pending_ddpm_verify
+  - amphoe: ยะหา
+    phone: null
+    note: "รอยืนยันเบอร์ตรงที่ว่าการอำเภอ/ปภ.ท้องถิ่น — ช่วงนี้ติดต่อ ปภ.ยะลา 073-203559 หรือ 1784"
+    verification_status: pending_ddpm_verify
+  - amphoe: กรงปินัง
+    phone: null
+    note: "รอยืนยันเบอร์ตรงที่ว่าการอำเภอ/ปภ.ท้องถิ่น — ช่วงนี้ติดต่อ ปภ.ยะลา 073-203559 หรือ 1784"
+    verification_status: pending_ddpm_verify
+  - amphoe: เบตง
+    phone: null
+    note: "รอยืนยันเบอร์ตรงเทศบาลเมืองเบตง/อำเภอ — ช่วงนี้ติดต่อ ปภ.ยะลา 073-203559 หรือ 1784"
+    verification_status: pending_ddpm_verify
+  - amphoe: บันนังสตา
+    phone: null
+    note: "รอยืนยันเบอร์ตรงที่ว่าการอำเภอ/ปภ.ท้องถิ่น — ช่วงนี้ติดต่อ ปภ.ยะลา 073-203559 หรือ 1784"
+    verification_status: pending_ddpm_verify
+  - amphoe: ธารโต
+    phone: null
+    note: "รอยืนยันเบอร์ตรงที่ว่าการอำเภอ/ปภ.ท้องถิ่น — ช่วงนี้ติดต่อ ปภ.ยะลา 073-203559 หรือ 1784"
+    verification_status: pending_ddpm_verify
+  - amphoe: กาบัง
+    phone: null
+    note: "รอยืนยันเบอร์ตรงที่ว่าการอำเภอ/ปภ.ท้องถิ่น — ช่วงนี้ติดต่อ ปภ.ยะลา 073-203559 หรือ 1784"
+    verification_status: pending_ddpm_verify

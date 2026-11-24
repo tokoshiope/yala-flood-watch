@@ -6,37 +6,39 @@ import 'package:yala_flood_app/models/alert_settings.dart';
 import 'package:yala_flood_app/models/rain_forecast.dart';
 import 'package:yala_flood_app/models/risk_level.dart';
 import 'package:yala_flood_app/models/sos_request.dart';
+import 'package:yala_flood_app/models/station.dart';
 import 'package:yala_flood_app/services/alert_engine.dart';
 import 'package:yala_flood_app/services/local_store.dart';
+import 'package:yala_flood_app/services/notification_service.dart';
 import 'package:yala_flood_app/services/rain_forecast_service.dart';
 import 'package:yala_flood_app/services/thai_water_service.dart';
-import 'package:yala_flood_app/models/station.dart';
 
-/// ศูนย์รวม state ของแอพ: สถานี, แจ้งเตือน, การตั้งค่า และคำขอ SOS
-///
-/// ทำให้ทุกหน้าจออ่านข้อมูลจากที่เดียว และ cache ถูกใช้อัตโนมัติเมื่อเน็ตขาด
+/// ศูนย์รวม state ของแอพ: สถานี, แจ้งเตือน, การตั้งค่า, PDPA consent และคำขอ SOS
 class AlertProvider extends ChangeNotifier {
   AlertProvider({
     required ThaiWaterService waterService,
     RainForecastService? rainService,
     AlertEngine? engine,
     LocalStore? localStorage,
-    // ignore: prefer_initializing_formals — พารามิเตอร์ต้องเป็นชื่อสาธารณะ
+    NotificationService? notificationService,
+    // ignore: prefer_initializing_formals
   })  : _waterService = waterService,
         _rainService = rainService ?? RainForecastService(),
         _engine = engine ?? const AlertEngine(),
-        _store = localStorage;
+        _store = localStorage,
+        _notifications = notificationService ?? NotificationService.instance;
 
   final ThaiWaterService _waterService;
   final RainForecastService _rainService;
   final AlertEngine _engine;
   final LocalStore? _store;
+  final NotificationService _notifications;
 
-  // ── ข้อมูลที่แสดง ──────────────────────────────────────────────────────
   List<Station> _stations = const <Station>[];
   List<AlertItem> _alerts = const <AlertItem>[];
   List<SosRequest> _sosRequests = const <SosRequest>[];
   AlertSettings _settings = const AlertSettings();
+  bool _gpsConsentGranted = false;
 
   bool _loading = false;
   bool _initialized = false;
@@ -44,15 +46,13 @@ class AlertProvider extends ChangeNotifier {
   String? _noticeTh;
   DateTime? _lastUpdated;
   WaterSource _source = WaterSource.network;
-
-  /// สถานีที่ผู้ใช้เปิดดูรายละเอียดอยู่ (ใช้โหลดค่าฝนเฉพาะจุดนั้น)
   String? _selectedStationCode;
 
-  // ── getter ─────────────────────────────────────────────────────────────
   List<Station> get stations => _stations;
   List<AlertItem> get alerts => _alerts;
   List<SosRequest> get sosRequests => _sosRequests;
   AlertSettings get settings => _settings;
+  bool get gpsConsentGranted => _gpsConsentGranted;
   bool get loading => _loading;
   bool get initialized => _initialized;
   String? get errorTh => _errorTh;
@@ -62,27 +62,22 @@ class AlertProvider extends ChangeNotifier {
   String? get selectedStationCode => _selectedStationCode;
 
   bool get isOffline => _source == WaterSource.cache;
-
-  /// แจ้งเตือนที่ยังไม่ได้อ่าน
   int get unreadCount => _alerts.where((a) => !a.read).length;
 
-  /// จำนวนสถานีที่ถึงเกณฑ์เตือนภัยขึ้นไป
   int get warningStationCount =>
       _stations.where((s) => s.riskLevel.isAtLeastWarning).length;
 
   int get dangerStationCount =>
       _stations.where((s) => s.riskLevel == RiskLevel.danger).length;
 
-  /// แจ้งเตือนที่กำลังมีผล (สถานียังอยู่ในระดับนั้น)
+  /// แจ้งเตือนที่กำลังมีผลอยู่ ณ ขณะนี้ (ห้ามใช้ Cooldown มาซ่อนสถานะเตือนภัยที่ยังไม่คลี่คลาย!)
   List<AlertItem> get activeAlerts {
     if (_stations.isEmpty) return const <AlertItem>[];
-    final current = _engine.evaluate(
+    return _engine.evaluate(
       stations: _stations,
       settings: _settings,
-      previous: _alerts,
+      previous: const <AlertItem>[],
     );
-    if (current.isEmpty) return const <AlertItem>[];
-    return current;
   }
 
   Station? stationByCode(String? code) {
@@ -93,7 +88,6 @@ class AlertProvider extends ChangeNotifier {
     return null;
   }
 
-  /// อำเภอทั้งหมดที่มีสถานี (กรองเฉพาะจ.ยะลา)
   List<String> get amphoes {
     final set = _stations
         .map((s) => s.amphoeTh ?? '')
@@ -115,14 +109,13 @@ class AlertProvider extends ChangeNotifier {
       ..sort();
   }
 
-  // ── เริ่มต้น + รีเฟรช ───────────────────────────────────────────────────
-  /// โหลดข้อมูลที่เก็บไว้ในเครื่องก่อน แล้วค่อยพยายามดึงจากเน็ต
   Future<void> hydrate() async {
     final store = _store;
     if (store != null) {
       _alerts = store.loadAlerts();
       _settings = store.loadSettings();
       _sosRequests = store.loadSosRequests();
+      _gpsConsentGranted = store.loadGpsConsent();
     }
     _initialized = true;
     await refresh();
@@ -141,7 +134,6 @@ class AlertProvider extends ChangeNotifier {
       _source = result.source;
       _noticeTh = result.messageTh;
 
-      // โหลดค่าฝนเฉพาะสถานีที่เลือก หรือสถานีที่รุนแรงสุด (ไม่เรียกทุกสถานี)
       final rain = await _loadRain();
       final newAlerts = _engine.evaluate(
         stations: _stations,
@@ -151,6 +143,7 @@ class AlertProvider extends ChangeNotifier {
       );
       if (newAlerts.isNotEmpty) {
         _alerts = _mergeAlerts(_alerts, newAlerts);
+        await _dispatchLocalNotifications(newAlerts);
       }
       _initialized = true;
       await _store?.saveAlerts(_alerts);
@@ -165,8 +158,17 @@ class AlertProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> _dispatchLocalNotifications(List<AlertItem> freshAlerts) async {
+    if (!_settings.pushEnabled || !_notifications.isReady) return;
+    for (final alert in freshAlerts) {
+      if (alert.pushed) {
+        await _notifications.showFloodAlert(alert, quiet: _settings.quietMode);
+      }
+    }
+  }
+
   Future<RainForecast?> _loadRain() async {
-    if (!AppConfig.rainForecastEndpoint.isNotEmpty) return null;
+    if (AppConfig.rainForecastEndpoint.isEmpty) return null;
     final code = _selectedStationCode ??
         (_stations.isEmpty ? null : _stations.first.code);
     if (code == null) return null;
@@ -186,12 +188,10 @@ class AlertProvider extends ChangeNotifier {
     return merged;
   }
 
-  // ── การตั้งค่า ─────────────────────────────────────────────────────────
   void updateSettings(AlertSettings next) {
     _settings = next;
     notifyListeners();
     _store?.saveSettings(next);
-    // คำนวณแจ้งเตือนใหม่ทันทีถ้าเปลี่ยนเกณฑ์
     final newAlerts = _engine.evaluate(
       stations: _stations,
       settings: _settings,
@@ -204,7 +204,12 @@ class AlertProvider extends ChangeNotifier {
     }
   }
 
-  // ── แจ้งเตือน ──────────────────────────────────────────────────────────
+  Future<void> setGpsConsent(bool granted) async {
+    _gpsConsentGranted = granted;
+    await _store?.saveGpsConsent(granted);
+    notifyListeners();
+  }
+
   void markAllAlertsRead() {
     if (_alerts.every((a) => a.read)) return;
     _alerts = _alerts.map((a) => a.copyWith(read: true)).toList();
@@ -226,7 +231,6 @@ class AlertProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── SOS ────────────────────────────────────────────────────────────────
   void addSosRequest(SosRequest request) {
     _sosRequests = [request, ..._sosRequests];
     if (_sosRequests.length > AppConfig.maxStoredSosRequests) {
@@ -258,13 +262,22 @@ class AlertProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// ล้างแคชระดับน้ำที่เก็บไว้ในเครื่อง
   Future<void> clearCache() async {
     await _waterService.clearCache();
     notifyListeners();
   }
 
-  /// ข้อความสถานะแบบสั้นสำหรับแสดงบนแผนที่
+  /// ลบข้อมูลส่วนบุคคล ประวัติ SOS แจ้งเตือน แคช และรีเซ็ตการตั้งค่า (PDPA)
+  Future<void> deleteAllUserData() async {
+    _alerts = const <AlertItem>[];
+    _sosRequests = const <SosRequest>[];
+    _settings = const AlertSettings();
+    _gpsConsentGranted = false;
+    await _store?.deleteAllUserData();
+    await _waterService.clearCache();
+    notifyListeners();
+  }
+
   String get statusLineTh {
     if (_stations.isEmpty) {
       return _errorTh ?? 'กำลังโหลดข้อมูล…';
