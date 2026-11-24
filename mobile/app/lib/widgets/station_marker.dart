@@ -1,27 +1,39 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'package:yala_flood_app/l10n/app_strings.dart';
 import 'package:yala_flood_app/models/risk_level.dart';
 import 'package:yala_flood_app/models/station.dart';
 
-/// หมุดสถานีบนแผนที่ แสดงสีตามระดับความเสี่ยง + ตัวอักษรย่อสถานี
-///
-/// ใช้เป็น [Marker.child] ของ flutter_map (ต้องมีขนาดใน [width]/[height])
+/// หมุดสถานีวัดระดับน้ำบนแผนที่ แสดงชื่อสถานีจริง (เช่น "บ้านปายอยือนิ" ไม่ใช่รหัส X.273)
+/// พร้อมคอนทราสต์สูงชัดเจนทั้ง iOS Light Mode และ Dark Mode
 class StationMarker extends StatelessWidget {
   const StationMarker({
     super.key,
     required this.station,
     required this.onTap,
     this.selected = false,
+    this.strings = const AppStrings('th'),
   });
 
   final Station station;
   final VoidCallback onTap;
   final bool selected;
+  final AppStrings strings;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final level = station.riskLevel;
-    final color = level.color;
+    final pinColor = level.color;
+    final borderColor = level.colorFor(Theme.of(context).brightness);
+    final labelText = strings.stationShortName(station);
+
+    final bgColor = selected
+        ? pinColor
+        : (isDark ? const Color(0xF20F172A) : const Color(0xFAFFFFFF));
+    final fgColor = selected
+        ? level.onColor
+        : (isDark ? Colors.white : const Color(0xFF0F172A));
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -29,37 +41,40 @@ class StationMarker extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // ป้ายชื่อสถานี
+          // ป้ายชื่อสถานีจริง (อ่านชัดทั้ง Light / Dark Mode)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            constraints: const BoxConstraints(maxWidth: 132),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
             decoration: BoxDecoration(
-              color: selected ? color : Colors.white,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: color, width: 1),
+              color: bgColor,
+              borderRadius: BorderRadius.circular(7),
+              border: Border.all(color: borderColor, width: 1.4),
               boxShadow: const [
                 BoxShadow(
-                  color: Color(0x33000000),
-                  blurRadius: 3,
-                  offset: Offset(0, 1),
+                  color: Color(0x55000000),
+                  blurRadius: 4,
+                  offset: Offset(0, 1.5),
                 ),
               ],
             ),
             child: Text(
-              station.code,
+              labelText,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w800,
-                color: selected ? Colors.white : color,
+                color: fgColor,
               ),
             ),
           ),
           const SizedBox(height: 2),
-          // หมุด
+          // หมุดสถานี
           Container(
             width: selected ? 26 : 22,
             height: selected ? 26 : 22,
             decoration: BoxDecoration(
-              color: color,
+              color: pinColor,
               shape: BoxShape.circle,
               border: Border.all(
                 color: Colors.white,
@@ -67,7 +82,7 @@ class StationMarker extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: color.withValues(alpha: 0.5),
+                  color: pinColor.withValues(alpha: 0.55),
                   blurRadius: selected ? 10 : 4,
                 ),
               ],

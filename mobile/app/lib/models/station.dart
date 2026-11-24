@@ -331,6 +331,16 @@ enum WaterTrend {
   final String labelTh;
   final IconData icon;
   final Color color;
+
+  Color colorFor(Brightness brightness) {
+    if (brightness == Brightness.light) return color;
+    return switch (this) {
+      WaterTrend.rising => const Color(0xFFFF6B6B),
+      WaterTrend.falling => const Color(0xFF66BB6A),
+      WaterTrend.steady => const Color(0xFFCBD5E1),
+      WaterTrend.unknown => const Color(0xFF94A3B8),
+    };
+  }
 }
 
 // ── ตัวช่วยแปลงค่าจาก JSON (รองรับทั้ง String และ num, และ null) ──────────
@@ -352,8 +362,10 @@ int? _asInt(dynamic value) {
 
 double? _asDouble(dynamic value) {
   if (value == null) return null;
-  if (value is double) return value;
-  if (value is num) return value.toDouble();
+  if (value is num) {
+    final d = value.toDouble();
+    return d.isFinite ? d : null;
+  }
   final parsed = double.tryParse(value.toString());
-  return parsed;
+  return (parsed != null && parsed.isFinite) ? parsed : null;
 }

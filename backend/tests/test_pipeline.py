@@ -296,7 +296,7 @@ def test_main_graceful_degradation_when_secondary_sources_fail(tmp_path, monkeyp
     assert len(payload["amphoes"]) == 8
     man = json.loads((tmp_path / "manifest.json").read_text(encoding="utf-8"))
     assert man["content_hash"] == payload["content_hash"]
-    assert man["formula_version"] == 2
+    assert man["formula_version"] == 3
 
 
 def test_contacts_registry_has_verified_1784_and_yala_ddpm():
@@ -449,3 +449,192 @@ def test_notify_fcm_topic_parity_cooldown_and_tamper_fail_closed(tmp_path):
     (tmp_path / "latest.json").write_text(json.dumps(snap), encoding="utf-8")
     (tmp_path / "manifest.json").write_text(json.dumps({"content_hash": "0" * 64}), encoding="utf-8")
     assert N.main(["--snapshot-dir", str(tmp_path), "--dry-run"]) == 1
+
+
+# ── Formula v3 Exact Parity Vectors & Historical 2024/2025 Backtests ────────
+
+@pytest.mark.parametrize(
+    "case_id,kwargs,expected_score,expected_level,expected_push,expected_mech,expected_conf",
+    [
+        (
+            "TV3-1_normal",
+            dict(
+                level_msl=14.2, previous_msl=14.2, bank_m=16.5, watch_m=15.5, critical_m=16.5,
+                situation_level=1, stale=False, rain_1h_mm=3.0, forecast_24h_mm=11.0,
+            ),
+            5.1, 1, False, "monitoring", "high",
+        ),
+        (
+            "TV3-2_nov2025_x40a_overflow_no_sit",
+            dict(
+                level_msl=17.74, previous_msl=17.50, bank_m=16.5, watch_m=15.5, critical_m=16.5,
+                situation_level=None, stale=False, rain_1h_mm=5.0, rain_24h_mm=20.0,
+                is_urban_basin=True,
+            ),
+            40.9, 5, True, "riverine_overflow", "high",
+        ),
+        (
+            "TV3-3_nov2025_urban_3day_333mm_low_dam",
+            dict(
+                level_msl=14.5, previous_msl=14.4, bank_m=16.5, watch_m=15.5, critical_m=16.5,
+                situation_level=None, stale=False, rain_24h_mm=155.0, rain_72h_mm=333.8,
+                api_7d_mm=140.0, forecast_6h_mm=35.0, dam_signal=0.0, is_urban_basin=True,
+            ),
+            45.1, 3, True, "urban_pluvial", "high",
+        ),
+        (
+            "TV3-4_nov2024_x40a_18_97_inflow_131",
+            dict(
+                level_msl=18.97, previous_msl=18.50, bank_m=16.5, watch_m=15.5, critical_m=16.5,
+                situation_level=4, stale=False, rain_24h_mm=180.0, rain_72h_mm=320.0,
+                api_7d_mm=200.0, forecast_24h_mm=120.0, glofas_peak_ratio=3.5,
+                dam_signal=0.75, lead_time_hours="6–12 ชม.",
+            ),
+            89.5, 5, True, "dam_release", "high",
+        ),
+        (
+            "TV3-5_x77_rid8_39_70_critical",
+            dict(
+                level_msl=39.75, previous_msl=39.65, bank_m=40.3, watch_m=38.0, critical_m=39.7,
+                situation_level=None, stale=False, is_flash_flood=True,
+            ),
+            38.0, 4, True, "riverine_overflow", "high",
+        ),
+        (
+            "TV3-6_rain_only_no_push",
+            dict(
+                level_msl=12.0, previous_msl=12.0, bank_m=16.5, watch_m=15.5, critical_m=16.5,
+                situation_level=None, stale=False, rain_1h_mm=40.0, forecast_24h_mm=33.0,
+                is_urban_basin=True,
+            ),
+            18.3, 1, False, "monitoring", "high",
+        ),
+        (
+            "TV3-7_kabang_0gauge_wet_soil_rain",
+            dict(
+                level_msl=None, previous_msl=None, bank_m=None, situation_level=None, stale=False,
+                rain_1h_mm=48.0, api_7d_mm=140.0, forecast_24h_mm=66.0,
+                is_flash_flood=True, has_water_gauge=False,
+            ),
+            32.6, 4, True, "flash_flood", "medium",
+        ),
+        (
+            "TV3-8_banglang_spillway_early_warning",
+            dict(
+                level_msl=14.0, previous_msl=14.0, bank_m=16.5, watch_m=15.5, critical_m=16.5,
+                situation_level=1, stale=False, rain_1h_mm=12.0, forecast_24h_mm=22.0,
+                dam_signal=1.0, dam_spillway_active=True, lead_time_hours="6–12 ชม.",
+            ),
+            16.8, 3, True, "dam_release", "high",
+        ),
+        (
+            "TV3-9_watch_rapid_rise_override",
+            dict(
+                level_msl=15.60, previous_msl=15.40, bank_m=16.5, watch_m=15.5, critical_m=16.5,
+                situation_level=None, stale=False,
+            ),
+            25.7, 3, True, "riverine_overflow", "high",
+        ),
+        (
+            "TV3-10_raman_sensor_gap_confidence",
+            dict(
+                level_msl=17.67, previous_msl=17.50, bank_m=16.5, watch_m=15.0, critical_m=16.5,
+                situation_level=None, stale=False, rain_24h_mm=90.0, rain_sensor_gap=True,
+                is_urban_basin=True,
+            ),
+            51.2, 5, True, "riverine_overflow", "medium",
+        ),
+    ],
+)
+def test_formula_v3_vectors(
+    case_id, kwargs, expected_score, expected_level, expected_push, expected_mech, expected_conf
+):
+    res = P.compute_alert_v3(**kwargs)
+    assert res["formula_version"] == 3
+    assert res["score"] == expected_score, f"{case_id}: expected score {expected_score}, got {res['score']}"
+    assert res["level"] == expected_level, f"{case_id}: expected level {expected_level}, got {res['level']}"
+    assert res["should_push"] is expected_push
+    assert res["flood_mechanism"] == expected_mech
+    assert res["confidence"] == expected_conf
+
+
+def test_banglang_high_inflow_surge_triggers_early_dam_signal():
+    # Nov 2024: storage still 51%, release normal, but inflow surges to 130.98 MCM/day -> D = 0.75!
+    dam = {"storage_percent": 51.0, "released_daily_mcm": 8.0, "spilled_mcm": 0.0, "inflow_daily_mcm": 130.98}
+    d_sig, spilled, lead = P.compute_dam_signal(dam, "เมืองยะลา")
+    assert d_sig == 0.75
+    assert spilled is False
+    assert lead == "6–12 ชม."
+
+
+def test_station_registry_real_names_and_rid8_thresholds():
+    reg = _registry()
+    assert reg["X.273"]["display_name"] == "บ้านปายอยือนิ"
+    assert reg["X.273"]["short_name_th"] == "บ้านปายอยือนิ"
+    assert reg["X.40A"]["watch_m"] == 15.50
+    assert reg["X.40A"]["critical_m"] == 16.50
+    assert reg["X.77"]["watch_m"] == 38.00
+    assert reg["X.77"]["critical_m"] == 39.70
+    for code, item in reg.items():
+        assert item.get("short_name_th") and not item["display_name"].endswith(" "), f"Bad name for {code}"
+        assert item.get("name_en") and item.get("name_zh") and item.get("name_ms"), f"Missing i18n for {code}"
+
+
+def test_curved_gis_boundaries_and_dem_elevation_assets():
+    # Subdistricts must be high-res curved GADM polygons (not coarse 15-vertex polygons)
+    subs = json.loads((P.REGISTRY_DIR / "yala_subdistricts.geojson").read_text(encoding="utf-8"))
+    verts = [
+        len(f["geometry"]["coordinates"][0])
+        if f["geometry"]["type"] == "Polygon"
+        else sum(len(p[0]) for p in f["geometry"]["coordinates"])
+        for f in subs["features"]
+    ]
+    assert sum(verts) / len(verts) >= 35.0
+
+    # DEM grid & topographic elevation zones exist and cover all 8 amphoes
+    dem = json.loads((P.REGISTRY_DIR / "yala_dem_grid.json").read_text(encoding="utf-8"))
+    assert dem["province_code"] == "95"
+    assert dem["rows"] > 50 and dem["cols"] > 40
+    non_null = sum(1 for row in dem["values"] for v in row if v is not None)
+    assert non_null >= 1500
+
+    ez = json.loads((P.REGISTRY_DIR / "yala_elevation_zones.geojson").read_text(encoding="utf-8"))
+    assert len(ez["features"]) >= 100
+    assert {f["properties"]["amphoe_th"] for f in ez["features"]} == set(_amphoes_registry().keys())
+
+    vz = json.loads((P.REGISTRY_DIR / "yala_village_zones.geojson").read_text(encoding="utf-8"))
+    assert len(vz["features"]) >= 400
+
+
+def test_rain_degraded_outage_triggers_sensor_gap_fallback_in_normalize():
+    # MEDIUM-1 regression: when entire thaiwater_rain_24h feed fails (amphoe_rain={}),
+    # normalize(..., rain_degraded=True) MUST trigger rain_sensor_gap + Open-Meteo past_24h fallback.
+    fixed = datetime(2026, 11, 24, 15, 0, tzinfo=P.ICT)
+    rows = _rows_sample(1, at=fixed)
+    rows[0]["station"]["tele_station_oldcode"] = "X.40A"
+    rows[0]["waterlevel_msl"] = "14.50"
+    rows[0]["waterlevel_msl_previous"] = "14.40"
+    rows[0]["situation_level"] = None
+    wx = {
+        "เมืองยะลา": {
+            "past_24h_mm": 160.0,
+            "observed_rain_72h_mm": 260.0,
+            "api_7d_mm": 140.0,
+            "forecast_6h_mm": 35.0,
+            "forecast_24h_mm": 90.0,
+            "forecast_72h_mm": 150.0,
+        }
+    }
+    st, _ = P.normalize(
+        rows,
+        _registry(),
+        now=fixed,
+        rain_gauges=[],
+        amphoe_rain={},
+        weather_by_amphoe=wx,
+        rain_degraded=True,
+    )
+    assert st[0]["rain_sensor_gap"] is True
+    assert st[0]["rain_24h_mm"] == 160.0
+    assert st[0]["assessment"]["confidence"] == "medium"
+    assert st[0]["assessment"]["level"] >= 3

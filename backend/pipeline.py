@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Yala Flood Watch — Multi-Source Early Warning Pipeline (formula_version = 2)
+"""Yala Flood Watch — Multi-Source Early Warning Pipeline (formula_version = 3)
 
 Connects 5 live public zero-key hydrological & meteorological databases for Yala Province (95):
   1. ThaiWater Waterlevel   (14 telemetric water-level stations — Primary, Fail-Closed)
@@ -54,7 +54,7 @@ OPEN_METEO_FLOOD_URL = "https://flood-api.open-meteo.com/v1/flood"
 API_URL = WATERLEVEL_URL
 
 SCHEMA_VERSION = 2
-FORMULA_VERSION = 2
+FORMULA_VERSION = 3
 HTTP_TIMEOUT = 15
 HTTP_RETRIES = 2
 HTTP_RETRY_BACKOFF = 0.9
@@ -63,9 +63,16 @@ MAX_STALE_MINUTES = 60
 RAIN_STALE_MINUTES = 90
 YALA_BBOX = (5.5, 7.2, 100.5, 101.9)  # lat_min, lat_max, lon_min, lon_max
 ICT = ZoneInfo("Asia/Bangkok")  # UTC+7
-USER_AGENT = "yala-flood-watch-pipeline/2.0 (+civic-open-data)"
+USER_AGENT = "yala-flood-watch-pipeline/3.0 (+civic-open-data)"
 
 FLASH_FLOOD_AMPHOES = {"บันนังสตา", "กรงปินัง", "เบตง", "กาบัง", "ธารโต"}
+URBAN_BASIN_AMPHOES = {"เมืองยะลา", "รามัน", "ยะหา"}
+GLOFAS_AMPHOE_CHECKPOINT = {
+    "เมืองยะลา": "pattani_x40a",
+    "กรงปินัง": "pattani_x40a",
+    "บันนังสตา": "pattani_x40a",
+    "รามัน": "saiburi_x273",
+}
 BANGLANG_DOWNSTREAM_LEAD_TIME = {
     "บันนังสตา": "2–4 ชม.",
     "กรงปินัง": "4–6 ชม.",
@@ -369,11 +376,13 @@ def fetch_open_meteo_weather(amphoes_reg: dict, now: datetime | None = None) -> 
             "hourly": "precipitation,rain,precipitation_probability",
             "daily": "precipitation_sum,precipitation_probability_max",
             "timezone": "Asia/Bangkok",
+            "past_days": 7,
             "forecast_days": 3,
         },
     )
     items = payload if isinstance(payload, list) else [payload]
     now_ict = _ict(now or datetime.now(ICT))
+    today_str = now_ict.strftime("%Y-%m-%d")
     out: dict[str, dict] = {}
     for idx, amp in enumerate(names):
         if idx >= len(items):
@@ -387,7 +396,7 @@ def fetch_open_meteo_weather(amphoes_reg: dict, now: datetime | None = None) -> 
         daily_sums = [float(x or 0.0) for x in (daily.get("precipitation_sum") or [])]
         daily_dates = daily.get("time") or []
 
-        # Align from current ICT hour onward
+        # Align from current ICT hour onward for forecast, and backward for observed rain / API_7d
         now_hour_prefix = now_ict.strftime("%Y-%m-%dT%H:00")
         start_i = 0
         for i, t in enumerate(times):
@@ -399,8 +408,32 @@ def fetch_open_meteo_weather(amphoes_reg: dict, now: datetime | None = None) -> 
         next_72 = precip[start_i:start_i + 72]
         probs_24 = probs[start_i:start_i + 24]
 
+        # Past observed windows from hourly series (research §4.2: R24, R72 & sensor-gap fallback)
+        past_24 = precip[max(0, start_i - 24):start_i]
+        past_72 = precip[max(0, start_i - 72):start_i]
+
+        # Antecedent Precipitation Index API_7d = sum(P_{t-i} * exp(-i / 4.0)) for i=0..6
+        past_daily = [
+            daily_sums[k]
+            for k in range(min(len(daily_dates), len(daily_sums)))
+            if daily_dates[k] <= today_str
+        ]
+        api_7d = 0.0
+        for lag, p_day in enumerate(reversed(past_daily[-7:])):
+            api_7d += max(0.0, p_day) * math.exp(-lag / 4.0)
+
+        # Future 3-day daily summary
+        future_daily = [
+            {"date": daily_dates[k], "mm": round(daily_sums[k], 2)}
+            for k in range(min(len(daily_dates), len(daily_sums)))
+            if daily_dates[k] >= today_str
+        ][:3]
+
         out[amp] = {
             "source": "Open-Meteo (CC BY 4.0)",
+            "past_24h_mm": round(sum(past_24), 2),
+            "observed_rain_72h_mm": round(sum(past_72), 2),
+            "api_7d_mm": round(api_7d, 2),
             "forecast_6h_mm": round(sum(next_6), 2),
             "forecast_24h_mm": round(sum(next_24), 2),
             "forecast_72h_mm": round(sum(next_72), 2),
@@ -409,10 +442,7 @@ def fetch_open_meteo_weather(amphoes_reg: dict, now: datetime | None = None) -> 
                 {"time": times[start_i + k], "mm": round(next_24[k], 2), "prob": probs_24[k] if k < len(probs_24) else 0}
                 for k in range(len(next_24))
             ],
-            "daily_3d": [
-                {"date": daily_dates[k], "mm": round(daily_sums[k], 2)}
-                for k in range(min(len(daily_dates), len(daily_sums)))
-            ],
+            "daily_3d": future_daily,
         }
     return out
 
@@ -466,27 +496,319 @@ def fetch_glofas_flood() -> list[dict]:
     return out
 
 
-# ── Formula v2 Core Engine (100% Parity with Dart AlertEngine) ──────────────
+# ── Formula v3 Core Engine (Research-Calibrated, 100% Parity with Dart AlertEngine) ──
 
 def compute_dam_signal(dam: dict | None, amphoe: str) -> tuple[float, bool, str | None]:
-    """Compute D (0..1), spillway_active, and downstream lead_time for an amphoe."""
+    """Compute D (0..1), spillway_active, and downstream lead_time for an amphoe.
+    Incorporates Bang Lang Dam inflow surge per research §2.1 (Nov 2024: 130.98 MCM/day)."""
     lead = BANGLANG_DOWNSTREAM_LEAD_TIME.get(amphoe)
     if not lead or not dam:
         return 0.0, False, lead
     spilled = _to_float(dam.get("spilled_mcm")) or 0.0
     storage_pct = _to_float(dam.get("storage_percent")) or 0.0
     released_daily = _to_float(dam.get("released_daily_mcm")) or 0.0
+    inflow_daily = _to_float(dam.get("inflow_daily_mcm")) or 0.0
 
     if spilled > 0:
         return 1.0, True, lead
-    if storage_pct >= 85.0 or released_daily >= 20.0:
+    if storage_pct >= 85.0 or released_daily >= 20.0 or inflow_daily >= 90.0:
         return 0.75, False, lead
-    if storage_pct >= 75.0 or released_daily >= 12.0:
+    if storage_pct >= 75.0 or released_daily >= 12.0 or inflow_daily >= 50.0:
         return 0.45, False, lead
     if storage_pct >= 60.0:
         return round(_clamp((storage_pct - 60.0) / 50.0, 0.0, 0.35), 4), False, lead
     return 0.0, False, lead
 
+
+def compute_alert_v3(
+    *,
+    level_msl: float | None,
+    previous_msl: float | None,
+    bank_m: float | None,
+    watch_m: float | None = None,
+    critical_m: float | None = None,
+    situation_level: int | None,
+    stale: bool,
+    rain_1h_mm: float = 0.0,
+    rain_24h_mm: float = 0.0,
+    rain_72h_mm: float = 0.0,
+    api_7d_mm: float = 0.0,
+    forecast_6h_mm: float = 0.0,
+    forecast_24h_mm: float = 0.0,
+    forecast_72h_mm: float = 0.0,
+    glofas_peak_ratio: float | None = None,
+    dam_signal: float = 0.0,
+    dam_spillway_active: bool = False,
+    community_reports_60m: int = 0,
+    is_flash_flood: bool = False,
+    is_urban_basin: bool = False,
+    has_water_gauge: bool = True,
+    rain_sensor_gap: bool = False,
+    h_normal_30d: float | None = None,
+    lead_time_hours: str | None = None,
+) -> dict:
+    """Research-calibrated multi-mechanism Formula v3 evaluator (100% Parity with Dart AlertEngine.assessV3)."""
+    flags: list[str] = []
+    reason_codes: list[str] = []
+
+    if rain_sensor_gap:
+        flags.append("rain_sensor_gap")
+
+    # 1. W (Impact-Based River Stage vs watch_m/critical_m + dH/dt rate-of-rise)
+    dh = 0.0
+    if level_msl is not None and previous_msl is not None and not stale:
+        dh = round(level_msl - previous_msl, 4)
+
+    crit = (
+        critical_m
+        if (critical_m is not None and critical_m > 0)
+        else (bank_m if (bank_m is not None and bank_m > 0) else None)
+    )
+    watch: float | None = None
+    if crit is not None:
+        watch = watch_m if (watch_m is not None and watch_m > 0 and watch_m < crit) else (crit - 1.5)
+
+    w_val = 0.0
+    if stale:
+        flags.append("water_stale")
+    elif crit is not None and watch is not None and level_msl is not None:
+        if h_normal_30d is not None and h_normal_30d < watch:
+            base_low = h_normal_30d
+        else:
+            base_low = watch - 1.5
+            flags.append("h_normal_bootstrap")
+        if level_msl <= base_low:
+            w_base = 0.0
+        elif level_msl < watch:
+            w_base = 0.55 * (level_msl - base_low) / (watch - base_low)
+        elif level_msl < crit:
+            w_base = 0.55 + 0.45 * (level_msl - watch) / (crit - watch)
+        else:
+            w_base = 1.0
+
+        rise_bonus = 0.0
+        if dh >= 0.30:
+            rise_bonus = 0.15
+            flags.append("rapid_rise")
+            reason_codes.append("rapid_rise")
+        elif dh >= 0.15:
+            rise_bonus = 0.08
+            flags.append("rising_watch")
+            reason_codes.append("rising_water")
+        w_val = _clamp(w_base + rise_bonus, 0.0, 1.0)
+    elif situation_level is not None and 1 <= situation_level <= 4:
+        w_val = _clamp(situation_level / 4.0, 0.0, 1.0)
+        flags.append("w_from_situation_fallback")
+    else:
+        flags.append("no_water_signal")
+
+    # 2. R (Multi-Window Observed Rain: 1h / 24h / 72h per research §4.2)
+    r_val = _clamp(
+        max(
+            max(0.0, rain_1h_mm) / 60.0,
+            max(0.0, rain_24h_mm) / 150.0,
+            max(0.0, rain_72h_mm) / 260.0,
+        ),
+        0.0,
+        1.0,
+    )
+    if r_val >= 0.65:
+        reason_codes.append("heavy_rain")
+
+    # 3. A (Antecedent Wetness API 7-day soil saturation proxy per research §4.2)
+    a_val = _clamp(max(0.0, api_7d_mm) / 180.0, 0.0, 1.0)
+    if a_val >= 0.65:
+        reason_codes.append("saturated_soil")
+
+    # 4. F (Multi-Window Forecast Rain + GloFAS v4 River Discharge Ratio)
+    f_rain = max(
+        max(0.0, forecast_6h_mm) / 50.0,
+        max(0.0, forecast_24h_mm) / 110.0,
+        max(0.0, forecast_72h_mm) / 200.0,
+    )
+    glofas_bonus = 0.0
+    if glofas_peak_ratio is not None:
+        if glofas_peak_ratio >= 3.0:
+            glofas_bonus = 0.25
+            flags.append("glofas_high_surge")
+            reason_codes.append("river_surge_forecast")
+        elif glofas_peak_ratio >= 2.0:
+            glofas_bonus = 0.15
+            flags.append("glofas_elevated")
+            reason_codes.append("river_surge_forecast")
+    f_val = _clamp(f_rain + glofas_bonus, 0.0, 1.0)
+    if f_rain >= 0.60:
+        reason_codes.append("heavy_forecast")
+
+    # 5. D (Bang Lang Dam downstream risk)
+    d_val = _clamp(dam_signal, 0.0, 1.0)
+    if dam_spillway_active:
+        flags.append("dam_spillway_active")
+        reason_codes.append("dam_spillway")
+    elif d_val >= 0.45:
+        reason_codes.append("dam_high_flow")
+
+    # 6. C (Verified community reports, trust >= 3)
+    c_val = _clamp(max(0, community_reports_60m) / 5.0, 0.0, 1.0)
+    if c_val >= 0.60:
+        reason_codes.append("community_reports")
+
+    # 7. Weighted Multi-Signal Risk Score (0..100, half-up 1 decimal)
+    raw = (
+        0.38 * w_val
+        + 0.22 * r_val
+        + 0.10 * a_val
+        + 0.12 * f_val
+        + 0.10 * d_val
+        + 0.08 * c_val
+    )
+    score = _clamp(_round_half_up(100.0 * raw, 1), 0.0, 100.0)
+
+    # 8. Base level from score (1..5)
+    if score < 20.0:
+        score_level = 1
+    elif score < 40.0:
+        score_level = 2
+    elif score < 60.0:
+        score_level = 3
+    elif score < 80.0:
+        score_level = 4
+    else:
+        score_level = 5
+
+    # 9. Agency situation_level floor
+    floor_level = int(_clamp(situation_level, 1, 4)) if situation_level is not None else 1
+    if situation_level is not None and situation_level >= 3 and score_level <= 2:
+        flags.append("situation_score_mismatch")
+    level = max(score_level, floor_level)
+
+    # 10. Physical Bank-Overflow Override (research §5(ข) & Nov 2025 X.40A/X.273 calibration)
+    bank_override = False
+    if not stale and crit is not None and watch is not None and level_msl is not None:
+        if level_msl >= crit + 0.50:
+            if level < 5:
+                level = 5
+            bank_override = True
+            flags.append("bank_overflow_severe")
+            reason_codes.append("bank_overflow")
+        elif level_msl >= crit:
+            if level < 4:
+                level = 4
+            bank_override = True
+            flags.append("bank_overflow")
+            reason_codes.append("bank_overflow")
+        elif level_msl >= watch and dh >= 0.15:
+            if level < 3:
+                level = 3
+            bank_override = True
+            flags.append("watch_rapid_rise")
+            reason_codes.append("near_bank")
+        elif level_msl >= watch:
+            reason_codes.append("near_bank")
+
+    # 11. Flash flood override (5 steep amphoes)
+    flash_bonus = 0
+    if is_flash_flood:
+        if r_val >= 0.65:
+            flash_bonus += 1
+        if c_val >= 0.60:
+            flash_bonus += 1
+        if dh >= 0.30:
+            flash_bonus += 1
+        if a_val >= 0.70 and r_val >= 0.45:
+            flash_bonus += 1
+        flash_bonus = min(flash_bonus, 2)
+        if flash_bonus > 0:
+            level = min(5, level + flash_bonus)
+            flags.append(f"flash_override_+{flash_bonus}")
+            reason_codes.append("flash_flood_risk")
+
+    # 12. Urban Pluvial Override (research §1 & §2.2: Mueang Yala / Raman / Yaha Nov 2025)
+    urban_pluvial_triggered = False
+    if is_urban_basin:
+        urban_rain = (rain_1h_mm >= 45.0) or (rain_24h_mm >= 140.0) or (rain_72h_mm >= 240.0)
+        urban_confirm = (a_val >= 0.50) or (forecast_6h_mm >= 30.0) or (rain_1h_mm >= 55.0)
+        if urban_rain and urban_confirm:
+            urban_pluvial_triggered = True
+            if level < 3:
+                level = 3
+            flags.append("urban_pluvial_override")
+            reason_codes.append("urban_flood_risk")
+
+    # 13. Dam Spillway Early Warning Override (min Level 3 downstream)
+    if dam_spillway_active and level < 3:
+        level = 3
+        flags.append("dam_spillway_floor_lv3")
+
+    # 14. Flood mechanism classification (research §1)
+    if dam_spillway_active or d_val >= 0.75:
+        flood_mechanism = "dam_release"
+    elif urban_pluvial_triggered:
+        flood_mechanism = "urban_pluvial"
+    elif is_flash_flood and (flash_bonus > 0 or r_val >= 0.55):
+        flood_mechanism = "flash_flood"
+    elif bank_override or w_val >= 0.55:
+        flood_mechanism = "riverine_overflow"
+    else:
+        flood_mechanism = "monitoring"
+
+    # 15. Confidence assessment (research §5.1 & §7)
+    if stale or (not has_water_gauge and rain_sensor_gap):
+        confidence = "low"
+    elif rain_sensor_gap or not has_water_gauge or (crit is None and situation_level is None):
+        confidence = "medium"
+    else:
+        confidence = "high"
+
+    # 16. Push eligibility (controls false alarms while allowing verified urban/flash emergencies)
+    has_primary_signal = (
+        w_val > 0.0
+        or bank_override
+        or (situation_level is not None and situation_level >= 2)
+        or d_val >= 0.45
+        or c_val >= 0.60
+        or urban_pluvial_triggered
+        or (is_flash_flood and not has_water_gauge and r_val >= 0.70 and (a_val >= 0.50 or f_val >= 0.50))
+    )
+    should_push = (level >= 2) and has_primary_signal
+
+    # Deduplicate reason codes preserving order
+    unique_reasons: list[str] = []
+    for rc in reason_codes:
+        if rc not in unique_reasons:
+            unique_reasons.append(rc)
+
+    meta = LEVEL_META[level]
+    return {
+        "formula_version": FORMULA_VERSION,
+        "score": score,
+        "score_level": score_level,
+        "floor_level": floor_level,
+        "flash_bonus": flash_bonus,
+        "level": level,
+        "label_th": meta["label_th"],
+        "color": meta["color"],
+        "action_th": meta["action_th"],
+        "should_push": should_push,
+        "has_primary_signal": has_primary_signal,
+        "flood_mechanism": flood_mechanism,
+        "confidence": confidence,
+        "reason_codes": unique_reasons,
+        "lead_time_hours": lead_time_hours if (dam_spillway_active or d_val >= 0.45) else None,
+        "signals": {
+            "W": round(w_val, 4),
+            "R": round(r_val, 4),
+            "A": round(a_val, 4),
+            "F": round(f_val, 4),
+            "D": round(d_val, 4),
+            "C": round(c_val, 4),
+            "dH_m": dh,
+        },
+        "flags": flags,
+    }
+
+
+# ── Legacy Formula v2 kept for regression/comparison reference ───────────────
 
 def compute_alert_v2(
     *,
@@ -606,7 +928,7 @@ def compute_alert_v2(
 
     meta = LEVEL_META[level]
     return {
-        "formula_version": FORMULA_VERSION,
+        "formula_version": 2,
         "score": score,
         "score_level": score_level,
         "floor_level": floor_level,
@@ -632,6 +954,18 @@ def compute_alert_v2(
 
 # ── Water Station Normalization + Multi-Source Enrichment ───────────────────
 
+def _glofas_ratio_for_amphoe(amphoe: str, glofas_flood: list[dict] | None) -> float | None:
+    if not glofas_flood:
+        return None
+    cp_id = GLOFAS_AMPHOE_CHECKPOINT.get(amphoe)
+    if not cp_id:
+        return None
+    for cp in glofas_flood:
+        if cp.get("id") == cp_id:
+            return _to_float(cp.get("peak_vs_mean_ratio"))
+    return None
+
+
 def normalize(
     rows: list[dict],
     registry: dict,
@@ -640,8 +974,10 @@ def normalize(
     amphoe_rain: dict[str, dict] | None = None,
     weather_by_amphoe: dict[str, dict] | None = None,
     banglang_dam: dict | None = None,
+    glofas_flood: list[dict] | None = None,
+    rain_degraded: bool = False,
 ) -> tuple[list[dict], dict]:
-    """Normalize ThaiWater waterlevel rows, apply registry fallback, and score with Formula v2."""
+    """Normalize ThaiWater waterlevel rows, apply registry fallback, and score with Formula v3."""
     now_ict = _ict(now or datetime.now(ICT))
     out: list[dict] = []
     seen_codes: set[str] = set()
@@ -698,6 +1034,9 @@ def normalize(
             else:
                 bank_source = "none"
 
+        watch_m = _to_float(reg_dict.get("watch_m"))
+        critical_m = _to_float(reg_dict.get("critical_m")) or bank
+
         sit_raw = _to_int(r.get("situation_level"))
         situation = sit_raw if (sit_raw is not None and 1 <= sit_raw <= 4) else None
 
@@ -721,8 +1060,11 @@ def normalize(
         lon = _to_float(st.get("tele_station_long"))
         amphoe = _th(geo.get("amphoe_name")) or str(reg_dict.get("amphoe") or "")
 
-        # Match nearest fresh rain gauge (fallback to amphoe rain)
+        wx_amp = (weather_by_amphoe or {}).get(amphoe) or {}
+
+        # Match nearest fresh rain gauge + sensor-gap fallback (research §7: never treat missing sensor as 0)
         r1_mm, r24_mm, nearest_rain_name = 0.0, 0.0, None
+        rain_sensor_gap = False
         if rain_gauges and lat is not None and lon is not None:
             fresh_gauges = [g for g in rain_gauges if not g["stale"]]
             pool = fresh_gauges if fresh_gauges else rain_gauges
@@ -733,36 +1075,74 @@ def normalize(
                     r1_mm = nearest["rain_1h_mm"] or 0.0
                     r24_mm = nearest["rain_24h_mm"] or 0.0
                     nearest_rain_name = f"{nearest['name']} ({dist_km:.1f} กม.)"
-        if amphoe_rain and amphoe in amphoe_rain:
+        if rain_degraded:
+            rain_sensor_gap = True
+            r24_mm = max(r24_mm, _to_float(wx_amp.get("past_24h_mm")) or 0.0)
+        elif amphoe_rain and amphoe in amphoe_rain:
             ar = amphoe_rain[amphoe]
-            r1_mm = max(r1_mm, ar.get("max_rain_1h_mm", 0.0))
-            r24_mm = max(r24_mm, ar.get("max_rain_24h_mm", 0.0))
+            if ar.get("stale", False) or ar.get("fresh_gauge_count", 0) == 0:
+                rain_sensor_gap = True
+                r24_mm = max(r24_mm, _to_float(wx_amp.get("past_24h_mm")) or 0.0)
+            else:
+                r1_mm = max(r1_mm, ar.get("max_rain_1h_mm", 0.0))
+                r24_mm = max(r24_mm, ar.get("max_rain_24h_mm", 0.0))
+        elif amphoe_rain is not None and len(amphoe_rain) > 0:
+            # Amphoe missing completely from rain feed -> sensor gap fallback
+            rain_sensor_gap = True
+            r24_mm = max(r24_mm, _to_float(wx_amp.get("past_24h_mm")) or 0.0)
 
-        forecast_24h = ((weather_by_amphoe or {}).get(amphoe) or {}).get("forecast_24h_mm", 0.0)
+        rain_72h = max(r24_mm, _to_float(wx_amp.get("observed_rain_72h_mm")) or 0.0)
+        api_7d = _to_float(wx_amp.get("api_7d_mm"))
+        if api_7d is None:
+            api_7d = r24_mm
+        forecast_6h = _to_float(wx_amp.get("forecast_6h_mm")) or 0.0
+        forecast_24h = _to_float(wx_amp.get("forecast_24h_mm")) or 0.0
+        forecast_72h = _to_float(wx_amp.get("forecast_72h_mm")) or 0.0
+        glofas_ratio = _glofas_ratio_for_amphoe(amphoe, glofas_flood)
+
         dam_sig, dam_spill, lead_time = compute_dam_signal(banglang_dam, amphoe)
         is_flash = (reg_dict.get("risk_zone") == "flash") or (amphoe in FLASH_FLOOD_AMPHOES)
+        is_urban = amphoe in URBAN_BASIN_AMPHOES
 
-        assessment = compute_alert_v2(
+        assessment = compute_alert_v3(
             level_msl=lvl,
             previous_msl=prev_lvl,
             bank_m=bank,
+            watch_m=watch_m,
+            critical_m=critical_m,
             situation_level=situation,
             stale=stale,
             rain_1h_mm=r1_mm,
             rain_24h_mm=r24_mm,
+            rain_72h_mm=rain_72h,
+            api_7d_mm=api_7d,
+            forecast_6h_mm=forecast_6h,
             forecast_24h_mm=forecast_24h,
+            forecast_72h_mm=forecast_72h,
+            glofas_peak_ratio=glofas_ratio,
             dam_signal=dam_sig,
             dam_spillway_active=dam_spill,
             community_reports_60m=0,
             is_flash_flood=is_flash,
+            is_urban_basin=is_urban,
             has_water_gauge=True,
+            rain_sensor_gap=rain_sensor_gap,
             lead_time_hours=lead_time,
         )
+
+        # Clean real station name (trim whitespace & prefer readable registry display name when API name is blank)
+        api_name = _th(st.get("tele_station_name")).strip()
+        reg_display = str(reg_dict.get("display_name") or "").strip()
+        clean_name = api_name or reg_display or oc
 
         rec = {
             "id": r.get("id"),
             "oldcode": oc,
-            "name": _th(st.get("tele_station_name")) or reg_dict.get("display_name") or oc,
+            "name": clean_name,
+            "short_name": str(reg_dict.get("short_name_th") or clean_name).strip(),
+            "name_en": str(reg_dict.get("name_en") or "").strip(),
+            "name_zh": str(reg_dict.get("name_zh") or "").strip(),
+            "name_ms": str(reg_dict.get("name_ms") or "").strip(),
             "river": _th(r.get("river_name")) or str(reg_dict.get("river") or ""),
             "amphoe": amphoe,
             "tumbon": _th(geo.get("tumbon_name")) or str(reg_dict.get("tumbon") or ""),
@@ -771,6 +1151,8 @@ def normalize(
             "level_msl": lvl,
             "previous_msl": prev_lvl,
             "bank_m": bank,
+            "watch_m": watch_m,
+            "critical_m": critical_m,
             "bank_source": bank_source,
             "remaining_to_bank_m": round(bank - lvl, 3) if (bank is not None and lvl is not None) else None,
             "situation_level": situation,
@@ -787,8 +1169,13 @@ def normalize(
             "bank_missing": bank is None,
             "rain_1h_mm": round(r1_mm, 2),
             "rain_24h_mm": round(r24_mm, 2),
+            "rain_72h_mm": round(rain_72h, 2),
+            "api_7d_mm": round(api_7d, 2),
+            "rain_sensor_gap": rain_sensor_gap,
             "nearest_rain_gauge": nearest_rain_name,
+            "forecast_6h_mm": round(forecast_6h, 2),
             "forecast_24h_mm": round(forecast_24h, 2),
+            "forecast_72h_mm": round(forecast_72h, 2),
             "assessment": assessment,
         }
         out.append(rec)
@@ -801,22 +1188,16 @@ def build_amphoe_summaries(
     amphoe_rain: dict[str, dict],
     weather_by_amphoe: dict[str, dict],
     banglang_dam: dict | None,
+    glofas_flood: list[dict] | None = None,
 ) -> list[dict]:
     """Produce unified Early Warning assessments for ALL 8 Yala amphoes (including Kabang)."""
     summaries: list[dict] = []
     for amp_name, meta in amphoes_reg.items():
         amp_stations = [s for s in stations if s["amphoe"] == amp_name]
-        rain_info = amphoe_rain.get(amp_name) or {
-            "gauge_count": 0,
-            "fresh_gauge_count": 0,
-            "max_rain_1h_mm": 0.0,
-            "avg_rain_1h_mm": 0.0,
-            "max_rain_24h_mm": 0.0,
-            "avg_rain_24h_mm": 0.0,
-            "stale": True,
-            "latest_observed_at": None,
-        }
         wx_info = weather_by_amphoe.get(amp_name) or {
+            "past_24h_mm": 0.0,
+            "observed_rain_72h_mm": 0.0,
+            "api_7d_mm": 0.0,
             "forecast_6h_mm": 0.0,
             "forecast_24h_mm": 0.0,
             "forecast_72h_mm": 0.0,
@@ -824,6 +1205,31 @@ def build_amphoe_summaries(
             "hourly_next_24h": [],
             "daily_3d": [],
         }
+        rain_raw_info = amphoe_rain.get(amp_name)
+        rain_sensor_gap = (
+            rain_raw_info is None
+            or rain_raw_info.get("stale", False)
+            or rain_raw_info.get("fresh_gauge_count", 0) == 0
+        )
+        rain_info = rain_raw_info or {
+            "gauge_count": 0,
+            "fresh_gauge_count": 0,
+            "max_rain_1h_mm": 0.0,
+            "avg_rain_1h_mm": 0.0,
+            "max_rain_24h_mm": _to_float(wx_info.get("past_24h_mm")) or 0.0,
+            "avg_rain_24h_mm": _to_float(wx_info.get("past_24h_mm")) or 0.0,
+            "stale": True,
+            "latest_observed_at": None,
+        }
+        effective_r24 = max(
+            rain_info.get("max_rain_24h_mm", 0.0),
+            (_to_float(wx_info.get("past_24h_mm")) or 0.0) if rain_sensor_gap else 0.0,
+        )
+        effective_r72 = max(effective_r24, _to_float(wx_info.get("observed_rain_72h_mm")) or 0.0)
+        api_7d = _to_float(wx_info.get("api_7d_mm"))
+        if api_7d is None:
+            api_7d = effective_r24
+        glofas_ratio = _glofas_ratio_for_amphoe(amp_name, glofas_flood)
         dam_sig, dam_spill, lead_time = compute_dam_signal(banglang_dam, amp_name)
 
         if amp_stations:
@@ -832,21 +1238,28 @@ def build_amphoe_summaries(
             assessment = worst["assessment"]
             gov_station = worst["oldcode"]
         else:
-            # Amphoe with 0 water gauges (e.g., อ.กาบัง) — evaluated via real-time rain + Open-Meteo forecast!
-            assessment = compute_alert_v2(
+            # Amphoe with 0 water gauges (e.g., อ.กาบัง) — evaluated via real-time rain + API_7d + Open-Meteo forecast!
+            assessment = compute_alert_v3(
                 level_msl=None,
                 previous_msl=None,
                 bank_m=None,
                 situation_level=None,
                 stale=False,
                 rain_1h_mm=rain_info["max_rain_1h_mm"],
-                rain_24h_mm=rain_info["max_rain_24h_mm"],
-                forecast_24h_mm=wx_info["forecast_24h_mm"],
+                rain_24h_mm=effective_r24,
+                rain_72h_mm=effective_r72,
+                api_7d_mm=api_7d,
+                forecast_6h_mm=_to_float(wx_info.get("forecast_6h_mm")) or 0.0,
+                forecast_24h_mm=_to_float(wx_info.get("forecast_24h_mm")) or 0.0,
+                forecast_72h_mm=_to_float(wx_info.get("forecast_72h_mm")) or 0.0,
+                glofas_peak_ratio=glofas_ratio,
                 dam_signal=dam_sig,
                 dam_spillway_active=dam_spill,
                 community_reports_60m=0,
                 is_flash_flood=bool(meta.get("is_flash_flood", False)),
+                is_urban_basin=(amp_name in URBAN_BASIN_AMPHOES),
                 has_water_gauge=False,
+                rain_sensor_gap=rain_sensor_gap,
                 lead_time_hours=lead_time,
             )
             gov_station = None
@@ -1063,6 +1476,8 @@ def run_pipeline(sync_mobile_asset: bool = False, now: datetime | None = None) -
             amphoe_rain=amphoe_rain,
             weather_by_amphoe=weather_by_amphoe,
             banglang_dam=banglang_dam,
+            glofas_flood=glofas_flood,
+            rain_degraded=("thaiwater_rain_24h" in degraded),
         )
         validate(stations, stats)
 
@@ -1072,6 +1487,7 @@ def run_pipeline(sync_mobile_asset: bool = False, now: datetime | None = None) -
             amphoe_rain,
             weather_by_amphoe,
             banglang_dam,
+            glofas_flood=glofas_flood,
         )
 
         body = build_snapshot(

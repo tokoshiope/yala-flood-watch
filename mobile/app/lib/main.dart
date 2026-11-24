@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,12 +32,15 @@ Future<void> main() async {
     snapshotService: SnapshotService(preferences: preferences),
   );
 
-  // แจ้งเตือนในเครื่อง + Push รายอำเภอ (Push ข้ามได้อัตโนมัติถ้ายังไม่วาง GoogleService-Info.plist)
+  // เตรียมแจ้งเตือนในเครื่องทันที ส่วน Push (Firebase/APNs) เริ่มแบบไม่บล็อกการเปิดหน้าจอแรก
   final savedSettings = LocalStore(preferences).loadSettings();
   await NotificationService.instance.initialize();
-  await NotificationService.instance.initializePush(
-    pushEnabled: savedSettings.pushEnabled,
-    selectedAmphoeTh: savedSettings.selectedAmphoeTh,
+  unawaited(
+    NotificationService.instance.initializePush(
+      pushEnabled: savedSettings.pushEnabled,
+      selectedAmphoeTh: savedSettings.selectedAmphoeTh,
+      preferences: preferences,
+    ),
   );
 
   runApp(YalaFloodApp(provider: provider));
@@ -50,19 +55,29 @@ class YalaFloodApp extends StatefulWidget {
   State<YalaFloodApp> createState() => _YalaFloodAppState();
 }
 
-class _YalaFloodAppState extends State<YalaFloodApp> {
+class _YalaFloodAppState extends State<YalaFloodApp>
+    with WidgetsBindingObserver {
   final DeepLinkService _deepLinkService = DeepLinkService();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // โหลดแคชในเครื่องก่อน แล้วค่อยดึงค่าใหม่จากเน็ต
     widget.provider.hydrate();
     _deepLinkService.start(_handleDeepLink);
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(widget.provider.refreshIfStale());
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _deepLinkService.dispose();
     super.dispose();
   }
@@ -99,8 +114,12 @@ class _YalaFloodAppState extends State<YalaFloodApp> {
             darkTheme: ThemeData(
               useMaterial3: true,
               colorScheme: ColorScheme.fromSeed(
-                seedColor: const Color(AppConfig.colorPrimary),
+                seedColor: const Color(0xFF38BDF8),
                 brightness: Brightness.dark,
+              ).copyWith(
+                primary: const Color(0xFF60A5FA),
+                onSurface: const Color(0xFFF8FAFC),
+                onSurfaceVariant: const Color(0xFFCBD5E1),
               ),
             ),
             localizationsDelegates: GlobalMaterialLocalizations.delegates,

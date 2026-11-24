@@ -1,143 +1,229 @@
-version: 1
-source: ThaiWater API live at generation time
+version: 2
+source: ThaiWater API live + สทภ.8 WaterLevelWarningCriteria 2568 (X.40A, X.77)
 stations:
   PAT002:
-    display_name: เมืองยะลา
+    display_name: เมืองยะลา (ตาเซะ)
+    short_name_th: เมืองยะลา
+    name_en: Mueang Yala (Ta Se)
+    name_zh: 也拉市区 (塔塞)
+    name_ms: Mueang Yala (Ta Se)
     river: เขื่อนปัตตานี
     amphoe: เมืองยะลา
     tumbon: ตาเซะ
     lat: 6.67525
     lon: 101.286354
     left_bank_m: 13.85
+    watch_m: 12.35
+    critical_m: 13.85
     agency: สสน.
     risk_zone: riverine
   PAT001:
     display_name: บันนังสตา
+    short_name_th: บันนังสตา
+    name_en: Bannang Sata
+    name_zh: 班南沙达
+    name_ms: Bannang Sata
     river: แม่น้ำปัตตานี
     amphoe: บันนังสตา
     tumbon: บันนังสตา
     lat: 6.262041
     lon: 101.268036
     left_bank_m: 38.678
+    watch_m: 36.80
+    critical_m: 38.678
     agency: สสน.
     risk_zone: flash
   BLGTD01:
     display_name: สะพานท้ายเขื่อนบางลาง อ.บันนังสตา จ.ยะลา
+    short_name_th: ท้ายเขื่อนบางลาง
+    name_en: Bang Lang Dam Tailrace Bridge
+    name_zh: 邦朗坝下游桥
+    name_ms: Jambatan Hilir Empangan Bang Lang
     river: แม่น้ำปัตตานี
     amphoe: บันนังสตา
     tumbon: บาเจาะ
     lat: 6.160477
     lon: 101.276104
     left_bank_m: 48.678
+    watch_m: 46.70
+    critical_m: 48.678
     agency: กฟผ.
     risk_zone: flash
   BLGTD03:
     display_name: สะพานท่าสาป อ.เมือง จ.ยะลา
+    short_name_th: สะพานท่าสาป
+    name_en: Tha Sap Bridge
+    name_zh: 塔萨大桥
+    name_ms: Jambatan Tha Sap
     river: แม่น้ำปัตตานี
     amphoe: เมืองยะลา
     tumbon: สะเตง
     lat: 6.552715
     lon: 101.266197
     left_bank_m: 17.29
+    watch_m: 15.80
+    critical_m: 17.29
     agency: กฟผ.
     risk_zone: riverine
   BLGTD02:
     display_name: สะพานหัวสะพาน อ.บันนังสตา จ.ยะลา
+    short_name_th: สะพานหัวสะพาน
+    name_en: Hua Saphan Bridge (Bannang Sata)
+    name_zh: 华沙攀桥 (班南沙达)
+    name_ms: Jambatan Hua Saphan (Bannang Sata)
     river: แม่น้ำปัตตานี
     amphoe: บันนังสตา
     tumbon: บาเจาะ
     lat: 6.262132
     lon: 101.268237
     left_bank_m: 40.71
+    watch_m: 38.70
+    critical_m: 40.71
     agency: กฟผ.
     risk_zone: flash
   BLGTD04:
     display_name: อาคารสูบน้ำดิบ กปภ. อ.ยะหา จ.ยะลา
+    short_name_th: สูบน้ำ กปภ. ยะหา
+    name_en: PWA Pumping Station Yaha
+    name_zh: 亚哈自来水泵站
+    name_ms: Stesen Pam PWA Yaha
     river: คลองเล็ก
     amphoe: ยะหา
     tumbon: บาโร๊ะ
     lat: 6.47481
     lon: 101.139521
     left_bank_m: 31.55
+    watch_m: 29.80
+    critical_m: 31.55
     agency: กฟผ.
     risk_zone: riverine
   BLGTU02:
     display_name: สะพานบ้าน กม.29 อ.เบตง จ.ยะลา
+    short_name_th: สะพาน กม.29
+    name_en: Ban KM.29 Bridge (Betong)
+    name_zh: 勿洞29公里桥
+    name_ms: Jambatan KM.29 (Betong)
     river: แม่น้ำปัตตานี
     amphoe: เบตง
     tumbon: อัยเยอร์เวง
     lat: 5.920578
     lon: 101.182086
     left_bank_m: 120.37
+    watch_m: 118.50
+    critical_m: 120.37
     agency: กฟผ.
     risk_zone: flash
   MOU454:
     display_name: คลองเบตง (ชุมชนกุนุงจนอง)
+    short_name_th: คลองเบตง
+    name_en: Khlong Betong (Kunung Chanong)
+    name_zh: 勿洞河 (古农查农)
+    name_ms: Sungai Betong (Kunung Chanong)
     river: คลองตาโล๊ะ
     amphoe: เบตง
     tumbon: เบตง
     lat: 5.785312
     lon: 101.058685
     left_bank_m: 286.432
+    watch_m: 284.80
+    critical_m: 286.432
     agency: พพภ
     risk_zone: flash
   FOP045:
-    display_name: สะพานข้ามแม่น้ำปัตตานี
+    display_name: สะพานข้ามแม่น้ำปัตตานี (กรงปินัง)
+    short_name_th: สะพานกรงปินัง
+    name_en: Pattani River Bridge (Krong Pinang)
+    name_zh: 功比南北大年河桥
+    name_ms: Jambatan Sungai Pattani (Krong Pinang)
     river: แม่น้ำปัตตานี
     amphoe: กรงปินัง
     tumbon: กรงปินัง
     lat: 6.411704
     lon: 101.27776
     left_bank_m: 25.128
+    watch_m: 23.20
+    critical_m: 25.128
     agency: พพภ
     risk_zone: flash
   X.40A:
     display_name: บ้านท่าสาป
+    short_name_th: บ้านท่าสาป
+    name_en: Ban Tha Sap
+    name_zh: 班塔萨
+    name_ms: Ban Tha Sap
     river: แม่น้ำปัตตานี
     amphoe: เมืองยะลา
     tumbon: สะเตง
     lat: 6.54053
     lon: 101.249763
-    left_bank_m: 16.5
+    left_bank_m: 16.50
+    watch_m: 15.50
+    critical_m: 16.50
+    criteria_source: สทภ.8 ปี 2568 (ปกติ <15.50, เฝ้าระวัง 15.50-16.50, วิกฤต >=16.50 ม.รทก.)
     agency: ชป.
     risk_zone: riverine
   X.273:
-    display_name: 'บ้านปายอยือนิ '
+    display_name: บ้านปายอยือนิ
+    short_name_th: บ้านปายอยือนิ
+    name_en: Ban Payo Yuni
+    name_zh: 班帕约尤尼
+    name_ms: Ban Payo Yuni
     river: แม่น้ำสายบุรี
     amphoe: รามัน
     tumbon: ตะโล๊ะหะลอ
     lat: 6.47977
     lon: 101.44474
-    left_bank_m: 16.5
+    left_bank_m: 16.50
+    watch_m: 15.00
+    critical_m: 16.50
     agency: ชป.
     risk_zone: riverine
   BLGTU06:
     display_name: ฝายละแอ อ.บันนังสตา จ.ยะลา
+    short_name_th: ฝายละแอ
+    name_en: La-ae Weir
+    name_zh: 拉艾堰
+    name_ms: Empang La-ae
     river: คลองละแอ
     amphoe: บันนังสตา
     tumbon: เขื่อนบางลาง
     lat: 6.143055
     lon: 101.309167
     left_bank_m: null
+    watch_m: null
+    critical_m: null
     agency: กฟผ.
     risk_zone: dam
   BLGTU05:
     display_name: เขื่อนบางลาง อ.บันนังสตา จ.ยะลา
+    short_name_th: เขื่อนบางลาง
+    name_en: Bang Lang Dam
+    name_zh: 邦朗水坝
+    name_ms: Empangan Bang Lang
     river: แม่น้ำปัตตานี
     amphoe: บันนังสตา
     tumbon: เขื่อนบางลาง
     lat: 6.153667
     lon: 101.273116
     left_bank_m: null
+    watch_m: null
+    critical_m: null
     agency: กฟผ.
     risk_zone: dam
   X.77:
     display_name: บ้านหัวสะพาน
+    short_name_th: บ้านหัวสะพาน
+    name_en: Ban Hua Saphan
+    name_zh: 班华沙攀
+    name_ms: Ban Hua Saphan
     river: คลองใหญ่
     amphoe: ธารโต
     tumbon: คีรีเขต
     lat: 6.1525
     lon: 101.080902
-    left_bank_m: 40.2999992370605
+    left_bank_m: 40.30
+    watch_m: 38.00
+    critical_m: 39.70
+    criteria_source: สทภ.8 ปี 2568 (เฝ้าระวัง 38.00-39.70, วิกฤต >=39.70 ม.รทก.)
     agency: ชป.
     risk_zone: flash

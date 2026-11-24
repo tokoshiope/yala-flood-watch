@@ -5,7 +5,6 @@ import 'package:yala_flood_app/l10n/app_strings.dart';
 import 'package:yala_flood_app/models/alert.dart';
 import 'package:yala_flood_app/models/flood_snapshot.dart';
 import 'package:yala_flood_app/models/risk_level.dart';
-import 'package:yala_flood_app/models/sos_request.dart';
 import 'package:yala_flood_app/models/station.dart';
 import 'package:yala_flood_app/screens/station_detail_screen.dart';
 import 'package:yala_flood_app/state/alert_provider.dart';
@@ -13,7 +12,7 @@ import 'package:yala_flood_app/widgets/risk_badge.dart';
 
 /// แถบที่ 2 "ข้อมูล": รวมข้อมูลพยากรณ์ฝนรายชั่วโมง (เวลาไทย UTC+7),
 /// สถานการณ์รายอำเภอทั้ง 8 อำเภอ, สถานีวัดระดับน้ำ 14 แห่ง และการแจ้งเตือนล่าสุด
-/// โดยไม่แสดงสูตรคำนวณหรือคะแนนเทคนิคที่ไม่จำเป็นต่อประชาชน
+/// รองรับ iOS Dark Mode และ 4 ภาษา (ไทย/อังกฤษ/จีน/มาเลเซีย) เต็มรูปแบบ
 class AlertsScreen extends StatefulWidget {
   const AlertsScreen({super.key});
 
@@ -53,6 +52,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<AlertProvider>();
     final strings = provider.strings;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final focusAmphoe = _focusAmphoeForecast(provider);
     final amphoeList = provider.snapshot?.amphoes ?? const <AmphoeForecastSummary>[];
     final stations = _sortedStations(provider);
@@ -65,10 +65,10 @@ class _AlertsScreenState extends State<AlertsScreen> {
             TextButton.icon(
               onPressed: provider.markAllAlertsRead,
               icon: const Icon(Icons.done_all, size: 18),
-              label: const Text('อ่านทั้งหมด'),
+              label: Text(strings.get('mark_all_read')),
             ),
           IconButton(
-            tooltip: 'โหลดข้อมูลใหม่',
+            tooltip: strings.get('refresh_tooltip'),
             onPressed: provider.loading
                 ? null
                 : () => provider.refresh(force: true),
@@ -84,25 +84,36 @@ class _AlertsScreenState extends State<AlertsScreen> {
               width: double.infinity,
               margin: const EdgeInsets.only(bottom: 10),
               decoration: BoxDecoration(
-                color: const Color(0xFFE8F5E9),
+                color: isDark ? const Color(0xFF1B3A26) : const Color(0xFFE8F5E9),
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isDark ? const Color(0xFF4CAF50) : const Color(0xFFA5D6A7),
+                ),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.check_circle_outline, size: 18, color: Color(0xFF2E7D32)),
-                  SizedBox(width: 8),
+                  Icon(
+                    Icons.check_circle_outline,
+                    size: 18,
+                    color: isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32),
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'ขณะนี้ระดับน้ำทุกสถานีอยู่ในเกณฑ์ปกติ',
-                      style: TextStyle(fontSize: 13),
+                      strings.get('all_stations_normal'),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isDark ? const Color(0xFFE8F5E9) : const Color(0xFF1B5E20),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
 
-          // 1. กราฟพยากรณ์ฝนรายชั่วโมง (เวลาไทย UTC+7) แบบแถบเลื่อน
+          // 1. กราฟพยากรณ์ฝนรายชั่วโมง (เวลาไทย UTC+7)
           if (focusAmphoe != null && focusAmphoe.hourlyNext24h.isNotEmpty) ...[
             _RainForecastCard(
               amphoes: amphoeList,
@@ -119,22 +130,23 @@ class _AlertsScreenState extends State<AlertsScreen> {
           if (provider.alerts.isNotEmpty) ...[
             _SectionHeader(
               icon: Icons.campaign_outlined,
-              title: 'ประกาศแจ้งเตือนล่าสุด (${provider.alerts.length})',
+              title: '${strings.get('latest_alerts_header')} (${provider.alerts.length})',
             ),
             const SizedBox(height: 6),
             for (final alert in provider.alerts.take(8))
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
-                child: _AlertTile(alert: alert),
+                child: _AlertTile(alert: alert, strings: strings),
               ),
             const SizedBox(height: 8),
           ],
 
-          // 3. สรุปสถานการณ์ทั้ง 8 อำเภอ (ไม่แสดงสูตร/คะแนนเทคนิค)
+          // 3. สรุปสถานการณ์ทั้ง 8 อำเภอ
           if (amphoeList.isNotEmpty) ...[
             _SectionHeader(
               icon: Icons.location_city_outlined,
-              title: 'สถานการณ์รายอำเภอ (${amphoeList.length} อำเภอ)',
+              title:
+                  '${strings.get('district_summary_header')} (${amphoeList.length} ${strings.get('districts_unit')})',
             ),
             const SizedBox(height: 6),
             for (final amp in amphoeList)
@@ -148,7 +160,8 @@ class _AlertsScreenState extends State<AlertsScreen> {
           // 4. สถานีวัดระดับน้ำทั้งหมด
           _SectionHeader(
             icon: Icons.water_outlined,
-            title: '${strings.get('latest_stations')} (${stations.length} แห่ง)',
+            title:
+                '${strings.get('latest_stations')} (${stations.length} ${strings.get('stations_unit')})',
           ),
           const SizedBox(height: 6),
           for (final station in stations)
@@ -156,6 +169,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
               padding: const EdgeInsets.only(bottom: 8),
               child: _StationRowCard(
                 station: station,
+                strings: strings,
                 onTap: () {
                   provider.setSelectedStation(station.code);
                   Navigator.of(context).push(
@@ -180,16 +194,19 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Icon(icon, size: 18, color: const Color(0xFF0E5FA6)),
+        Icon(icon, size: 18, color: cs.primary),
         const SizedBox(width: 6),
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF0B2545),
-              ),
+        Expanded(
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: cs.onSurface,
+                ),
+          ),
         ),
       ],
     );
@@ -213,16 +230,18 @@ class _RainForecastCard extends StatelessWidget {
   final ValueChanged<String> onSelectAmphoe;
   final VoidCallback onToggle;
 
-  Color _barColor(double mm) {
-    if (mm >= 20) return const Color(0xFFB71C1C);
-    if (mm >= 10) return const Color(0xFFEF6C00);
+  Color _barColor(double mm, Brightness brightness) {
+    if (mm >= 20) return brightness == Brightness.dark ? const Color(0xFFFF6B6B) : const Color(0xFFB71C1C);
+    if (mm >= 10) return brightness == Brightness.dark ? const Color(0xFFFFB74D) : const Color(0xFFEF6C00);
     if (mm >= 3) return const Color(0xFFF59E0B);
-    if (mm > 0) return const Color(0xFF0284C7);
+    if (mm > 0) return brightness == Brightness.dark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7);
     return const Color(0xFF94A3B8);
   }
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final brightness = Theme.of(context).brightness;
     final maxMm = selected.hourlyNext24h.fold<double>(
       10.0,
       (prev, e) => e.mm > prev ? e.mm : prev,
@@ -239,7 +258,7 @@ class _RainForecastCard extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
               child: Row(
                 children: [
-                  const Icon(Icons.water_drop_outlined, size: 18, color: Color(0xFF0E5FA6)),
+                  Icon(Icons.water_drop_outlined, size: 18, color: cs.primary),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
@@ -249,14 +268,14 @@ class _RainForecastCard extends StatelessWidget {
                           expanded
                               ? strings.get('rain_drawer_open')
                               : strings.get('rain_drawer_closed'),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF0E5FA6),
+                            color: cs.primary,
                           ),
                         ),
                         Text(
-                          '${strings.amphoe(selected.amphoeTh)} · พยากรณ์ฝน 24 ชม. ${selected.forecast24hMm.toStringAsFixed(1)} มม.',
+                          '${strings.amphoe(selected.amphoeTh)} · ${strings.get('forecast_24h_label')} ${selected.forecast24hMm.toStringAsFixed(1)} ${strings.get('unit_mm')}',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
@@ -264,7 +283,7 @@ class _RainForecastCard extends StatelessWidget {
                   ),
                   Icon(
                     expanded ? Icons.expand_less : Icons.expand_more,
-                    color: const Color(0xFF0E5FA6),
+                    color: cs.primary,
                   ),
                 ],
               ),
@@ -306,10 +325,14 @@ class _RainForecastCard extends StatelessWidget {
                     child: Row(
                       children: [
                         SizedBox(
-                          width: 62,
+                          width: 64,
                           child: Text(
-                            '${pt.hourMinute} น.',
-                            style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
+                            strings.formatHourLabel(pt.hourMinute),
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: cs.onSurface,
+                            ),
                           ),
                         ),
                         Expanded(
@@ -318,18 +341,24 @@ class _RainForecastCard extends StatelessWidget {
                             child: LinearProgressIndicator(
                               value: pt.mm > 0 ? ratio.clamp(0.06, 1.0) : 0.02,
                               minHeight: 10,
-                              backgroundColor: const Color(0xFFE2E8F0),
-                              valueColor: AlwaysStoppedAnimation<Color>(_barColor(pt.mm)),
+                              backgroundColor: cs.surfaceContainerHighest,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                _barColor(pt.mm, brightness),
+                              ),
                             ),
                           ),
                         ),
                         const SizedBox(width: 8),
                         SizedBox(
-                          width: 82,
+                          width: 90,
                           child: Text(
-                            '${pt.mm.toStringAsFixed(1)} มม. · ${pt.probPct}%',
+                            '${pt.mm.toStringAsFixed(1)} ${strings.get('unit_mm')} · ${pt.probPct}%',
                             textAlign: TextAlign.right,
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: cs.onSurface,
+                            ),
                           ),
                         ),
                       ],
@@ -375,9 +404,9 @@ class _AmphoeStatusCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    amphoe.labelTh,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    strings.alertLevelLabel(lv.value),
+                    style: TextStyle(
+                      color: lv.onSolidColor,
                       fontWeight: FontWeight.w700,
                       fontSize: 11.5,
                     ),
@@ -387,14 +416,26 @@ class _AmphoeStatusCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'ฝน 24 ชม. ${amphoe.rain24hMaxMm.toStringAsFixed(1)} มม. · '
-              'พยากรณ์ฝน 24 ชม. ${amphoe.forecast24hMm.toStringAsFixed(1)} มม.',
+              '${strings.get('rain_24h_label')} ${amphoe.rain24hMaxMm.toStringAsFixed(1)} ${strings.get('unit_mm')} · '
+              '${strings.get('forecast_24h_label')} ${amphoe.forecast24hMm.toStringAsFixed(1)} ${strings.get('unit_mm')}',
               style: Theme.of(context).textTheme.bodySmall,
             ),
-            if (amphoe.actionTh.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(amphoe.actionTh, style: const TextStyle(fontSize: 12.5)),
+            if (amphoe.floodMechanism != 'monitoring') ...[
+              const SizedBox(height: 3),
+              Text(
+                strings.mechanismLabel(amphoe.floodMechanism),
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: lv.colorFor(Theme.of(context).brightness),
+                ),
+              ),
             ],
+            const SizedBox(height: 4),
+            Text(
+              strings.alertLevelAction(lv.value),
+              style: const TextStyle(fontSize: 12.5),
+            ),
           ],
         ),
       ),
@@ -403,30 +444,38 @@ class _AmphoeStatusCard extends StatelessWidget {
 }
 
 class _StationRowCard extends StatelessWidget {
-  const _StationRowCard({required this.station, required this.onTap});
+  const _StationRowCard({
+    required this.station,
+    required this.strings,
+    required this.onTap,
+  });
 
   final Station station;
+  final AppStrings strings;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
     final level = station.riskLevel;
+    final displayColor = level.colorFor(brightness);
     final remaining = station.remainingToBank;
+
     return Card(
       child: ListTile(
         onTap: onTap,
         leading: CircleAvatar(
-          backgroundColor: level.color.withValues(alpha: 0.14),
-          child: Icon(station.trend.icon, color: level.color),
+          backgroundColor: displayColor.withValues(alpha: 0.16),
+          child: Icon(station.trend.icon, color: displayColor),
         ),
         title: Text(
-          station.nameTh,
+          strings.stationFullName(station),
           style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
         ),
         subtitle: Text(
-          '${station.locationLabel}'
-          '${remaining != null ? (remaining >= 0 ? ' · เหลือ ${remaining.toStringAsFixed(2)} ม. ถึงตลิ่ง' : ' · ล้นตลิ่ง ${(-remaining).toStringAsFixed(2)} ม.') : ''}'
-          '${station.datetime != null ? '\n${station.datetime} (เวลาไทย UTC+7)' : ''}',
+          '${strings.stationLocation(station)}'
+          '${remaining != null ? ' · ${strings.remainingToBankText(remaining)}' : ''}'
+          '${station.datetime != null ? '\n${station.datetime} (${strings.get('updated_tz')})' : ''}',
           style: const TextStyle(fontSize: 12),
         ),
         trailing: Column(
@@ -435,15 +484,15 @@ class _StationRowCard extends StatelessWidget {
           children: [
             Text(
               station.displayLevel != null
-                  ? '${station.displayLevel!.toStringAsFixed(2)} ม.'
+                  ? '${station.displayLevel!.toStringAsFixed(2)} ${strings.get('unit_m')}'
                   : '—',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: level.color,
+                color: displayColor,
               ),
             ),
-            RiskBadge(level: level, compact: true),
+            RiskBadge(level: level, compact: true, strings: strings),
           ],
         ),
         isThreeLine: station.datetime != null,
@@ -453,19 +502,30 @@ class _StationRowCard extends StatelessWidget {
 }
 
 class _AlertTile extends StatelessWidget {
-  const _AlertTile({required this.alert});
+  const _AlertTile({required this.alert, required this.strings});
 
   final AlertItem alert;
+  final AppStrings strings;
 
   @override
   Widget build(BuildContext context) {
     final provider = context.read<AlertProvider>();
+    final station = provider.stationByCode(alert.stationCode);
+    final displayTitle = station != null
+        ? '${strings.riskLevelLabel(alert.level)}: ${strings.stationFullName(station)}'
+        : alert.title;
+    final alertLvVal = alert.alertLevel?.value ?? alert.level.severity.clamp(1, 5);
+    final displayMsg = strings.lang == 'th'
+        ? alert.message
+        : (alert.waterLevelMsl != null
+            ? '${strings.get('latest_water_level')} ${alert.waterLevelMsl!.toStringAsFixed(2)} ${strings.get('unit_msl')} · ${strings.alertLevelAction(alertLvVal)}'
+            : strings.alertLevelAction(alertLvVal));
+
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
           provider.markAlertRead(alert.id);
-          final station = provider.stationByCode(alert.stationCode);
           if (station != null) {
             Navigator.of(context).push(
               MaterialPageRoute<void>(
@@ -497,7 +557,7 @@ class _AlertTile extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            alert.title,
+                            displayTitle,
                             style: const TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 14.5,
@@ -516,14 +576,14 @@ class _AlertTile extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    Text(alert.message, style: const TextStyle(fontSize: 13)),
+                    Text(displayMsg, style: const TextStyle(fontSize: 13)),
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        RiskBadge(level: alert.level, compact: true),
+                        RiskBadge(level: alert.level, compact: true, strings: strings),
                         const Spacer(),
                         Text(
-                          thaiRelativeTime(alert.createdAt),
+                          strings.relativeTime(alert.createdAt),
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],

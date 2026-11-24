@@ -3,32 +3,36 @@ import 'package:provider/provider.dart';
 
 import 'package:yala_flood_app/config/app_config.dart';
 import 'package:yala_flood_app/l10n/app_strings.dart';
+import 'package:yala_flood_app/models/risk_level.dart';
 import 'package:yala_flood_app/state/alert_provider.dart';
 
-/// หน้าตั้งค่า: เลือกภาษา 4 ภาษา (ไทย/อังกฤษ/จีน/มาเลเซีย), อำเภอ/ตำบล, เกณฑ์แจ้งเตือน, PDPA และสถานะ CDN
+/// หน้าตั้งค่า: เลือกภาษา 4 ภาษา (ไทย/อังกฤษ/จีน/มาเลเซีย), คำอธิบายระดับการแจ้งเตือน 1–5,
+/// พื้นที่ติดตาม, เกณฑ์แจ้งเตือน, โหมดตัวอักษรใหญ่, PDPA และแหล่งข้อมูล
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
-  Future<void> _confirmDeleteAll(BuildContext context, AlertProvider provider) async {
+  Future<void> _confirmDeleteAll(
+    BuildContext context,
+    AlertProvider provider,
+    AppStrings strings,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('ลบข้อมูลทั้งหมดในเครื่อง (PDPA)'),
-        content: const Text(
-          'การดำเนินการนี้จะลบประวัติแจ้งเตือน, ประวัติ SOS/พิกัดในเครื่อง, ความยินยอม GPS, '
-          'ข้อมูลแคช และการตั้งค่าทั้งหมดของคุณทันที ยืนยันหรือไม่?',
-        ),
+        title: Text(strings.get('delete_dialog_title')),
+        content: Text(strings.get('delete_dialog_body')),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('ยกเลิก'),
+            child: Text(strings.get('cancel')),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: const Color(AppConfig.colorDanger),
+              foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('ลบข้อมูลทั้งหมด'),
+            child: Text(strings.get('delete_confirm_btn')),
           ),
         ],
       ),
@@ -37,7 +41,7 @@ class SettingsScreen extends StatelessWidget {
       await provider.deleteAllUserData();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ลบข้อมูลส่วนบุคคลและประวัติในเครื่องทั้งหมดแล้ว')),
+          SnackBar(content: Text(strings.get('delete_done_snack'))),
         );
       }
     }
@@ -48,6 +52,7 @@ class SettingsScreen extends StatelessWidget {
     final provider = context.watch<AlertProvider>();
     final settings = provider.settings;
     final strings = provider.strings;
+    final cs = Theme.of(context).colorScheme;
     final amphoes = AppConfig.riskAmphoeTh;
     final tumbons = <String>[...provider.tumbonsInSelectedAmphoe];
     if (settings.selectedTumbonTh != null &&
@@ -79,16 +84,25 @@ class SettingsScreen extends StatelessWidget {
             },
           ),
           const SizedBox(height: 20),
-          const _SectionTitle('พื้นที่ที่ติดตาม'),
+
+          // คำอธิบายระดับการแจ้งเตือน 1–5 เพื่อความเข้าใจชัดเจนของประชาชน
+          _SectionTitle(strings.get('alert_guide_section')),
+          _AlertLevelGuideCard(strings: strings),
+          const SizedBox(height: 20),
+
+          _SectionTitle(strings.get('area_section')),
           DropdownButtonFormField<String?>(
             initialValue: settings.selectedAmphoeTh,
-            decoration: const InputDecoration(
-              labelText: 'อำเภอ (ครบทั้ง 8 อำเภอของยะลา)',
-              prefixIcon: Icon(Icons.location_city),
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: strings.get('amphoe_dropdown_label'),
+              prefixIcon: const Icon(Icons.location_city),
+              border: const OutlineInputBorder(),
             ),
             items: [
-              const DropdownMenuItem(value: null, child: Text('ทั้งจังหวัดยะลา')),
+              DropdownMenuItem(
+                value: null,
+                child: Text(strings.get('whole_province')),
+              ),
               for (final amphoe in amphoes)
                 DropdownMenuItem(value: amphoe, child: Text(strings.amphoe(amphoe))),
             ],
@@ -105,16 +119,27 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 12),
           DropdownButtonFormField<String?>(
             initialValue: settings.selectedTumbonTh,
-            decoration: const InputDecoration(
-              labelText: 'ตำบล',
-              prefixIcon: Icon(Icons.map_outlined),
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: strings.get('tumbon_dropdown_label'),
+              prefixIcon: const Icon(Icons.map_outlined),
+              border: const OutlineInputBorder(),
             ),
             items: [
-              const DropdownMenuItem(value: null, child: Text('ทุกตำบล')),
+              DropdownMenuItem(
+                value: null,
+                child: Text(strings.get('all_tumbons')),
+              ),
               for (final tumbon in tumbons)
                 if (tumbon.isNotEmpty)
-                  DropdownMenuItem(value: tumbon, child: Text(tumbon)),
+                  DropdownMenuItem(
+                    value: tumbon,
+                    child: Text(
+                      strings.tumbonName(
+                        tumbon,
+                        provider.tumbonEnOf(settings.selectedAmphoeTh, tumbon),
+                      ),
+                    ),
+                  ),
             ],
             onChanged: (value) => provider.updateSettings(
               value == null
@@ -123,18 +148,28 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          const _SectionTitle('เกณฑ์การแจ้งเตือน'),
+
+          _SectionTitle(strings.get('threshold_section')),
           DropdownButtonFormField<int>(
             initialValue: settings.warningLevel,
-            decoration: const InputDecoration(
-              labelText: 'เริ่มแจ้งเตือนเมื่อระดับสถานการณ์',
-              prefixIcon: Icon(Icons.warning_amber),
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: strings.get('warn_level_label'),
+              prefixIcon: const Icon(Icons.warning_amber),
+              border: const OutlineInputBorder(),
             ),
-            items: const [
-              DropdownMenuItem(value: 2, child: Text('ระดับ 2 — เฝ้าระวัง')),
-              DropdownMenuItem(value: 3, child: Text('ระดับ 3 — เตือนภัย')),
-              DropdownMenuItem(value: 4, child: Text('ระดับ 4 — เตือนภัยสูง/อันตราย')),
+            items: [
+              DropdownMenuItem(
+                value: 2,
+                child: Text('2 — ${strings.alertLevelLabel(2)}'),
+              ),
+              DropdownMenuItem(
+                value: 3,
+                child: Text('3 — ${strings.alertLevelLabel(3)}'),
+              ),
+              DropdownMenuItem(
+                value: 4,
+                child: Text('4 — ${strings.alertLevelLabel(4)}'),
+              ),
             ],
             onChanged: (value) => provider.updateSettings(
               settings.copyWith(warningLevel: value ?? 3),
@@ -143,21 +178,28 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 12),
           DropdownButtonFormField<int>(
             initialValue: settings.dangerLevel,
-            decoration: const InputDecoration(
-              labelText: 'ถือว่าอันตรายเมื่อระดับสถานการณ์',
-              prefixIcon: Icon(Icons.dangerous_outlined),
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: strings.get('danger_level_label'),
+              prefixIcon: const Icon(Icons.dangerous_outlined),
+              border: const OutlineInputBorder(),
             ),
-            items: const [
-              DropdownMenuItem(value: 3, child: Text('ระดับ 3 ขึ้นไป')),
-              DropdownMenuItem(value: 4, child: Text('ระดับ 4 ขึ้นไป')),
+            items: [
+              DropdownMenuItem(
+                value: 3,
+                child: Text('3+ — ${strings.alertLevelLabel(3)}'),
+              ),
+              DropdownMenuItem(
+                value: 4,
+                child: Text('4+ — ${strings.alertLevelLabel(4)} / ${strings.alertLevelLabel(5)}'),
+              ),
             ],
             onChanged: (value) => provider.updateSettings(
               settings.copyWith(dangerLevel: value ?? 4),
             ),
           ),
           const SizedBox(height: 20),
-          const _SectionTitle('การแจ้งเตือน'),
+
+          _SectionTitle(strings.get('notifications_section')),
           SwitchListTile(
             secondary: Icon(
               settings.quietMode
@@ -188,8 +230,8 @@ class SettingsScreen extends StatelessWidget {
           ),
           SwitchListTile(
             secondary: const Icon(Icons.cloud_outlined),
-            title: const Text('ประเมินร่วมกับฝนจริงและพยากรณ์ฝน'),
-            subtitle: const Text('ช่วยเตือนภัยล่วงหน้าในพื้นที่ฝนตกหนักและท้ายเขื่อนบางลาง'),
+            title: Text(strings.get('rain_score_toggle')),
+            subtitle: Text(strings.get('rain_score_sub')),
             value: settings.rainScoreEnabled,
             onChanged: (value) =>
                 provider.updateSettings(settings.copyWith(rainScoreEnabled: value)),
@@ -197,64 +239,172 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 12),
           DropdownButtonFormField<int>(
             initialValue: settings.refreshMinutes,
-            decoration: const InputDecoration(
-              labelText: 'รีเฟรชข้อมูลทุก ๆ',
-              prefixIcon: Icon(Icons.update),
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: strings.get('refresh_interval_label'),
+              prefixIcon: const Icon(Icons.update),
+              border: const OutlineInputBorder(),
             ),
-            items: const [
-              DropdownMenuItem(value: 5, child: Text('5 นาที')),
-              DropdownMenuItem(value: 10, child: Text('10 นาที')),
-              DropdownMenuItem(value: 15, child: Text('15 นาที')),
-              DropdownMenuItem(value: 30, child: Text('30 นาที')),
+            items: [
+              for (final mins in const [5, 10, 15, 30])
+                DropdownMenuItem(
+                  value: mins,
+                  child: Text('$mins ${strings.get('minutes_unit')}'),
+                ),
             ],
             onChanged: (value) => provider.updateSettings(
               settings.copyWith(refreshMinutes: value ?? 15),
             ),
           ),
           const SizedBox(height: 20),
-          const _SectionTitle('ความเป็นส่วนตัวและข้อมูล (PDPA)'),
+
+          _SectionTitle(strings.get('pdpa_section')),
           ListTile(
             leading: const Icon(Icons.cleaning_services_outlined),
-            title: const Text('ล้างข้อมูลสำรอง (Cache)'),
-            subtitle: const Text('บังคับโหลดค่าใหม่จากเซิร์ฟเวอร์'),
+            title: Text(strings.get('clear_cache_title')),
+            subtitle: Text(strings.get('clear_cache_sub')),
             onTap: () async {
               await provider.clearCache();
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('ล้างข้อมูลสำรองแล้ว')),
+                  SnackBar(content: Text(strings.get('cache_cleared_snack'))),
                 );
               }
             },
           ),
           ListTile(
             leading: const Icon(Icons.storage_outlined),
-            title: const Text('ล้างประวัติแจ้งเตือน'),
-            subtitle: Text('มี ${provider.alerts.length} รายการ'),
+            title: Text(strings.get('clear_alerts_title')),
+            subtitle: Text(strings.countItems(provider.alerts.length)),
             onTap: provider.clearAlerts,
           ),
           ListTile(
-            leading: const Icon(Icons.delete_forever, color: Color(AppConfig.colorDanger)),
-            title: const Text(
-              'ลบข้อมูลของฉันทั้งหมด (PDPA)',
-              style: TextStyle(color: Color(AppConfig.colorDanger), fontWeight: FontWeight.w700),
+            leading: Icon(Icons.delete_forever, color: cs.error),
+            title: Text(
+              strings.get('delete_all_title'),
+              style: TextStyle(color: cs.error, fontWeight: FontWeight.w700),
             ),
-            subtitle: const Text('ลบประวัติ SOS, พิกัดในเครื่อง, ความยินยอม GPS และแจ้งเตือนทั้งหมด'),
-            onTap: () => _confirmDeleteAll(context, provider),
+            subtitle: Text(strings.get('delete_all_sub')),
+            onTap: () => _confirmDeleteAll(context, provider, strings),
           ),
           const SizedBox(height: 20),
-          const _SectionTitle('แหล่งข้อมูลและคำชี้แจง'),
+
+          _SectionTitle(strings.get('sources_section')),
           ListTile(
             leading: const Icon(Icons.info_outline),
             title: Text('${strings.get('app_title')} v${AppConfig.appVersion}'),
-            subtitle: const Text(
-              'ข้อมูลระดับน้ำและฝนจากระบบคลังข้อมูลน้ำแห่งชาติ (สสน.) และเขื่อนบางลาง · '
-              'พยากรณ์ฝนล่วงหน้าจาก Open-Meteo · เวลาแสดงผลตามเวลาประเทศไทย (UTC+7)\n\n'
-              '${AppConfig.lifeSafetyDisclaimerTh}',
+            subtitle: Text(
+              '${strings.get('sources_desc')}\n\n${strings.get('life_safety_disclaimer')}',
             ),
             isThreeLine: true,
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// การ์ดคำอธิบายระดับการแจ้งเตือนทั้ง 5 ระดับ + หลักการไล่สีตามความสูงภูมิประเทศบนแผนที่
+class _AlertLevelGuideCard extends StatelessWidget {
+  const _AlertLevelGuideCard({required this.strings});
+
+  final AppStrings strings;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final brightness = Theme.of(context).brightness;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final lv in AlertLevel.values) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 28,
+                    height: 28,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: lv.color,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '${lv.value}',
+                      style: TextStyle(
+                        color: lv.onSolidColor,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          strings.alertLevelLabel(lv.value),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                            color: lv.colorFor(brightness),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          strings.alertLevelDesc(lv.value),
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: cs.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '→ ${strings.alertLevelAction(lv.value)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (lv != AlertLevel.danger) const Divider(height: 16),
+            ],
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: cs.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.terrain, size: 18, color: cs.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      strings.get('alert_guide_map_note'),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: cs.onSurface,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -272,7 +422,7 @@ class _SectionTitle extends StatelessWidget {
       child: Text(
         text,
         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: const Color(AppConfig.colorPrimary),
+              color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.w800,
             ),
       ),

@@ -94,6 +94,16 @@ enum SosStatus {
   final IconData icon;
   final Color color;
 
+  Color colorFor(Brightness brightness) {
+    if (brightness == Brightness.light) return color;
+    return switch (this) {
+      SosStatus.pending => const Color(0xFFFFD54F),
+      SosStatus.accepted => const Color(0xFF60A5FA),
+      SosStatus.inProgress => const Color(0xFFFFB74D),
+      SosStatus.resolved => const Color(0xFF66BB6A),
+    };
+  }
+
   SosStatus? get next => switch (this) {
         SosStatus.pending => SosStatus.accepted,
         SosStatus.accepted => SosStatus.inProgress,

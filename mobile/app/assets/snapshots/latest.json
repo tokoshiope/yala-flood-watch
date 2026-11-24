@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "formula_version": 2,
+  "formula_version": 3,
   "province": {
     "code": "95",
     "name": "ยะลา",
@@ -19,33 +19,33 @@
       "status": "ok",
       "tier": "A",
       "count": 14,
-      "latency_ms": 2916
+      "latency_ms": 1663
     },
     "thaiwater_rain_24h": {
       "status": "ok",
       "tier": "A",
       "count": 87,
       "amphoes_covered": 8,
-      "latency_ms": 1647
+      "latency_ms": 1648
     },
     "thaiwater_dam": {
       "status": "ok",
       "tier": "A",
       "storage_percent": 54.3,
       "spillway_active": false,
-      "latency_ms": 4002
+      "latency_ms": 2260
     },
     "open_meteo_weather": {
       "status": "ok",
       "tier": "B",
       "amphoes_covered": 8,
-      "latency_ms": 268
+      "latency_ms": 251
     },
     "open_meteo_flood": {
       "status": "ok",
       "tier": "B",
       "checkpoints": 2,
-      "latency_ms": 328
+      "latency_ms": 302
     }
   },
   "degraded_sources": [],
@@ -54,16 +54,16 @@
     "amphoe": "บันนังสตา",
     "lat": 6.15473,
     "lon": 101.273,
-    "hourly_observed_at": "2026-11-24 17:00",
+    "hourly_observed_at": "2026-11-24 22:00",
     "daily_observed_at": "2026-11-24",
-    "dam_level_msl": 100.77,
-    "storage_mcm": 791.69,
+    "dam_level_msl": 100.75,
+    "storage_mcm": 790.93,
     "normal_storage_mcm": 1454.36,
     "max_storage_mcm": 1589.82875,
     "storage_percent": 54.3,
-    "inflow_hourly_mcm": 0.18,
+    "inflow_hourly_mcm": null,
     "inflow_daily_mcm": 4.45,
-    "released_hourly_mcm": 0.17,
+    "released_hourly_mcm": 0.56,
     "released_daily_mcm": 4.16,
     "spilled_mcm": 0.0,
     "spillway_active": false,
@@ -83,9 +83,9 @@
       "lon": 101.24976,
       "source": "Open-Meteo GloFAS v4 (CC BY 4.0)",
       "unit": "m³/s",
-      "peak_discharge_7d": 169.61,
-      "mean_discharge_baseline": 176.31,
-      "peak_vs_mean_ratio": 0.96,
+      "peak_discharge_7d": 145.22,
+      "mean_discharge_baseline": 127.78,
+      "peak_vs_mean_ratio": 1.14,
       "daily_7d": [
         {
           "date": "2026-11-24",
@@ -95,39 +95,39 @@
         },
         {
           "date": "2026-11-25",
-          "discharge": 83.33,
-          "mean": 80.15,
-          "max": 114.35
+          "discharge": 94.94,
+          "mean": 96.26,
+          "max": 137.36
         },
         {
           "date": "2026-11-26",
-          "discharge": 96.5,
-          "mean": 101.27,
-          "max": 208.41
+          "discharge": 110.17,
+          "mean": 116.8,
+          "max": 289.4
         },
         {
           "date": "2026-11-27",
-          "discharge": 115.14,
-          "mean": 137.01,
-          "max": 495.59
+          "discharge": 130.22,
+          "mean": 140.62,
+          "max": 404.51
         },
         {
           "date": "2026-11-28",
-          "discharge": 117.85,
-          "mean": 203.27,
-          "max": 2050.16
+          "discharge": 133.59,
+          "mean": 142.87,
+          "max": 385.37
         },
         {
           "date": "2026-11-29",
-          "discharge": 132.35,
-          "mean": 303.21,
-          "max": 4101.04
+          "discharge": 133.59,
+          "mean": 155.51,
+          "max": 449.82
         },
         {
           "date": "2026-11-30",
-          "discharge": 169.61,
-          "mean": 346.3,
-          "max": 3853.78
+          "discharge": 145.22,
+          "mean": 179.48,
+          "max": 553.63
         }
       ]
     },
@@ -139,9 +139,9 @@
       "lon": 101.44474,
       "source": "Open-Meteo GloFAS v4 (CC BY 4.0)",
       "unit": "m³/s",
-      "peak_discharge_7d": 280.19,
-      "mean_discharge_baseline": 269.77,
-      "peak_vs_mean_ratio": 1.04,
+      "peak_discharge_7d": 232.88,
+      "mean_discharge_baseline": 231.23,
+      "peak_vs_mean_ratio": 1.01,
       "daily_7d": [
         {
           "date": "2026-11-24",
@@ -151,39 +151,39 @@
         },
         {
           "date": "2026-11-25",
-          "discharge": 156.76,
-          "mean": 149.67,
-          "max": 222.87
+          "discharge": 178.06,
+          "mean": 179.7,
+          "max": 217.78
         },
         {
           "date": "2026-11-26",
-          "discharge": 217.27,
-          "mean": 203.42,
-          "max": 400.79
+          "discharge": 213.78,
+          "mean": 225.88,
+          "max": 445.68
         },
         {
           "date": "2026-11-27",
-          "discharge": 251.35,
-          "mean": 269.62,
-          "max": 1293.2
+          "discharge": 232.88,
+          "mean": 270.03,
+          "max": 706.95
         },
         {
           "date": "2026-11-28",
-          "discharge": 250.77,
-          "mean": 348.51,
-          "max": 2772.32
+          "discharge": 218.79,
+          "mean": 276.08,
+          "max": 644.65
         },
         {
           "date": "2026-11-29",
-          "discharge": 265.07,
-          "mean": 398.11,
-          "max": 2734.27
+          "discharge": 194.88,
+          "mean": 275.79,
+          "max": 750.62
         },
         {
           "date": "2026-11-30",
-          "discharge": 280.19,
-          "mean": 409.88,
-          "max": 1980.53
+          "discharge": 192.64,
+          "mean": 281.96,
+          "max": 913.11
         }
       ]
     }
@@ -207,157 +207,160 @@
         "fresh_gauge_count": 6,
         "max_rain_1h_mm": 0.0,
         "avg_rain_1h_mm": 0.0,
-        "max_rain_24h_mm": 14.0,
-        "avg_rain_24h_mm": 4.7,
+        "max_rain_24h_mm": 13.4,
+        "avg_rain_24h_mm": 4.38,
         "stale": false,
-        "latest_observed_at": "2026-11-24 17:00"
+        "latest_observed_at": "2026-11-24 23:00"
       },
       "weather_forecast": {
         "source": "Open-Meteo (CC BY 4.0)",
-        "forecast_6h_mm": 0.4,
-        "forecast_24h_mm": 23.3,
-        "forecast_72h_mm": 36.3,
-        "max_prob_24h_pct": 99,
+        "past_24h_mm": 6.0,
+        "observed_rain_72h_mm": 58.0,
+        "api_7d_mm": 59.7,
+        "forecast_6h_mm": 3.7,
+        "forecast_24h_mm": 16.6,
+        "forecast_72h_mm": 24.0,
+        "max_prob_24h_pct": 100,
         "hourly_next_24h": [
           {
-            "time": "2026-11-24T18:00",
-            "mm": 0.4,
-            "prob": 93
-          },
-          {
-            "time": "2026-11-24T19:00",
-            "mm": 0.0,
-            "prob": 86
-          },
-          {
-            "time": "2026-11-24T20:00",
-            "mm": 0.0,
-            "prob": 73
-          },
-          {
-            "time": "2026-11-24T21:00",
-            "mm": 0.0,
-            "prob": 57
-          },
-          {
-            "time": "2026-11-24T22:00",
-            "mm": 0.0,
-            "prob": 45
-          },
-          {
             "time": "2026-11-24T23:00",
-            "mm": 0.0,
-            "prob": 40
+            "mm": 1.4,
+            "prob": 51
           },
           {
             "time": "2026-11-25T00:00",
-            "mm": 0.1,
-            "prob": 39
+            "mm": 1.4,
+            "prob": 59
           },
           {
             "time": "2026-11-25T01:00",
-            "mm": 0.2,
-            "prob": 39
+            "mm": 0.6,
+            "prob": 65
           },
           {
             "time": "2026-11-25T02:00",
-            "mm": 0.0,
-            "prob": 38
+            "mm": 0.1,
+            "prob": 65
           },
           {
             "time": "2026-11-25T03:00",
-            "mm": 0.0,
-            "prob": 38
+            "mm": 0.1,
+            "prob": 62
           },
           {
             "time": "2026-11-25T04:00",
-            "mm": 0.0,
-            "prob": 39
+            "mm": 0.1,
+            "prob": 59
           },
           {
             "time": "2026-11-25T05:00",
-            "mm": 0.4,
-            "prob": 43
+            "mm": 0.1,
+            "prob": 57
           },
           {
             "time": "2026-11-25T06:00",
-            "mm": 0.2,
-            "prob": 49
+            "mm": 0.1,
+            "prob": 54
           },
           {
             "time": "2026-11-25T07:00",
-            "mm": 0.4,
+            "mm": 0.0,
             "prob": 55
           },
           {
             "time": "2026-11-25T08:00",
-            "mm": 5.7,
-            "prob": 62
+            "mm": 0.0,
+            "prob": 60
           },
           {
             "time": "2026-11-25T09:00",
-            "mm": 4.3,
-            "prob": 69
+            "mm": 0.1,
+            "prob": 68
           },
           {
             "time": "2026-11-25T10:00",
-            "mm": 1.0,
+            "mm": 0.2,
             "prob": 76
           },
           {
             "time": "2026-11-25T11:00",
-            "mm": 0.5,
+            "mm": 0.3,
             "prob": 84
           },
           {
             "time": "2026-11-25T12:00",
-            "mm": 0.2,
-            "prob": 93
+            "mm": 1.2,
+            "prob": 92
           },
           {
             "time": "2026-11-25T13:00",
-            "mm": 0.3,
+            "mm": 5.7,
             "prob": 98
           },
           {
             "time": "2026-11-25T14:00",
-            "mm": 0.4,
-            "prob": 99
+            "mm": 3.8,
+            "prob": 100
           },
           {
             "time": "2026-11-25T15:00",
-            "mm": 3.1,
+            "mm": 0.5,
             "prob": 98
           },
           {
             "time": "2026-11-25T16:00",
-            "mm": 3.9,
-            "prob": 94
+            "mm": 0.1,
+            "prob": 96
           },
           {
             "time": "2026-11-25T17:00",
-            "mm": 2.2,
-            "prob": 89
+            "mm": 0.1,
+            "prob": 94
+          },
+          {
+            "time": "2026-11-25T18:00",
+            "mm": 0.1,
+            "prob": 90
+          },
+          {
+            "time": "2026-11-25T19:00",
+            "mm": 0.2,
+            "prob": 82
+          },
+          {
+            "time": "2026-11-25T20:00",
+            "mm": 0.2,
+            "prob": 67
+          },
+          {
+            "time": "2026-11-25T21:00",
+            "mm": 0.1,
+            "prob": 47
+          },
+          {
+            "time": "2026-11-25T22:00",
+            "mm": 0.1,
+            "prob": 33
           }
         ],
         "daily_3d": [
           {
             "date": "2026-11-24",
-            "mm": 6.8
+            "mm": 7.3
           },
           {
             "date": "2026-11-25",
-            "mm": 24.3
+            "mm": 15.3
           },
           {
             "date": "2026-11-26",
-            "mm": 11.6
+            "mm": 7.3
           }
         ]
       },
       "assessment": {
-        "formula_version": 2,
-        "score": 28.0,
+        "formula_version": 3,
+        "score": 37.1,
         "score_level": 2,
         "floor_level": 4,
         "flash_bonus": 0,
@@ -367,11 +370,17 @@
         "action_th": "พร้อมอพยพทันที ติดตามประกาศ ปภ.ยะลา (073-203559)",
         "should_push": true,
         "has_primary_signal": true,
+        "flood_mechanism": "riverine_overflow",
+        "confidence": "high",
+        "reason_codes": [
+          "near_bank"
+        ],
         "lead_time_hours": null,
         "signals": {
-          "W": 0.52,
-          "R": 0.0933,
-          "F": 0.1942,
+          "W": 0.712,
+          "R": 0.2231,
+          "A": 0.3317,
+          "F": 0.1509,
           "D": 0.0,
           "C": 0.0,
           "dH_m": 0.0
@@ -399,159 +408,162 @@
       "rain": {
         "gauge_count": 19,
         "fresh_gauge_count": 4,
-        "max_rain_1h_mm": 0.2,
-        "avg_rain_1h_mm": 0.05,
-        "max_rain_24h_mm": 4.4,
-        "avg_rain_24h_mm": 1.38,
+        "max_rain_1h_mm": 0.0,
+        "avg_rain_1h_mm": 0.0,
+        "max_rain_24h_mm": 2.0,
+        "avg_rain_24h_mm": 0.78,
         "stale": false,
-        "latest_observed_at": "2026-11-24 17:00"
+        "latest_observed_at": "2026-11-24 23:00"
       },
       "weather_forecast": {
         "source": "Open-Meteo (CC BY 4.0)",
-        "forecast_6h_mm": 0.0,
-        "forecast_24h_mm": 15.6,
-        "forecast_72h_mm": 29.8,
-        "max_prob_24h_pct": 99,
+        "past_24h_mm": 10.2,
+        "observed_rain_72h_mm": 41.1,
+        "api_7d_mm": 40.31,
+        "forecast_6h_mm": 1.1,
+        "forecast_24h_mm": 16.0,
+        "forecast_72h_mm": 25.0,
+        "max_prob_24h_pct": 100,
         "hourly_next_24h": [
           {
-            "time": "2026-11-24T18:00",
-            "mm": 0.0,
-            "prob": 99
-          },
-          {
-            "time": "2026-11-24T19:00",
-            "mm": 0.0,
-            "prob": 92
-          },
-          {
-            "time": "2026-11-24T20:00",
-            "mm": 0.0,
-            "prob": 72
-          },
-          {
-            "time": "2026-11-24T21:00",
-            "mm": 0.0,
-            "prob": 46
-          },
-          {
-            "time": "2026-11-24T22:00",
-            "mm": 0.0,
-            "prob": 27
-          },
-          {
             "time": "2026-11-24T23:00",
-            "mm": 0.0,
-            "prob": 20
+            "mm": 0.2,
+            "prob": 32
           },
           {
             "time": "2026-11-25T00:00",
-            "mm": 0.0,
-            "prob": 20
+            "mm": 0.4,
+            "prob": 38
           },
           {
             "time": "2026-11-25T01:00",
-            "mm": 0.0,
-            "prob": 20
+            "mm": 0.4,
+            "prob": 41
           },
           {
             "time": "2026-11-25T02:00",
-            "mm": 0.0,
-            "prob": 19
+            "mm": 0.1,
+            "prob": 35
           },
           {
             "time": "2026-11-25T03:00",
             "mm": 0.0,
-            "prob": 18
+            "prob": 25
           },
           {
             "time": "2026-11-25T04:00",
             "mm": 0.0,
-            "prob": 20
+            "prob": 18
           },
           {
             "time": "2026-11-25T05:00",
-            "mm": 0.1,
-            "prob": 25
+            "mm": 0.0,
+            "prob": 17
           },
           {
             "time": "2026-11-25T06:00",
-            "mm": 0.2,
-            "prob": 33
+            "mm": 0.0,
+            "prob": 19
           },
           {
             "time": "2026-11-25T07:00",
-            "mm": 0.1,
-            "prob": 41
+            "mm": 0.0,
+            "prob": 25
           },
           {
             "time": "2026-11-25T08:00",
-            "mm": 0.1,
-            "prob": 49
+            "mm": 0.0,
+            "prob": 39
           },
           {
             "time": "2026-11-25T09:00",
             "mm": 0.1,
-            "prob": 58
+            "prob": 57
           },
           {
             "time": "2026-11-25T10:00",
-            "mm": 0.3,
-            "prob": 67
+            "mm": 0.4,
+            "prob": 73
           },
           {
             "time": "2026-11-25T11:00",
-            "mm": 0.4,
-            "prob": 76
+            "mm": 3.2,
+            "prob": 85
           },
           {
             "time": "2026-11-25T12:00",
-            "mm": 0.3,
-            "prob": 84
+            "mm": 5.6,
+            "prob": 94
           },
           {
             "time": "2026-11-25T13:00",
-            "mm": 0.3,
-            "prob": 90
+            "mm": 0.5,
+            "prob": 100
           },
           {
             "time": "2026-11-25T14:00",
-            "mm": 7.7,
-            "prob": 94
+            "mm": 2.0,
+            "prob": 100
           },
           {
             "time": "2026-11-25T15:00",
-            "mm": 4.4,
-            "prob": 95
+            "mm": 1.4,
+            "prob": 100
           },
           {
             "time": "2026-11-25T16:00",
-            "mm": 1.0,
-            "prob": 94
+            "mm": 0.7,
+            "prob": 98
           },
           {
             "time": "2026-11-25T17:00",
-            "mm": 0.6,
-            "prob": 91
+            "mm": 0.4,
+            "prob": 95
+          },
+          {
+            "time": "2026-11-25T18:00",
+            "mm": 0.1,
+            "prob": 90
+          },
+          {
+            "time": "2026-11-25T19:00",
+            "mm": 0.0,
+            "prob": 82
+          },
+          {
+            "time": "2026-11-25T20:00",
+            "mm": 0.0,
+            "prob": 68
+          },
+          {
+            "time": "2026-11-25T21:00",
+            "mm": 0.2,
+            "prob": 51
+          },
+          {
+            "time": "2026-11-25T22:00",
+            "mm": 0.3,
+            "prob": 37
           }
         ],
         "daily_3d": [
           {
             "date": "2026-11-24",
-            "mm": 12.9
+            "mm": 10.2
           },
           {
             "date": "2026-11-25",
-            "mm": 19.2
+            "mm": 17.7
           },
           {
             "date": "2026-11-26",
-            "mm": 10.6
+            "mm": 7.1
           }
         ]
       },
       "assessment": {
-        "formula_version": 2,
-        "score": 2.3,
+        "formula_version": 3,
+        "score": 16.5,
         "score_level": 1,
         "floor_level": 4,
         "flash_bonus": 0,
@@ -561,14 +573,18 @@
         "action_th": "พร้อมอพยพทันที ติดตามประกาศ ปภ.ยะลา (073-203559)",
         "should_push": true,
         "has_primary_signal": true,
+        "flood_mechanism": "monitoring",
+        "confidence": "high",
+        "reason_codes": [],
         "lead_time_hours": null,
         "signals": {
-          "W": 0.0,
-          "R": 0.0293,
-          "F": 0.13,
+          "W": 0.2383,
+          "R": 0.1581,
+          "A": 0.2239,
+          "F": 0.1455,
           "D": 0.0,
           "C": 0.0,
-          "dH_m": 0.05
+          "dH_m": 0.01
         },
         "flags": [
           "h_normal_bootstrap",
@@ -595,82 +611,60 @@
         "fresh_gauge_count": 4,
         "max_rain_1h_mm": 0.0,
         "avg_rain_1h_mm": 0.0,
-        "max_rain_24h_mm": 8.4,
-        "avg_rain_24h_mm": 3.48,
+        "max_rain_24h_mm": 7.4,
+        "avg_rain_24h_mm": 2.73,
         "stale": false,
-        "latest_observed_at": "2026-11-24 17:00"
+        "latest_observed_at": "2026-11-24 23:00"
       },
       "weather_forecast": {
         "source": "Open-Meteo (CC BY 4.0)",
-        "forecast_6h_mm": 0.1,
-        "forecast_24h_mm": 13.1,
-        "forecast_72h_mm": 31.6,
-        "max_prob_24h_pct": 99,
+        "past_24h_mm": 5.3,
+        "observed_rain_72h_mm": 57.4,
+        "api_7d_mm": 54.75,
+        "forecast_6h_mm": 2.0,
+        "forecast_24h_mm": 13.5,
+        "forecast_72h_mm": 20.2,
+        "max_prob_24h_pct": 100,
         "hourly_next_24h": [
           {
-            "time": "2026-11-24T18:00",
-            "mm": 0.1,
-            "prob": 93
-          },
-          {
-            "time": "2026-11-24T19:00",
-            "mm": 0.0,
-            "prob": 86
-          },
-          {
-            "time": "2026-11-24T20:00",
-            "mm": 0.0,
-            "prob": 73
-          },
-          {
-            "time": "2026-11-24T21:00",
-            "mm": 0.0,
-            "prob": 57
-          },
-          {
-            "time": "2026-11-24T22:00",
-            "mm": 0.0,
-            "prob": 45
-          },
-          {
             "time": "2026-11-24T23:00",
-            "mm": 0.0,
-            "prob": 40
+            "mm": 0.5,
+            "prob": 51
           },
           {
             "time": "2026-11-25T00:00",
-            "mm": 0.0,
-            "prob": 39
+            "mm": 0.7,
+            "prob": 59
           },
           {
             "time": "2026-11-25T01:00",
-            "mm": 0.1,
-            "prob": 39
+            "mm": 0.6,
+            "prob": 65
           },
           {
             "time": "2026-11-25T02:00",
-            "mm": 0.0,
-            "prob": 38
+            "mm": 0.1,
+            "prob": 65
           },
           {
             "time": "2026-11-25T03:00",
-            "mm": 0.0,
-            "prob": 38
+            "mm": 0.1,
+            "prob": 62
           },
           {
             "time": "2026-11-25T04:00",
             "mm": 0.0,
-            "prob": 39
+            "prob": 59
           },
           {
             "time": "2026-11-25T05:00",
-            "mm": 0.1,
-            "prob": 43
+            "mm": 0.0,
+            "prob": 57
           },
           {
             "time": "2026-11-25T06:00",
-            "mm": 0.1,
-            "prob": 49
+            "mm": 0.0,
+            "prob": 54
           },
           {
             "time": "2026-11-25T07:00",
@@ -679,73 +673,98 @@
           },
           {
             "time": "2026-11-25T08:00",
-            "mm": 0.8,
-            "prob": 62
+            "mm": 0.0,
+            "prob": 60
           },
           {
             "time": "2026-11-25T09:00",
-            "mm": 1.2,
-            "prob": 69
+            "mm": 0.0,
+            "prob": 68
           },
           {
             "time": "2026-11-25T10:00",
-            "mm": 0.9,
+            "mm": 0.1,
             "prob": 76
           },
           {
             "time": "2026-11-25T11:00",
-            "mm": 0.5,
+            "mm": 0.3,
             "prob": 84
           },
           {
             "time": "2026-11-25T12:00",
-            "mm": 0.2,
-            "prob": 93
+            "mm": 0.3,
+            "prob": 92
           },
           {
             "time": "2026-11-25T13:00",
-            "mm": 0.2,
+            "mm": 5.0,
             "prob": 98
           },
           {
             "time": "2026-11-25T14:00",
-            "mm": 1.0,
-            "prob": 99
+            "mm": 3.0,
+            "prob": 100
           },
           {
             "time": "2026-11-25T15:00",
-            "mm": 2.5,
+            "mm": 1.8,
             "prob": 98
           },
           {
             "time": "2026-11-25T16:00",
-            "mm": 2.6,
-            "prob": 94
+            "mm": 0.3,
+            "prob": 96
           },
           {
             "time": "2026-11-25T17:00",
-            "mm": 2.8,
-            "prob": 89
+            "mm": 0.2,
+            "prob": 94
+          },
+          {
+            "time": "2026-11-25T18:00",
+            "mm": 0.2,
+            "prob": 90
+          },
+          {
+            "time": "2026-11-25T19:00",
+            "mm": 0.1,
+            "prob": 82
+          },
+          {
+            "time": "2026-11-25T20:00",
+            "mm": 0.1,
+            "prob": 67
+          },
+          {
+            "time": "2026-11-25T21:00",
+            "mm": 0.0,
+            "prob": 47
+          },
+          {
+            "time": "2026-11-25T22:00",
+            "mm": 0.1,
+            "prob": 33
           }
         ],
         "daily_3d": [
           {
             "date": "2026-11-24",
-            "mm": 7.7
+            "mm": 5.7
           },
           {
             "date": "2026-11-25",
-            "mm": 16.6
+            "mm": 13.1
           },
           {
             "date": "2026-11-26",
-            "mm": 14.9
+            "mm": 6.6
           }
         ]
       },
       "assessment": {
-        "formula_version": 2,
-        "score": 2.7,
+        "formula_version": 3,
+        "score": 9.4,
         "score_level": 1,
         "floor_level": 2,
         "flash_bonus": 0,
@@ -755,17 +774,21 @@
         "action_th": "ติดตามข่าวใกล้ชิด เตรียมถุงยังชีพและชาร์จแบต",
         "should_push": true,
         "has_primary_signal": true,
+        "flood_mechanism": "monitoring",
+        "confidence": "high",
+        "reason_codes": [],
         "lead_time_hours": null,
         "signals": {
           "W": 0.0,
-          "R": 0.056,
-          "F": 0.1092,
+          "R": 0.2208,
+          "A": 0.3042,
+          "F": 0.1227,
           "D": 0.0,
           "C": 0.0,
           "dH_m": 0.0
         },
         "flags": [
-          "water_stale"
+          "h_normal_bootstrap"
         ]
       },
       "note": null
@@ -785,75 +808,53 @@
       "governing_station": "BLGTU02",
       "rain": {
         "gauge_count": 20,
-        "fresh_gauge_count": 7,
+        "fresh_gauge_count": 8,
         "max_rain_1h_mm": 0.0,
         "avg_rain_1h_mm": 0.0,
         "max_rain_24h_mm": 9.2,
-        "avg_rain_24h_mm": 5.39,
+        "avg_rain_24h_mm": 3.88,
         "stale": false,
-        "latest_observed_at": "2026-11-24 17:00"
+        "latest_observed_at": "2026-11-24 23:00"
       },
       "weather_forecast": {
         "source": "Open-Meteo (CC BY 4.0)",
-        "forecast_6h_mm": 0.1,
-        "forecast_24h_mm": 8.3,
-        "forecast_72h_mm": 13.5,
+        "past_24h_mm": 13.6,
+        "observed_rain_72h_mm": 39.6,
+        "api_7d_mm": 41.37,
+        "forecast_6h_mm": 0.0,
+        "forecast_24h_mm": 15.5,
+        "forecast_72h_mm": 21.8,
         "max_prob_24h_pct": 100,
         "hourly_next_24h": [
           {
-            "time": "2026-11-24T18:00",
-            "mm": 0.1,
-            "prob": 94
-          },
-          {
-            "time": "2026-11-24T19:00",
-            "mm": 0.0,
-            "prob": 84
-          },
-          {
-            "time": "2026-11-24T20:00",
-            "mm": 0.0,
-            "prob": 64
-          },
-          {
-            "time": "2026-11-24T21:00",
-            "mm": 0.0,
-            "prob": 39
-          },
-          {
-            "time": "2026-11-24T22:00",
-            "mm": 0.0,
-            "prob": 20
-          },
-          {
             "time": "2026-11-24T23:00",
             "mm": 0.0,
-            "prob": 11
+            "prob": 21
           },
           {
             "time": "2026-11-25T00:00",
             "mm": 0.0,
-            "prob": 9
+            "prob": 23
           },
           {
             "time": "2026-11-25T01:00",
             "mm": 0.0,
-            "prob": 8
+            "prob": 25
           },
           {
             "time": "2026-11-25T02:00",
             "mm": 0.0,
-            "prob": 10
+            "prob": 23
           },
           {
             "time": "2026-11-25T03:00",
             "mm": 0.0,
-            "prob": 13
+            "prob": 20
           },
           {
             "time": "2026-11-25T04:00",
             "mm": 0.0,
-            "prob": 16
+            "prob": 18
           },
           {
             "time": "2026-11-25T05:00",
@@ -868,77 +869,102 @@
           {
             "time": "2026-11-25T07:00",
             "mm": 0.0,
-            "prob": 14
+            "prob": 16
           },
           {
             "time": "2026-11-25T08:00",
             "mm": 0.0,
-            "prob": 12
+            "prob": 19
           },
           {
             "time": "2026-11-25T09:00",
             "mm": 0.0,
-            "prob": 10
+            "prob": 25
           },
           {
             "time": "2026-11-25T10:00",
             "mm": 0.1,
-            "prob": 16
+            "prob": 35
           },
           {
             "time": "2026-11-25T11:00",
-            "mm": 0.1,
-            "prob": 36
+            "mm": 0.2,
+            "prob": 55
           },
           {
             "time": "2026-11-25T12:00",
-            "mm": 3.6,
-            "prob": 63
+            "mm": 3.1,
+            "prob": 80
           },
           {
             "time": "2026-11-25T13:00",
-            "mm": 1.5,
-            "prob": 84
+            "mm": 3.2,
+            "prob": 98
           },
           {
             "time": "2026-11-25T14:00",
             "mm": 0.8,
-            "prob": 94
+            "prob": 100
           },
           {
             "time": "2026-11-25T15:00",
-            "mm": 0.6,
-            "prob": 99
+            "mm": 1.3,
+            "prob": 100
           },
           {
             "time": "2026-11-25T16:00",
-            "mm": 1.0,
+            "mm": 1.5,
             "prob": 100
           },
           {
             "time": "2026-11-25T17:00",
-            "mm": 0.5,
-            "prob": 98
+            "mm": 2.0,
+            "prob": 99
+          },
+          {
+            "time": "2026-11-25T18:00",
+            "mm": 0.9,
+            "prob": 96
+          },
+          {
+            "time": "2026-11-25T19:00",
+            "mm": 0.7,
+            "prob": 88
+          },
+          {
+            "time": "2026-11-25T20:00",
+            "mm": 1.3,
+            "prob": 71
+          },
+          {
+            "time": "2026-11-25T21:00",
+            "mm": 0.3,
+            "prob": 49
+          },
+          {
+            "time": "2026-11-25T22:00",
+            "mm": 0.1,
+            "prob": 33
           }
         ],
         "daily_3d": [
           {
             "date": "2026-11-24",
-            "mm": 15.1
+            "mm": 13.1
           },
           {
             "date": "2026-11-25",
-            "mm": 8.6
+            "mm": 15.6
           },
           {
             "date": "2026-11-26",
-            "mm": 4.8
+            "mm": 6.2
           }
         ]
       },
       "assessment": {
-        "formula_version": 2,
-        "score": 2.2,
+        "formula_version": 3,
+        "score": 9.0,
         "score_level": 1,
         "floor_level": 2,
         "flash_bonus": 0,
@@ -948,17 +974,21 @@
         "action_th": "ติดตามข่าวใกล้ชิด เตรียมถุงยังชีพและชาร์จแบต",
         "should_push": true,
         "has_primary_signal": true,
+        "flood_mechanism": "monitoring",
+        "confidence": "high",
+        "reason_codes": [],
         "lead_time_hours": null,
         "signals": {
-          "W": 0.0,
-          "R": 0.0613,
-          "F": 0.0692,
+          "W": 0.044,
+          "R": 0.1523,
+          "A": 0.2298,
+          "F": 0.1409,
           "D": 0.0,
           "C": 0.0,
-          "dH_m": 0.0
+          "dH_m": -0.01
         },
         "flags": [
-          "water_stale"
+          "h_normal_bootstrap"
         ]
       },
       "note": null
@@ -981,350 +1011,160 @@
         "fresh_gauge_count": 4,
         "max_rain_1h_mm": 0.0,
         "avg_rain_1h_mm": 0.0,
-        "max_rain_24h_mm": 27.2,
-        "avg_rain_24h_mm": 12.55,
+        "max_rain_24h_mm": 20.2,
+        "avg_rain_24h_mm": 10.8,
         "stale": false,
-        "latest_observed_at": "2026-11-24 17:00"
+        "latest_observed_at": "2026-11-24 23:00"
       },
       "weather_forecast": {
         "source": "Open-Meteo (CC BY 4.0)",
+        "past_24h_mm": 10.3,
+        "observed_rain_72h_mm": 38.6,
+        "api_7d_mm": 35.18,
         "forecast_6h_mm": 0.1,
-        "forecast_24h_mm": 20.4,
-        "forecast_72h_mm": 25.8,
+        "forecast_24h_mm": 11.5,
+        "forecast_72h_mm": 17.1,
         "max_prob_24h_pct": 100,
         "hourly_next_24h": [
           {
-            "time": "2026-11-24T18:00",
-            "mm": 0.1,
-            "prob": 95
-          },
-          {
-            "time": "2026-11-24T19:00",
-            "mm": 0.0,
-            "prob": 86
-          },
-          {
-            "time": "2026-11-24T20:00",
-            "mm": 0.0,
-            "prob": 65
-          },
-          {
-            "time": "2026-11-24T21:00",
-            "mm": 0.0,
-            "prob": 38
-          },
-          {
-            "time": "2026-11-24T22:00",
-            "mm": 0.0,
-            "prob": 18
-          },
-          {
             "time": "2026-11-24T23:00",
-            "mm": 0.0,
-            "prob": 10
-          },
-          {
-            "time": "2026-11-25T00:00",
-            "mm": 0.0,
-            "prob": 9
-          },
-          {
-            "time": "2026-11-25T01:00",
-            "mm": 0.0,
-            "prob": 10
-          },
-          {
-            "time": "2026-11-25T02:00",
-            "mm": 0.0,
-            "prob": 12
-          },
-          {
-            "time": "2026-11-25T03:00",
-            "mm": 0.0,
-            "prob": 15
-          },
-          {
-            "time": "2026-11-25T04:00",
-            "mm": 0.0,
-            "prob": 18
-          },
-          {
-            "time": "2026-11-25T05:00",
-            "mm": 0.0,
-            "prob": 19
-          },
-          {
-            "time": "2026-11-25T06:00",
-            "mm": 0.0,
-            "prob": 20
-          },
-          {
-            "time": "2026-11-25T07:00",
             "mm": 0.0,
             "prob": 24
           },
           {
-            "time": "2026-11-25T08:00",
-            "mm": 0.0,
-            "prob": 33
-          },
-          {
-            "time": "2026-11-25T09:00",
-            "mm": 0.1,
-            "prob": 46
-          },
-          {
-            "time": "2026-11-25T10:00",
-            "mm": 0.4,
-            "prob": 59
-          },
-          {
-            "time": "2026-11-25T11:00",
-            "mm": 0.9,
-            "prob": 73
-          },
-          {
-            "time": "2026-11-25T12:00",
-            "mm": 6.6,
-            "prob": 88
-          },
-          {
-            "time": "2026-11-25T13:00",
-            "mm": 4.3,
-            "prob": 98
-          },
-          {
-            "time": "2026-11-25T14:00",
-            "mm": 0.7,
-            "prob": 100
-          },
-          {
-            "time": "2026-11-25T15:00",
-            "mm": 4.8,
-            "prob": 100
-          },
-          {
-            "time": "2026-11-25T16:00",
-            "mm": 1.6,
-            "prob": 96
-          },
-          {
-            "time": "2026-11-25T17:00",
-            "mm": 0.9,
-            "prob": 90
-          }
-        ],
-        "daily_3d": [
-          {
-            "date": "2026-11-24",
-            "mm": 13.3
-          },
-          {
-            "date": "2026-11-25",
-            "mm": 21.4
-          },
-          {
-            "date": "2026-11-26",
-            "mm": 4.3
-          }
-        ]
-      },
-      "assessment": {
-        "formula_version": 2,
-        "score": 6.2,
-        "score_level": 1,
-        "floor_level": 1,
-        "flash_bonus": 0,
-        "level": 1,
-        "label_th": "ปกติ",
-        "color": "#2E7D32",
-        "action_th": "ติดตามสถานการณ์ได้ตามปกติ",
-        "should_push": false,
-        "has_primary_signal": false,
-        "lead_time_hours": null,
-        "signals": {
-          "W": 0.0,
-          "R": 0.1813,
-          "F": 0.17,
-          "D": 0.0,
-          "C": 0.0,
-          "dH_m": 0.0
-        },
-        "flags": [
-          "water_stale"
-        ]
-      },
-      "note": null
-    },
-    {
-      "amphoe": "กรงปินัง",
-      "name_en": "Krong Pinang",
-      "lat": 6.4117,
-      "lon": 101.2778,
-      "basin": "แม่น้ำปัตตานี",
-      "risk_zone": "flash",
-      "is_flash_flood": true,
-      "banglang_downstream": true,
-      "banglang_lead_time_hours": "4–6 ชม.",
-      "risk_villages_10yr": 22,
-      "water_station_count": 1,
-      "governing_station": "FOP045",
-      "rain": {
-        "gauge_count": 3,
-        "fresh_gauge_count": 1,
-        "max_rain_1h_mm": 0.0,
-        "avg_rain_1h_mm": 0.0,
-        "max_rain_24h_mm": 4.8,
-        "avg_rain_24h_mm": 4.8,
-        "stale": false,
-        "latest_observed_at": "2026-11-24 17:00"
-      },
-      "weather_forecast": {
-        "source": "Open-Meteo (CC BY 4.0)",
-        "forecast_6h_mm": 0.0,
-        "forecast_24h_mm": 14.2,
-        "forecast_72h_mm": 40.2,
-        "max_prob_24h_pct": 99,
-        "hourly_next_24h": [
-          {
-            "time": "2026-11-24T18:00",
-            "mm": 0.0,
-            "prob": 93
-          },
-          {
-            "time": "2026-11-24T19:00",
-            "mm": 0.0,
-            "prob": 86
-          },
-          {
-            "time": "2026-11-24T20:00",
-            "mm": 0.0,
-            "prob": 73
-          },
-          {
-            "time": "2026-11-24T21:00",
-            "mm": 0.0,
-            "prob": 57
-          },
-          {
-            "time": "2026-11-24T22:00",
-            "mm": 0.0,
-            "prob": 45
-          },
-          {
-            "time": "2026-11-24T23:00",
-            "mm": 0.0,
-            "prob": 40
-          },
-          {
             "time": "2026-11-25T00:00",
-            "mm": 0.0,
-            "prob": 39
+            "mm": 0.1,
+            "prob": 25
           },
           {
             "time": "2026-11-25T01:00",
             "mm": 0.0,
-            "prob": 39
+            "prob": 25
           },
           {
             "time": "2026-11-25T02:00",
             "mm": 0.0,
-            "prob": 38
+            "prob": 20
           },
           {
             "time": "2026-11-25T03:00",
             "mm": 0.0,
-            "prob": 38
+            "prob": 13
           },
           {
             "time": "2026-11-25T04:00",
             "mm": 0.0,
-            "prob": 39
+            "prob": 8
           },
           {
             "time": "2026-11-25T05:00",
-            "mm": 0.1,
-            "prob": 43
+            "mm": 0.0,
+            "prob": 7
           },
           {
             "time": "2026-11-25T06:00",
-            "mm": 0.1,
-            "prob": 49
+            "mm": 0.0,
+            "prob": 9
           },
           {
             "time": "2026-11-25T07:00",
             "mm": 0.0,
-            "prob": 55
+            "prob": 14
           },
           {
             "time": "2026-11-25T08:00",
-            "mm": 0.2,
-            "prob": 62
+            "mm": 0.0,
+            "prob": 24
           },
           {
             "time": "2026-11-25T09:00",
-            "mm": 0.4,
-            "prob": 69
+            "mm": 0.2,
+            "prob": 38
           },
           {
             "time": "2026-11-25T10:00",
             "mm": 0.7,
-            "prob": 76
+            "prob": 53
           },
           {
             "time": "2026-11-25T11:00",
-            "mm": 0.5,
-            "prob": 84
+            "mm": 0.4,
+            "prob": 69
           },
           {
             "time": "2026-11-25T12:00",
-            "mm": 0.2,
-            "prob": 93
+            "mm": 3.2,
+            "prob": 86
           },
           {
             "time": "2026-11-25T13:00",
-            "mm": 0.3,
+            "mm": 1.7,
             "prob": 98
           },
           {
             "time": "2026-11-25T14:00",
-            "mm": 7.2,
-            "prob": 99
+            "mm": 0.3,
+            "prob": 100
           },
           {
             "time": "2026-11-25T15:00",
-            "mm": 2.1,
-            "prob": 98
+            "mm": 1.1,
+            "prob": 100
           },
           {
             "time": "2026-11-25T16:00",
-            "mm": 1.2,
-            "prob": 94
+            "mm": 1.9,
+            "prob": 98
           },
           {
             "time": "2026-11-25T17:00",
-            "mm": 1.2,
-            "prob": 89
+            "mm": 0.6,
+            "prob": 94
+          },
+          {
+            "time": "2026-11-25T18:00",
+            "mm": 0.1,
+            "prob": 87
+          },
+          {
+            "time": "2026-11-25T19:00",
+            "mm": 0.1,
+            "prob": 78
+          },
+          {
+            "time": "2026-11-25T20:00",
+            "mm": 0.1,
+            "prob": 63
+          },
+          {
+            "time": "2026-11-25T21:00",
+            "mm": 0.1,
+            "prob": 44
+          },
+          {
+            "time": "2026-11-25T22:00",
+            "mm": 0.9,
+            "prob": 31
           }
         ],
         "daily_3d": [
           {
             "date": "2026-11-24",
-            "mm": 10.6
+            "mm": 10.3
           },
           {
             "date": "2026-11-25",
-            "mm": 17.0
+            "mm": 11.7
           },
           {
             "date": "2026-11-26",
-            "mm": 23.2
+            "mm": 5.4
           }
         ]
       },
       "assessment": {
-        "formula_version": 2,
-        "score": 2.2,
+        "formula_version": 3,
+        "score": 11.5,
         "score_level": 1,
         "floor_level": 1,
         "flash_bonus": 0,
@@ -1333,18 +1173,25 @@
         "color": "#2E7D32",
         "action_th": "ติดตามสถานการณ์ได้ตามปกติ",
         "should_push": false,
-        "has_primary_signal": false,
+        "has_primary_signal": true,
+        "flood_mechanism": "monitoring",
+        "confidence": "high",
+        "reason_codes": [
+          "rising_water"
+        ],
         "lead_time_hours": null,
         "signals": {
-          "W": 0.0,
-          "R": 0.032,
-          "F": 0.1183,
+          "W": 0.1313,
+          "R": 0.1485,
+          "A": 0.1954,
+          "F": 0.1045,
           "D": 0.0,
           "C": 0.0,
-          "dH_m": -0.02
+          "dH_m": 0.26
         },
         "flags": [
-          "h_normal_bootstrap"
+          "h_normal_bootstrap",
+          "rising_watch"
         ]
       },
       "note": null
@@ -1367,157 +1214,160 @@
         "fresh_gauge_count": 2,
         "max_rain_1h_mm": 0.0,
         "avg_rain_1h_mm": 0.0,
-        "max_rain_24h_mm": 0.5,
-        "avg_rain_24h_mm": 0.25,
+        "max_rain_24h_mm": 0.0,
+        "avg_rain_24h_mm": 0.0,
         "stale": false,
-        "latest_observed_at": "2026-11-24 17:00"
+        "latest_observed_at": "2026-11-24 23:00"
       },
       "weather_forecast": {
         "source": "Open-Meteo (CC BY 4.0)",
-        "forecast_6h_mm": 0.0,
-        "forecast_24h_mm": 17.5,
-        "forecast_72h_mm": 28.8,
+        "past_24h_mm": 7.9,
+        "observed_rain_72h_mm": 63.2,
+        "api_7d_mm": 64.05,
+        "forecast_6h_mm": 6.7,
+        "forecast_24h_mm": 14.9,
+        "forecast_72h_mm": 19.1,
         "max_prob_24h_pct": 100,
         "hourly_next_24h": [
           {
-            "time": "2026-11-24T18:00",
-            "mm": 0.0,
-            "prob": 89
-          },
-          {
-            "time": "2026-11-24T19:00",
-            "mm": 0.0,
-            "prob": 82
-          },
-          {
-            "time": "2026-11-24T20:00",
-            "mm": 0.0,
-            "prob": 71
-          },
-          {
-            "time": "2026-11-24T21:00",
-            "mm": 0.0,
-            "prob": 59
-          },
-          {
-            "time": "2026-11-24T22:00",
-            "mm": 0.0,
-            "prob": 51
-          },
-          {
             "time": "2026-11-24T23:00",
-            "mm": 0.0,
-            "prob": 53
+            "mm": 3.4,
+            "prob": 77
           },
           {
             "time": "2026-11-25T00:00",
-            "mm": 0.0,
-            "prob": 59
+            "mm": 2.5,
+            "prob": 84
           },
           {
             "time": "2026-11-25T01:00",
-            "mm": 0.1,
-            "prob": 63
+            "mm": 0.4,
+            "prob": 88
           },
           {
             "time": "2026-11-25T02:00",
-            "mm": 0.0,
-            "prob": 61
+            "mm": 0.1,
+            "prob": 86
           },
           {
             "time": "2026-11-25T03:00",
-            "mm": 0.0,
-            "prob": 56
+            "mm": 0.2,
+            "prob": 82
           },
           {
             "time": "2026-11-25T04:00",
             "mm": 0.1,
-            "prob": 55
+            "prob": 78
           },
           {
             "time": "2026-11-25T05:00",
-            "mm": 0.3,
-            "prob": 60
+            "mm": 0.1,
+            "prob": 75
           },
           {
             "time": "2026-11-25T06:00",
             "mm": 0.1,
-            "prob": 69
+            "prob": 73
           },
           {
             "time": "2026-11-25T07:00",
             "mm": 0.0,
-            "prob": 76
+            "prob": 73
           },
           {
             "time": "2026-11-25T08:00",
-            "mm": 1.4,
-            "prob": 80
+            "mm": 0.1,
+            "prob": 77
           },
           {
             "time": "2026-11-25T09:00",
-            "mm": 1.3,
+            "mm": 0.2,
             "prob": 83
           },
           {
             "time": "2026-11-25T10:00",
-            "mm": 0.7,
-            "prob": 86
+            "mm": 0.2,
+            "prob": 88
           },
           {
             "time": "2026-11-25T11:00",
-            "mm": 0.2,
+            "mm": 0.3,
             "prob": 91
           },
           {
             "time": "2026-11-25T12:00",
-            "mm": 0.3,
-            "prob": 97
+            "mm": 0.2,
+            "prob": 94
           },
           {
             "time": "2026-11-25T13:00",
-            "mm": 3.6,
-            "prob": 100
+            "mm": 0.6,
+            "prob": 96
           },
           {
             "time": "2026-11-25T14:00",
-            "mm": 2.0,
+            "mm": 4.2,
             "prob": 98
           },
           {
             "time": "2026-11-25T15:00",
-            "mm": 3.7,
-            "prob": 94
+            "mm": 0.2,
+            "prob": 100
           },
           {
             "time": "2026-11-25T16:00",
-            "mm": 2.1,
-            "prob": 88
+            "mm": 0.2,
+            "prob": 98
           },
           {
             "time": "2026-11-25T17:00",
-            "mm": 1.6,
-            "prob": 81
+            "mm": 0.2,
+            "prob": 91
+          },
+          {
+            "time": "2026-11-25T18:00",
+            "mm": 0.1,
+            "prob": 80
+          },
+          {
+            "time": "2026-11-25T19:00",
+            "mm": 0.3,
+            "prob": 69
+          },
+          {
+            "time": "2026-11-25T20:00",
+            "mm": 0.1,
+            "prob": 59
+          },
+          {
+            "time": "2026-11-25T21:00",
+            "mm": 0.3,
+            "prob": 49
+          },
+          {
+            "time": "2026-11-25T22:00",
+            "mm": 0.8,
+            "prob": 43
           }
         ],
         "daily_3d": [
           {
             "date": "2026-11-24",
-            "mm": 9.0
+            "mm": 11.2
           },
           {
             "date": "2026-11-25",
-            "mm": 19.2
+            "mm": 11.7
           },
           {
             "date": "2026-11-26",
-            "mm": 9.6
+            "mm": 4.0
           }
         ]
       },
       "assessment": {
-        "formula_version": 2,
-        "score": 2.0,
+        "formula_version": 3,
+        "score": 10.5,
         "score_level": 1,
         "floor_level": 1,
         "flash_bonus": 0,
@@ -1527,17 +1377,221 @@
         "action_th": "ติดตามสถานการณ์ได้ตามปกติ",
         "should_push": false,
         "has_primary_signal": false,
+        "flood_mechanism": "monitoring",
+        "confidence": "high",
+        "reason_codes": [],
         "lead_time_hours": null,
         "signals": {
           "W": 0.0,
-          "R": 0.0033,
-          "F": 0.1458,
+          "R": 0.2431,
+          "A": 0.3558,
+          "F": 0.1355,
+          "D": 0.0,
+          "C": 0.0,
+          "dH_m": 0.05
+        },
+        "flags": [
+          "h_normal_bootstrap"
+        ]
+      },
+      "note": null
+    },
+    {
+      "amphoe": "กรงปินัง",
+      "name_en": "Krong Pinang",
+      "lat": 6.4117,
+      "lon": 101.2778,
+      "basin": "แม่น้ำปัตตานี",
+      "risk_zone": "flash",
+      "is_flash_flood": true,
+      "banglang_downstream": true,
+      "banglang_lead_time_hours": "4–6 ชม.",
+      "risk_villages_10yr": 22,
+      "water_station_count": 1,
+      "governing_station": "FOP045",
+      "rain": {
+        "gauge_count": 3,
+        "fresh_gauge_count": 1,
+        "max_rain_1h_mm": 0.0,
+        "avg_rain_1h_mm": 0.0,
+        "max_rain_24h_mm": 2.6,
+        "avg_rain_24h_mm": 2.6,
+        "stale": false,
+        "latest_observed_at": "2026-11-24 23:00"
+      },
+      "weather_forecast": {
+        "source": "Open-Meteo (CC BY 4.0)",
+        "past_24h_mm": 6.3,
+        "observed_rain_72h_mm": 52.4,
+        "api_7d_mm": 49.76,
+        "forecast_6h_mm": 2.4,
+        "forecast_24h_mm": 11.7,
+        "forecast_72h_mm": 16.7,
+        "max_prob_24h_pct": 100,
+        "hourly_next_24h": [
+          {
+            "time": "2026-11-24T23:00",
+            "mm": 0.6,
+            "prob": 51
+          },
+          {
+            "time": "2026-11-25T00:00",
+            "mm": 0.9,
+            "prob": 59
+          },
+          {
+            "time": "2026-11-25T01:00",
+            "mm": 0.7,
+            "prob": 65
+          },
+          {
+            "time": "2026-11-25T02:00",
+            "mm": 0.1,
+            "prob": 65
+          },
+          {
+            "time": "2026-11-25T03:00",
+            "mm": 0.1,
+            "prob": 62
+          },
+          {
+            "time": "2026-11-25T04:00",
+            "mm": 0.0,
+            "prob": 59
+          },
+          {
+            "time": "2026-11-25T05:00",
+            "mm": 0.0,
+            "prob": 57
+          },
+          {
+            "time": "2026-11-25T06:00",
+            "mm": 0.0,
+            "prob": 54
+          },
+          {
+            "time": "2026-11-25T07:00",
+            "mm": 0.0,
+            "prob": 55
+          },
+          {
+            "time": "2026-11-25T08:00",
+            "mm": 0.0,
+            "prob": 60
+          },
+          {
+            "time": "2026-11-25T09:00",
+            "mm": 0.0,
+            "prob": 68
+          },
+          {
+            "time": "2026-11-25T10:00",
+            "mm": 0.1,
+            "prob": 76
+          },
+          {
+            "time": "2026-11-25T11:00",
+            "mm": 0.3,
+            "prob": 84
+          },
+          {
+            "time": "2026-11-25T12:00",
+            "mm": 0.4,
+            "prob": 92
+          },
+          {
+            "time": "2026-11-25T13:00",
+            "mm": 0.9,
+            "prob": 98
+          },
+          {
+            "time": "2026-11-25T14:00",
+            "mm": 4.5,
+            "prob": 100
+          },
+          {
+            "time": "2026-11-25T15:00",
+            "mm": 1.4,
+            "prob": 98
+          },
+          {
+            "time": "2026-11-25T16:00",
+            "mm": 0.4,
+            "prob": 96
+          },
+          {
+            "time": "2026-11-25T17:00",
+            "mm": 0.4,
+            "prob": 94
+          },
+          {
+            "time": "2026-11-25T18:00",
+            "mm": 0.1,
+            "prob": 90
+          },
+          {
+            "time": "2026-11-25T19:00",
+            "mm": 0.1,
+            "prob": 82
+          },
+          {
+            "time": "2026-11-25T20:00",
+            "mm": 0.0,
+            "prob": 67
+          },
+          {
+            "time": "2026-11-25T21:00",
+            "mm": 0.0,
+            "prob": 47
+          },
+          {
+            "time": "2026-11-25T22:00",
+            "mm": 0.7,
+            "prob": 33
+          }
+        ],
+        "daily_3d": [
+          {
+            "date": "2026-11-24",
+            "mm": 6.9
+          },
+          {
+            "date": "2026-11-25",
+            "mm": 12.7
+          },
+          {
+            "date": "2026-11-26",
+            "mm": 3.4
+          }
+        ]
+      },
+      "assessment": {
+        "formula_version": 3,
+        "score": 8.5,
+        "score_level": 1,
+        "floor_level": 1,
+        "flash_bonus": 0,
+        "level": 1,
+        "label_th": "ปกติ",
+        "color": "#2E7D32",
+        "action_th": "ติดตามสถานการณ์ได้ตามปกติ",
+        "should_push": false,
+        "has_primary_signal": false,
+        "flood_mechanism": "monitoring",
+        "confidence": "high",
+        "reason_codes": [],
+        "lead_time_hours": null,
+        "signals": {
+          "W": 0.0,
+          "R": 0.2015,
+          "A": 0.2764,
+          "F": 0.1064,
           "D": 0.0,
           "C": 0.0,
           "dH_m": 0.0
         },
         "flags": [
-          "water_stale"
+          "h_normal_bootstrap"
         ]
       },
       "note": null
@@ -1560,157 +1614,160 @@
         "fresh_gauge_count": 1,
         "max_rain_1h_mm": 0.0,
         "avg_rain_1h_mm": 0.0,
-        "max_rain_24h_mm": 1.8,
-        "avg_rain_24h_mm": 1.8,
+        "max_rain_24h_mm": 1.6,
+        "avg_rain_24h_mm": 1.6,
         "stale": false,
-        "latest_observed_at": "2026-11-24 17:00"
+        "latest_observed_at": "2026-11-24 23:00"
       },
       "weather_forecast": {
         "source": "Open-Meteo (CC BY 4.0)",
-        "forecast_6h_mm": 0.1,
-        "forecast_24h_mm": 10.0,
-        "forecast_72h_mm": 29.7,
-        "max_prob_24h_pct": 99,
+        "past_24h_mm": 8.3,
+        "observed_rain_72h_mm": 51.9,
+        "api_7d_mm": 46.61,
+        "forecast_6h_mm": 0.3,
+        "forecast_24h_mm": 9.9,
+        "forecast_72h_mm": 19.0,
+        "max_prob_24h_pct": 97,
         "hourly_next_24h": [
-          {
-            "time": "2026-11-24T18:00",
-            "mm": 0.1,
-            "prob": 99
-          },
-          {
-            "time": "2026-11-24T19:00",
-            "mm": 0.0,
-            "prob": 92
-          },
-          {
-            "time": "2026-11-24T20:00",
-            "mm": 0.0,
-            "prob": 72
-          },
-          {
-            "time": "2026-11-24T21:00",
-            "mm": 0.0,
-            "prob": 45
-          },
-          {
-            "time": "2026-11-24T22:00",
-            "mm": 0.0,
-            "prob": 25
-          },
           {
             "time": "2026-11-24T23:00",
             "mm": 0.0,
-            "prob": 17
+            "prob": 32
           },
           {
             "time": "2026-11-25T00:00",
-            "mm": 0.0,
-            "prob": 16
+            "mm": 0.1,
+            "prob": 33
           },
           {
             "time": "2026-11-25T01:00",
-            "mm": 0.0,
-            "prob": 16
+            "mm": 0.1,
+            "prob": 33
           },
           {
             "time": "2026-11-25T02:00",
-            "mm": 0.0,
-            "prob": 18
+            "mm": 0.1,
+            "prob": 29
           },
           {
             "time": "2026-11-25T03:00",
             "mm": 0.0,
-            "prob": 21
+            "prob": 23
           },
           {
             "time": "2026-11-25T04:00",
             "mm": 0.0,
-            "prob": 25
+            "prob": 20
           },
           {
             "time": "2026-11-25T05:00",
             "mm": 0.0,
-            "prob": 27
+            "prob": 21
           },
           {
             "time": "2026-11-25T06:00",
             "mm": 0.0,
-            "prob": 30
+            "prob": 25
           },
           {
             "time": "2026-11-25T07:00",
             "mm": 0.0,
-            "prob": 35
+            "prob": 31
           },
           {
             "time": "2026-11-25T08:00",
-            "mm": 0.2,
-            "prob": 45
+            "mm": 0.0,
+            "prob": 41
           },
           {
             "time": "2026-11-25T09:00",
-            "mm": 0.4,
-            "prob": 57
+            "mm": 0.2,
+            "prob": 53
           },
           {
             "time": "2026-11-25T10:00",
-            "mm": 0.2,
-            "prob": 69
+            "mm": 0.1,
+            "prob": 65
           },
           {
             "time": "2026-11-25T11:00",
-            "mm": 0.3,
-            "prob": 79
+            "mm": 0.2,
+            "prob": 76
           },
           {
             "time": "2026-11-25T12:00",
-            "mm": 0.7,
-            "prob": 88
+            "mm": 0.3,
+            "prob": 87
           },
           {
             "time": "2026-11-25T13:00",
-            "mm": 4.6,
+            "mm": 0.8,
             "prob": 94
           },
           {
             "time": "2026-11-25T14:00",
-            "mm": 0.4,
-            "prob": 96
+            "mm": 4.6,
+            "prob": 97
           },
           {
             "time": "2026-11-25T15:00",
-            "mm": 1.3,
-            "prob": 95
+            "mm": 1.1,
+            "prob": 97
           },
           {
             "time": "2026-11-25T16:00",
-            "mm": 1.4,
-            "prob": 92
+            "mm": 1.1,
+            "prob": 96
           },
           {
             "time": "2026-11-25T17:00",
-            "mm": 0.4,
-            "prob": 89
+            "mm": 0.5,
+            "prob": 96
+          },
+          {
+            "time": "2026-11-25T18:00",
+            "mm": 0.5,
+            "prob": 94
+          },
+          {
+            "time": "2026-11-25T19:00",
+            "mm": 0.1,
+            "prob": 88
+          },
+          {
+            "time": "2026-11-25T20:00",
+            "mm": 0.1,
+            "prob": 73
+          },
+          {
+            "time": "2026-11-25T21:00",
+            "mm": 0.0,
+            "prob": 53
+          },
+          {
+            "time": "2026-11-25T22:00",
+            "mm": 0.0,
+            "prob": 37
           }
         ],
         "daily_3d": [
           {
             "date": "2026-11-24",
-            "mm": 16.0
+            "mm": 8.3
           },
           {
             "date": "2026-11-25",
-            "mm": 14.1
+            "mm": 10.1
           },
           {
             "date": "2026-11-26",
-            "mm": 15.5
+            "mm": 8.9
           }
         ]
       },
       "assessment": {
-        "formula_version": 2,
-        "score": 1.3,
+        "formula_version": 3,
+        "score": 8.1,
         "score_level": 1,
         "floor_level": 1,
         "flash_bonus": 0,
@@ -1720,11 +1777,15 @@
         "action_th": "ติดตามสถานการณ์ได้ตามปกติ",
         "should_push": false,
         "has_primary_signal": false,
+        "flood_mechanism": "monitoring",
+        "confidence": "medium",
+        "reason_codes": [],
         "lead_time_hours": null,
         "signals": {
           "W": 0.0,
-          "R": 0.012,
-          "F": 0.0833,
+          "R": 0.1996,
+          "A": 0.2589,
+          "F": 0.095,
           "D": 0.0,
           "C": 0.0,
           "dH_m": 0.0
@@ -1738,24 +1799,30 @@
   ],
   "stations": [
     {
-      "id": 1345909240,
+      "id": 1346036286,
       "oldcode": "FOP045",
       "name": "สะพานข้ามแม่น้ำปัตตานี",
+      "short_name": "สะพานกรงปินัง",
+      "name_en": "Pattani River Bridge (Krong Pinang)",
+      "name_zh": "功比南北大年河桥",
+      "name_ms": "Jambatan Sungai Pattani (Krong Pinang)",
       "river": "แม่น้ำปัตตานี",
       "amphoe": "กรงปินัง",
       "tumbon": "กรงปินัง",
       "lat": 6.411704,
       "lon": 101.27776,
-      "level_msl": 6.43,
-      "previous_msl": 6.45,
+      "level_msl": 5.97,
+      "previous_msl": 5.97,
       "bank_m": 25.128,
+      "watch_m": 23.2,
+      "critical_m": 25.128,
       "bank_source": "api",
-      "remaining_to_bank_m": 18.698,
+      "remaining_to_bank_m": 19.158,
       "situation_level": 1,
-      "storage_percent": 2.5,
+      "storage_percent": 0.1,
       "storage_anomaly": false,
-      "observed_at": "2026-11-24 17:40",
-      "age_minutes": 21.0,
+      "observed_at": "2026-11-24 23:40",
+      "age_minutes": 15.4,
       "agency": "พพภ",
       "risk_zone": "flash",
       "is_flash_flood": true,
@@ -1764,12 +1831,17 @@
       "situation_missing": false,
       "bank_missing": false,
       "rain_1h_mm": 0.0,
-      "rain_24h_mm": 4.8,
+      "rain_24h_mm": 2.6,
+      "rain_72h_mm": 52.4,
+      "api_7d_mm": 49.76,
+      "rain_sensor_gap": false,
       "nearest_rain_gauge": "สะพานข้ามแม่น้ำปัตตานี (0.0 กม.)",
-      "forecast_24h_mm": 14.2,
+      "forecast_6h_mm": 2.4,
+      "forecast_24h_mm": 11.7,
+      "forecast_72h_mm": 16.7,
       "assessment": {
-        "formula_version": 2,
-        "score": 2.2,
+        "formula_version": 3,
+        "score": 8.5,
         "score_level": 1,
         "floor_level": 1,
         "flash_bonus": 0,
@@ -1779,14 +1851,18 @@
         "action_th": "ติดตามสถานการณ์ได้ตามปกติ",
         "should_push": false,
         "has_primary_signal": false,
+        "flood_mechanism": "monitoring",
+        "confidence": "high",
+        "reason_codes": [],
         "lead_time_hours": null,
         "signals": {
           "W": 0.0,
-          "R": 0.032,
-          "F": 0.1183,
+          "R": 0.2015,
+          "A": 0.2764,
+          "F": 0.1064,
           "D": 0.0,
           "C": 0.0,
-          "dH_m": -0.02
+          "dH_m": 0.0
         },
         "flags": [
           "h_normal_bootstrap"
@@ -1794,38 +1870,49 @@
       }
     },
     {
-      "id": 1345903652,
+      "id": 1346030130,
       "oldcode": "X.77",
       "name": "บ้านหัวสะพาน",
+      "short_name": "บ้านหัวสะพาน",
+      "name_en": "Ban Hua Saphan",
+      "name_zh": "班华沙攀",
+      "name_ms": "Ban Hua Saphan",
       "river": "คลองใหญ่",
       "amphoe": "ธารโต",
       "tumbon": "คีรีเขต",
       "lat": 6.1525,
       "lon": 101.080902,
-      "level_msl": 35.16,
-      "previous_msl": 35.19,
+      "level_msl": 36.64,
+      "previous_msl": 36.38,
       "bank_m": 40.2999992370605,
+      "watch_m": 38.0,
+      "critical_m": 39.7,
       "bank_source": "api",
-      "remaining_to_bank_m": 5.14,
+      "remaining_to_bank_m": 3.66,
       "situation_level": null,
       "storage_percent": null,
       "storage_anomaly": false,
-      "observed_at": "2026-11-24 17:00",
-      "age_minutes": 61.0,
+      "observed_at": "2026-11-24 23:00",
+      "age_minutes": 55.4,
       "agency": "ชป.",
       "risk_zone": "flash",
       "is_flash_flood": true,
       "registry_known": true,
-      "stale": true,
+      "stale": false,
       "situation_missing": true,
       "bank_missing": false,
       "rain_1h_mm": 0.0,
-      "rain_24h_mm": 27.2,
+      "rain_24h_mm": 20.2,
+      "rain_72h_mm": 38.6,
+      "api_7d_mm": 35.18,
+      "rain_sensor_gap": false,
       "nearest_rain_gauge": "สถานีพัฒนาที่ดินยะลา (11.2 กม.)",
-      "forecast_24h_mm": 20.4,
+      "forecast_6h_mm": 0.1,
+      "forecast_24h_mm": 11.5,
+      "forecast_72h_mm": 17.1,
       "assessment": {
-        "formula_version": 2,
-        "score": 6.2,
+        "formula_version": 3,
+        "score": 11.5,
         "score_level": 1,
         "floor_level": 1,
         "flash_bonus": 0,
@@ -1834,559 +1921,72 @@
         "color": "#2E7D32",
         "action_th": "ติดตามสถานการณ์ได้ตามปกติ",
         "should_push": false,
-        "has_primary_signal": false,
+        "has_primary_signal": true,
+        "flood_mechanism": "monitoring",
+        "confidence": "high",
+        "reason_codes": [
+          "rising_water"
+        ],
         "lead_time_hours": null,
         "signals": {
-          "W": 0.0,
-          "R": 0.1813,
-          "F": 0.17,
+          "W": 0.1313,
+          "R": 0.1485,
+          "A": 0.1954,
+          "F": 0.1045,
           "D": 0.0,
           "C": 0.0,
-          "dH_m": 0.0
+          "dH_m": 0.26
         },
         "flags": [
-          "water_stale"
+          "h_normal_bootstrap",
+          "rising_watch"
         ]
       }
     },
     {
-      "id": 1345892332,
+      "id": 1345983045,
       "oldcode": "BLGTD01",
       "name": "สะพานท้ายเขื่อนบางลาง อ.บันนังสตา จ.ยะลา",
+      "short_name": "ท้ายเขื่อนบางลาง",
+      "name_en": "Bang Lang Dam Tailrace Bridge",
+      "name_zh": "邦朗坝下游桥",
+      "name_ms": "Jambatan Hilir Empangan Bang Lang",
       "river": "แม่น้ำปัตตานี",
       "amphoe": "บันนังสตา",
       "tumbon": "บาเจาะ",
       "lat": 6.160477,
       "lon": 101.276104,
-      "level_msl": 42.57,
-      "previous_msl": 42.56,
+      "level_msl": 43.85,
+      "previous_msl": 43.8,
       "bank_m": 48.678,
+      "watch_m": 46.7,
+      "critical_m": 48.678,
       "bank_source": "api",
-      "remaining_to_bank_m": 6.108,
-      "situation_level": 2,
-      "storage_percent": 27.23,
-      "storage_anomaly": false,
-      "observed_at": "2026-11-24 17:00",
-      "age_minutes": 61.0,
-      "agency": "กฟผ.",
-      "risk_zone": "flash",
-      "is_flash_flood": true,
-      "registry_known": true,
-      "stale": true,
-      "situation_missing": false,
-      "bank_missing": false,
-      "rain_1h_mm": 0.2,
-      "rain_24h_mm": 4.4,
-      "nearest_rain_gauge": "สถานีพัฒนาที่ดินยะลา (10.6 กม.)",
-      "forecast_24h_mm": 15.6,
-      "assessment": {
-        "formula_version": 2,
-        "score": 2.3,
-        "score_level": 1,
-        "floor_level": 2,
-        "flash_bonus": 0,
-        "level": 2,
-        "label_th": "เฝ้าระวัง",
-        "color": "#F9A825",
-        "action_th": "ติดตามข่าวใกล้ชิด เตรียมถุงยังชีพและชาร์จแบต",
-        "should_push": true,
-        "has_primary_signal": true,
-        "lead_time_hours": null,
-        "signals": {
-          "W": 0.0,
-          "R": 0.0293,
-          "F": 0.13,
-          "D": 0.0,
-          "C": 0.0,
-          "dH_m": 0.0
-        },
-        "flags": [
-          "water_stale"
-        ]
-      }
-    },
-    {
-      "id": 1345892518,
-      "oldcode": "BLGTD02",
-      "name": "สะพานหัวสะพาน อ.บันนังสตา จ.ยะลา",
-      "river": "แม่น้ำปัตตานี",
-      "amphoe": "บันนังสตา",
-      "tumbon": "บาเจาะ",
-      "lat": 6.262132,
-      "lon": 101.268237,
-      "level_msl": 35.2,
-      "previous_msl": 35.23,
-      "bank_m": 40.71,
-      "bank_source": "api",
-      "remaining_to_bank_m": 5.51,
-      "situation_level": 2,
-      "storage_percent": 13.32,
-      "storage_anomaly": false,
-      "observed_at": "2026-11-24 17:00",
-      "age_minutes": 61.0,
-      "agency": "กฟผ.",
-      "risk_zone": "flash",
-      "is_flash_flood": true,
-      "registry_known": true,
-      "stale": true,
-      "situation_missing": false,
-      "bank_missing": false,
-      "rain_1h_mm": 0.2,
-      "rain_24h_mm": 4.4,
-      "nearest_rain_gauge": "บันนังสตา (0.0 กม.)",
-      "forecast_24h_mm": 15.6,
-      "assessment": {
-        "formula_version": 2,
-        "score": 2.3,
-        "score_level": 1,
-        "floor_level": 2,
-        "flash_bonus": 0,
-        "level": 2,
-        "label_th": "เฝ้าระวัง",
-        "color": "#F9A825",
-        "action_th": "ติดตามข่าวใกล้ชิด เตรียมถุงยังชีพและชาร์จแบต",
-        "should_push": true,
-        "has_primary_signal": true,
-        "lead_time_hours": null,
-        "signals": {
-          "W": 0.0,
-          "R": 0.0293,
-          "F": 0.13,
-          "D": 0.0,
-          "C": 0.0,
-          "dH_m": 0.0
-        },
-        "flags": [
-          "water_stale"
-        ]
-      }
-    },
-    {
-      "id": 1345897691,
-      "oldcode": "BLGTU05",
-      "name": "เขื่อนบางลาง อ.บันนังสตา จ.ยะลา",
-      "river": "แม่น้ำปัตตานี",
-      "amphoe": "บันนังสตา",
-      "tumbon": "เขื่อนบางลาง",
-      "lat": 6.153667,
-      "lon": 101.273116,
-      "level_msl": 100.76,
-      "previous_msl": 100.75,
-      "bank_m": null,
-      "bank_source": "none",
-      "remaining_to_bank_m": null,
-      "situation_level": null,
-      "storage_percent": null,
-      "storage_anomaly": false,
-      "observed_at": "2026-11-24 17:00",
-      "age_minutes": 61.0,
-      "agency": "กฟผ.",
-      "risk_zone": "dam",
-      "is_flash_flood": true,
-      "registry_known": true,
-      "stale": true,
-      "situation_missing": true,
-      "bank_missing": true,
-      "rain_1h_mm": 0.2,
-      "rain_24h_mm": 4.4,
-      "nearest_rain_gauge": "สถานีพัฒนาที่ดินยะลา (10.4 กม.)",
-      "forecast_24h_mm": 15.6,
-      "assessment": {
-        "formula_version": 2,
-        "score": 2.3,
-        "score_level": 1,
-        "floor_level": 1,
-        "flash_bonus": 0,
-        "level": 1,
-        "label_th": "ปกติ",
-        "color": "#2E7D32",
-        "action_th": "ติดตามสถานการณ์ได้ตามปกติ",
-        "should_push": false,
-        "has_primary_signal": false,
-        "lead_time_hours": null,
-        "signals": {
-          "W": 0.0,
-          "R": 0.0293,
-          "F": 0.13,
-          "D": 0.0,
-          "C": 0.0,
-          "dH_m": 0.0
-        },
-        "flags": [
-          "water_stale"
-        ]
-      }
-    },
-    {
-      "id": 1345897690,
-      "oldcode": "BLGTU06",
-      "name": "ฝายละแอ อ.บันนังสตา จ.ยะลา",
-      "river": "คลองละแอ",
-      "amphoe": "บันนังสตา",
-      "tumbon": "เขื่อนบางลาง",
-      "lat": 6.143055,
-      "lon": 101.309167,
-      "level_msl": 331.71,
-      "previous_msl": 331.71,
-      "bank_m": null,
-      "bank_source": "none",
-      "remaining_to_bank_m": null,
-      "situation_level": null,
-      "storage_percent": null,
-      "storage_anomaly": false,
-      "observed_at": "2026-11-24 17:00",
-      "age_minutes": 61.0,
-      "agency": "กฟผ.",
-      "risk_zone": "dam",
-      "is_flash_flood": true,
-      "registry_known": true,
-      "stale": true,
-      "situation_missing": true,
-      "bank_missing": true,
-      "rain_1h_mm": 0.2,
-      "rain_24h_mm": 4.4,
-      "nearest_rain_gauge": "บันนังสตา (14.0 กม.)",
-      "forecast_24h_mm": 15.6,
-      "assessment": {
-        "formula_version": 2,
-        "score": 2.3,
-        "score_level": 1,
-        "floor_level": 1,
-        "flash_bonus": 0,
-        "level": 1,
-        "label_th": "ปกติ",
-        "color": "#2E7D32",
-        "action_th": "ติดตามสถานการณ์ได้ตามปกติ",
-        "should_push": false,
-        "has_primary_signal": false,
-        "lead_time_hours": null,
-        "signals": {
-          "W": 0.0,
-          "R": 0.0293,
-          "F": 0.13,
-          "D": 0.0,
-          "C": 0.0,
-          "dH_m": 0.0
-        },
-        "flags": [
-          "water_stale"
-        ]
-      }
-    },
-    {
-      "id": 1345909753,
-      "oldcode": "PAT001",
-      "name": "บันนังสตา",
-      "river": "แม่น้ำปัตตานี",
-      "amphoe": "บันนังสตา",
-      "tumbon": "บันนังสตา",
-      "lat": 6.262041,
-      "lon": 101.268036,
-      "level_msl": 34.51,
-      "previous_msl": 34.46,
-      "bank_m": 38.678,
-      "bank_source": "api",
-      "remaining_to_bank_m": 4.168,
-      "situation_level": 4,
-      "storage_percent": 79.32,
-      "storage_anomaly": false,
-      "observed_at": "2026-11-24 17:40",
-      "age_minutes": 21.0,
-      "agency": "สสน.",
-      "risk_zone": "flash",
-      "is_flash_flood": true,
-      "registry_known": true,
-      "stale": false,
-      "situation_missing": false,
-      "bank_missing": false,
-      "rain_1h_mm": 0.2,
-      "rain_24h_mm": 4.4,
-      "nearest_rain_gauge": "บันนังสตา (0.0 กม.)",
-      "forecast_24h_mm": 15.6,
-      "assessment": {
-        "formula_version": 2,
-        "score": 2.3,
-        "score_level": 1,
-        "floor_level": 4,
-        "flash_bonus": 0,
-        "level": 4,
-        "label_th": "เตือนภัยสูง",
-        "color": "#E53935",
-        "action_th": "พร้อมอพยพทันที ติดตามประกาศ ปภ.ยะลา (073-203559)",
-        "should_push": true,
-        "has_primary_signal": true,
-        "lead_time_hours": null,
-        "signals": {
-          "W": 0.0,
-          "R": 0.0293,
-          "F": 0.13,
-          "D": 0.0,
-          "C": 0.0,
-          "dH_m": 0.05
-        },
-        "flags": [
-          "h_normal_bootstrap",
-          "situation_score_mismatch"
-        ]
-      }
-    },
-    {
-      "id": 1345892520,
-      "oldcode": "BLGTD04",
-      "name": "อาคารสูบน้ำดิบ กปภ. อ.ยะหา จ.ยะลา",
-      "river": "คลองเล็ก",
-      "amphoe": "ยะหา",
-      "tumbon": "บาโร๊ะ",
-      "lat": 6.47481,
-      "lon": 101.139521,
-      "level_msl": 23.54,
-      "previous_msl": 23.54,
-      "bank_m": 31.55,
-      "bank_source": "api",
-      "remaining_to_bank_m": 8.01,
-      "situation_level": 2,
-      "storage_percent": 28.14,
-      "storage_anomaly": false,
-      "observed_at": "2026-11-24 17:00",
-      "age_minutes": 61.0,
-      "agency": "กฟผ.",
-      "risk_zone": "riverine",
-      "is_flash_flood": false,
-      "registry_known": true,
-      "stale": true,
-      "situation_missing": false,
-      "bank_missing": false,
-      "rain_1h_mm": 0.0,
-      "rain_24h_mm": 8.4,
-      "nearest_rain_gauge": "สะพานอาเส็น (1.3 กม.)",
-      "forecast_24h_mm": 13.1,
-      "assessment": {
-        "formula_version": 2,
-        "score": 2.7,
-        "score_level": 1,
-        "floor_level": 2,
-        "flash_bonus": 0,
-        "level": 2,
-        "label_th": "เฝ้าระวัง",
-        "color": "#F9A825",
-        "action_th": "ติดตามข่าวใกล้ชิด เตรียมถุงยังชีพและชาร์จแบต",
-        "should_push": true,
-        "has_primary_signal": true,
-        "lead_time_hours": null,
-        "signals": {
-          "W": 0.0,
-          "R": 0.056,
-          "F": 0.1092,
-          "D": 0.0,
-          "C": 0.0,
-          "dH_m": 0.0
-        },
-        "flags": [
-          "water_stale"
-        ]
-      }
-    },
-    {
-      "id": 1345903669,
-      "oldcode": "X.273",
-      "name": "บ้านปายอยือนิ",
-      "river": "แม่น้ำสายบุรี",
-      "amphoe": "รามัน",
-      "tumbon": "ตะโล๊ะหะลอ",
-      "lat": 6.47977,
-      "lon": 101.44474,
-      "level_msl": 12.37,
-      "previous_msl": 12.31,
-      "bank_m": 16.5,
-      "bank_source": "api",
-      "remaining_to_bank_m": 4.13,
-      "situation_level": null,
-      "storage_percent": null,
-      "storage_anomaly": false,
-      "observed_at": "2026-11-24 17:00",
-      "age_minutes": 61.0,
-      "agency": "ชป.",
-      "risk_zone": "riverine",
-      "is_flash_flood": false,
-      "registry_known": true,
-      "stale": true,
-      "situation_missing": true,
-      "bank_missing": false,
-      "rain_1h_mm": 0.0,
-      "rain_24h_mm": 0.5,
-      "nearest_rain_gauge": "4066-แม่น้ำสายบุรี (0.1 กม.)",
-      "forecast_24h_mm": 17.5,
-      "assessment": {
-        "formula_version": 2,
-        "score": 2.0,
-        "score_level": 1,
-        "floor_level": 1,
-        "flash_bonus": 0,
-        "level": 1,
-        "label_th": "ปกติ",
-        "color": "#2E7D32",
-        "action_th": "ติดตามสถานการณ์ได้ตามปกติ",
-        "should_push": false,
-        "has_primary_signal": false,
-        "lead_time_hours": null,
-        "signals": {
-          "W": 0.0,
-          "R": 0.0033,
-          "F": 0.1458,
-          "D": 0.0,
-          "C": 0.0,
-          "dH_m": 0.0
-        },
-        "flags": [
-          "water_stale"
-        ]
-      }
-    },
-    {
-      "id": 1345897497,
-      "oldcode": "BLGTU02",
-      "name": "สะพานบ้าน กม.29 อ.เบตง จ.ยะลา",
-      "river": "แม่น้ำปัตตานี",
-      "amphoe": "เบตง",
-      "tumbon": "อัยเยอร์เวง",
-      "lat": 5.920578,
-      "lon": 101.182086,
-      "level_msl": 117.13,
-      "previous_msl": 117.13,
-      "bank_m": 120.37,
-      "bank_source": "api",
-      "remaining_to_bank_m": 3.24,
-      "situation_level": 2,
-      "storage_percent": 28.72,
-      "storage_anomaly": false,
-      "observed_at": "2026-11-24 17:00",
-      "age_minutes": 61.0,
-      "agency": "กฟผ.",
-      "risk_zone": "flash",
-      "is_flash_flood": true,
-      "registry_known": true,
-      "stale": true,
-      "situation_missing": false,
-      "bank_missing": false,
-      "rain_1h_mm": 0.0,
-      "rain_24h_mm": 9.2,
-      "nearest_rain_gauge": "ชุมชนบ้านเหมือง (6.2 กม.)",
-      "forecast_24h_mm": 8.3,
-      "assessment": {
-        "formula_version": 2,
-        "score": 2.2,
-        "score_level": 1,
-        "floor_level": 2,
-        "flash_bonus": 0,
-        "level": 2,
-        "label_th": "เฝ้าระวัง",
-        "color": "#F9A825",
-        "action_th": "ติดตามข่าวใกล้ชิด เตรียมถุงยังชีพและชาร์จแบต",
-        "should_push": true,
-        "has_primary_signal": true,
-        "lead_time_hours": null,
-        "signals": {
-          "W": 0.0,
-          "R": 0.0613,
-          "F": 0.0692,
-          "D": 0.0,
-          "C": 0.0,
-          "dH_m": 0.0
-        },
-        "flags": [
-          "water_stale"
-        ]
-      }
-    },
-    {
-      "id": 1345909311,
-      "oldcode": "MOU454",
-      "name": "คลองเบตง (ชุมชนกุนุงจนอง)",
-      "river": "คลองตาโล๊ะ",
-      "amphoe": "เบตง",
-      "tumbon": "เบตง",
-      "lat": 5.785312,
-      "lon": 101.058685,
-      "level_msl": 281.77,
-      "previous_msl": 281.76,
-      "bank_m": 286.432,
-      "bank_source": "api",
-      "remaining_to_bank_m": 4.662,
-      "situation_level": 1,
-      "storage_percent": 2.57,
-      "storage_anomaly": false,
-      "observed_at": "2026-11-24 17:40",
-      "age_minutes": 21.0,
-      "agency": "พพภ",
-      "risk_zone": "flash",
-      "is_flash_flood": true,
-      "registry_known": true,
-      "stale": false,
-      "situation_missing": false,
-      "bank_missing": false,
-      "rain_1h_mm": 0.0,
-      "rain_24h_mm": 9.2,
-      "nearest_rain_gauge": "คลองเบตง (ชุมชนกุนุงจนอง) (0.0 กม.)",
-      "forecast_24h_mm": 8.3,
-      "assessment": {
-        "formula_version": 2,
-        "score": 2.2,
-        "score_level": 1,
-        "floor_level": 1,
-        "flash_bonus": 0,
-        "level": 1,
-        "label_th": "ปกติ",
-        "color": "#2E7D32",
-        "action_th": "ติดตามสถานการณ์ได้ตามปกติ",
-        "should_push": false,
-        "has_primary_signal": false,
-        "lead_time_hours": null,
-        "signals": {
-          "W": 0.0,
-          "R": 0.0613,
-          "F": 0.0692,
-          "D": 0.0,
-          "C": 0.0,
-          "dH_m": 0.01
-        },
-        "flags": [
-          "h_normal_bootstrap"
-        ]
-      }
-    },
-    {
-      "id": 1345892519,
-      "oldcode": "BLGTD03",
-      "name": "สะพานท่าสาป อ.เมือง จ.ยะลา",
-      "river": "แม่น้ำปัตตานี",
-      "amphoe": "เมืองยะลา",
-      "tumbon": "สะเตง",
-      "lat": 6.552715,
-      "lon": 101.266197,
-      "level_msl": 13.37,
-      "previous_msl": 13.35,
-      "bank_m": 17.29,
-      "bank_source": "api",
-      "remaining_to_bank_m": 3.92,
+      "remaining_to_bank_m": 4.828,
       "situation_level": 3,
-      "storage_percent": 45.5,
+      "storage_percent": 42.57,
       "storage_anomaly": false,
-      "observed_at": "2026-11-24 17:00",
-      "age_minutes": 61.0,
+      "observed_at": "2026-11-24 21:00",
+      "age_minutes": 175.4,
       "agency": "กฟผ.",
-      "risk_zone": "riverine",
-      "is_flash_flood": false,
+      "risk_zone": "flash",
+      "is_flash_flood": true,
       "registry_known": true,
       "stale": true,
       "situation_missing": false,
       "bank_missing": false,
       "rain_1h_mm": 0.0,
-      "rain_24h_mm": 14.0,
-      "nearest_rain_gauge": "โครงการชลประทานยะลา (1.9 กม.)",
-      "forecast_24h_mm": 23.3,
+      "rain_24h_mm": 2.0,
+      "rain_72h_mm": 41.1,
+      "api_7d_mm": 40.31,
+      "rain_sensor_gap": false,
+      "nearest_rain_gauge": "สถานีพัฒนาที่ดินยะลา (10.6 กม.)",
+      "forecast_6h_mm": 1.1,
+      "forecast_24h_mm": 16.0,
+      "forecast_72h_mm": 25.0,
       "assessment": {
-        "formula_version": 2,
-        "score": 4.6,
+        "formula_version": 3,
+        "score": 7.5,
         "score_level": 1,
         "floor_level": 3,
         "flash_bonus": 0,
@@ -2396,11 +1996,15 @@
         "action_th": "ยกของขึ้นที่สูง เตรียมเส้นทางและแผนอพยพ",
         "should_push": true,
         "has_primary_signal": true,
+        "flood_mechanism": "monitoring",
+        "confidence": "low",
+        "reason_codes": [],
         "lead_time_hours": null,
         "signals": {
           "W": 0.0,
-          "R": 0.0933,
-          "F": 0.1942,
+          "R": 0.1581,
+          "A": 0.2239,
+          "F": 0.1455,
           "D": 0.0,
           "C": 0.0,
           "dH_m": 0.0
@@ -2412,9 +2016,658 @@
       }
     },
     {
-      "id": 1345909754,
+      "id": 1346024829,
+      "oldcode": "BLGTD02",
+      "name": "สะพานหัวสะพาน อ.บันนังสตา จ.ยะลา",
+      "short_name": "สะพานหัวสะพาน",
+      "name_en": "Hua Saphan Bridge (Bannang Sata)",
+      "name_zh": "华沙攀桥 (班南沙达)",
+      "name_ms": "Jambatan Hua Saphan (Bannang Sata)",
+      "river": "แม่น้ำปัตตานี",
+      "amphoe": "บันนังสตา",
+      "tumbon": "บาเจาะ",
+      "lat": 6.262132,
+      "lon": 101.268237,
+      "level_msl": 36.74,
+      "previous_msl": 36.48,
+      "bank_m": 40.71,
+      "watch_m": 38.7,
+      "critical_m": 40.71,
+      "bank_source": "api",
+      "remaining_to_bank_m": 3.97,
+      "situation_level": 3,
+      "storage_percent": 39.38,
+      "storage_anomaly": false,
+      "observed_at": "2026-11-24 23:00",
+      "age_minutes": 55.4,
+      "agency": "กฟผ.",
+      "risk_zone": "flash",
+      "is_flash_flood": true,
+      "registry_known": true,
+      "stale": false,
+      "situation_missing": false,
+      "bank_missing": false,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 2.0,
+      "rain_72h_mm": 41.1,
+      "api_7d_mm": 40.31,
+      "rain_sensor_gap": false,
+      "nearest_rain_gauge": "บันนังสตา (0.0 กม.)",
+      "forecast_6h_mm": 1.1,
+      "forecast_24h_mm": 16.0,
+      "forecast_72h_mm": 25.0,
+      "assessment": {
+        "formula_version": 3,
+        "score": 10.5,
+        "score_level": 1,
+        "floor_level": 3,
+        "flash_bonus": 0,
+        "level": 3,
+        "label_th": "เตือนภัย",
+        "color": "#EF6C00",
+        "action_th": "ยกของขึ้นที่สูง เตรียมเส้นทางและแผนอพยพ",
+        "should_push": true,
+        "has_primary_signal": true,
+        "flood_mechanism": "monitoring",
+        "confidence": "high",
+        "reason_codes": [
+          "rising_water"
+        ],
+        "lead_time_hours": null,
+        "signals": {
+          "W": 0.08,
+          "R": 0.1581,
+          "A": 0.2239,
+          "F": 0.1455,
+          "D": 0.0,
+          "C": 0.0,
+          "dH_m": 0.26
+        },
+        "flags": [
+          "h_normal_bootstrap",
+          "rising_watch",
+          "situation_score_mismatch"
+        ]
+      }
+    },
+    {
+      "id": 1346024853,
+      "oldcode": "BLGTU05",
+      "name": "เขื่อนบางลาง อ.บันนังสตา จ.ยะลา",
+      "short_name": "เขื่อนบางลาง",
+      "name_en": "Bang Lang Dam",
+      "name_zh": "邦朗水坝",
+      "name_ms": "Empangan Bang Lang",
+      "river": "แม่น้ำปัตตานี",
+      "amphoe": "บันนังสตา",
+      "tumbon": "เขื่อนบางลาง",
+      "lat": 6.153667,
+      "lon": 101.273116,
+      "level_msl": 100.73,
+      "previous_msl": 100.73,
+      "bank_m": null,
+      "watch_m": null,
+      "critical_m": null,
+      "bank_source": "none",
+      "remaining_to_bank_m": null,
+      "situation_level": null,
+      "storage_percent": null,
+      "storage_anomaly": false,
+      "observed_at": "2026-11-24 23:00",
+      "age_minutes": 55.4,
+      "agency": "กฟผ.",
+      "risk_zone": "dam",
+      "is_flash_flood": true,
+      "registry_known": true,
+      "stale": false,
+      "situation_missing": true,
+      "bank_missing": true,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 2.0,
+      "rain_72h_mm": 41.1,
+      "api_7d_mm": 40.31,
+      "rain_sensor_gap": false,
+      "nearest_rain_gauge": "สถานีพัฒนาที่ดินยะลา (10.4 กม.)",
+      "forecast_6h_mm": 1.1,
+      "forecast_24h_mm": 16.0,
+      "forecast_72h_mm": 25.0,
+      "assessment": {
+        "formula_version": 3,
+        "score": 7.5,
+        "score_level": 1,
+        "floor_level": 1,
+        "flash_bonus": 0,
+        "level": 1,
+        "label_th": "ปกติ",
+        "color": "#2E7D32",
+        "action_th": "ติดตามสถานการณ์ได้ตามปกติ",
+        "should_push": false,
+        "has_primary_signal": false,
+        "flood_mechanism": "monitoring",
+        "confidence": "medium",
+        "reason_codes": [],
+        "lead_time_hours": null,
+        "signals": {
+          "W": 0.0,
+          "R": 0.1581,
+          "A": 0.2239,
+          "F": 0.1455,
+          "D": 0.0,
+          "C": 0.0,
+          "dH_m": 0.0
+        },
+        "flags": [
+          "no_water_signal"
+        ]
+      }
+    },
+    {
+      "id": 1346024850,
+      "oldcode": "BLGTU06",
+      "name": "ฝายละแอ อ.บันนังสตา จ.ยะลา",
+      "short_name": "ฝายละแอ",
+      "name_en": "La-ae Weir",
+      "name_zh": "拉艾堰",
+      "name_ms": "Empang La-ae",
+      "river": "คลองละแอ",
+      "amphoe": "บันนังสตา",
+      "tumbon": "เขื่อนบางลาง",
+      "lat": 6.143055,
+      "lon": 101.309167,
+      "level_msl": 331.71,
+      "previous_msl": 331.71,
+      "bank_m": null,
+      "watch_m": null,
+      "critical_m": null,
+      "bank_source": "none",
+      "remaining_to_bank_m": null,
+      "situation_level": null,
+      "storage_percent": null,
+      "storage_anomaly": false,
+      "observed_at": "2026-11-24 23:00",
+      "age_minutes": 55.4,
+      "agency": "กฟผ.",
+      "risk_zone": "dam",
+      "is_flash_flood": true,
+      "registry_known": true,
+      "stale": false,
+      "situation_missing": true,
+      "bank_missing": true,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 2.0,
+      "rain_72h_mm": 41.1,
+      "api_7d_mm": 40.31,
+      "rain_sensor_gap": false,
+      "nearest_rain_gauge": "บันนังสตา (14.0 กม.)",
+      "forecast_6h_mm": 1.1,
+      "forecast_24h_mm": 16.0,
+      "forecast_72h_mm": 25.0,
+      "assessment": {
+        "formula_version": 3,
+        "score": 7.5,
+        "score_level": 1,
+        "floor_level": 1,
+        "flash_bonus": 0,
+        "level": 1,
+        "label_th": "ปกติ",
+        "color": "#2E7D32",
+        "action_th": "ติดตามสถานการณ์ได้ตามปกติ",
+        "should_push": false,
+        "has_primary_signal": false,
+        "flood_mechanism": "monitoring",
+        "confidence": "medium",
+        "reason_codes": [],
+        "lead_time_hours": null,
+        "signals": {
+          "W": 0.0,
+          "R": 0.1581,
+          "A": 0.2239,
+          "F": 0.1455,
+          "D": 0.0,
+          "C": 0.0,
+          "dH_m": 0.0
+        },
+        "flags": [
+          "no_water_signal"
+        ]
+      }
+    },
+    {
+      "id": 1346036808,
+      "oldcode": "PAT001",
+      "name": "บันนังสตา",
+      "short_name": "บันนังสตา",
+      "name_en": "Bannang Sata",
+      "name_zh": "班南沙达",
+      "name_ms": "Bannang Sata",
+      "river": "แม่น้ำปัตตานี",
+      "amphoe": "บันนังสตา",
+      "tumbon": "บันนังสตา",
+      "lat": 6.262041,
+      "lon": 101.268036,
+      "level_msl": 35.95,
+      "previous_msl": 35.94,
+      "bank_m": 38.678,
+      "watch_m": 36.8,
+      "critical_m": 38.678,
+      "bank_source": "api",
+      "remaining_to_bank_m": 2.728,
+      "situation_level": 4,
+      "storage_percent": 87.08,
+      "storage_anomaly": false,
+      "observed_at": "2026-11-24 23:40",
+      "age_minutes": 15.4,
+      "agency": "สสน.",
+      "risk_zone": "flash",
+      "is_flash_flood": true,
+      "registry_known": true,
+      "stale": false,
+      "situation_missing": false,
+      "bank_missing": false,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 2.0,
+      "rain_72h_mm": 41.1,
+      "api_7d_mm": 40.31,
+      "rain_sensor_gap": false,
+      "nearest_rain_gauge": "บันนังสตา (0.0 กม.)",
+      "forecast_6h_mm": 1.1,
+      "forecast_24h_mm": 16.0,
+      "forecast_72h_mm": 25.0,
+      "assessment": {
+        "formula_version": 3,
+        "score": 16.5,
+        "score_level": 1,
+        "floor_level": 4,
+        "flash_bonus": 0,
+        "level": 4,
+        "label_th": "เตือนภัยสูง",
+        "color": "#E53935",
+        "action_th": "พร้อมอพยพทันที ติดตามประกาศ ปภ.ยะลา (073-203559)",
+        "should_push": true,
+        "has_primary_signal": true,
+        "flood_mechanism": "monitoring",
+        "confidence": "high",
+        "reason_codes": [],
+        "lead_time_hours": null,
+        "signals": {
+          "W": 0.2383,
+          "R": 0.1581,
+          "A": 0.2239,
+          "F": 0.1455,
+          "D": 0.0,
+          "C": 0.0,
+          "dH_m": 0.01
+        },
+        "flags": [
+          "h_normal_bootstrap",
+          "situation_score_mismatch"
+        ]
+      }
+    },
+    {
+      "id": 1346024844,
+      "oldcode": "BLGTD04",
+      "name": "อาคารสูบน้ำดิบ กปภ. อ.ยะหา จ.ยะลา",
+      "short_name": "สูบน้ำ กปภ. ยะหา",
+      "name_en": "PWA Pumping Station Yaha",
+      "name_zh": "亚哈自来水泵站",
+      "name_ms": "Stesen Pam PWA Yaha",
+      "river": "คลองเล็ก",
+      "amphoe": "ยะหา",
+      "tumbon": "บาโร๊ะ",
+      "lat": 6.47481,
+      "lon": 101.139521,
+      "level_msl": 23.52,
+      "previous_msl": 23.52,
+      "bank_m": 31.55,
+      "watch_m": 29.8,
+      "critical_m": 31.55,
+      "bank_source": "api",
+      "remaining_to_bank_m": 8.03,
+      "situation_level": 2,
+      "storage_percent": 27.71,
+      "storage_anomaly": false,
+      "observed_at": "2026-11-24 23:00",
+      "age_minutes": 55.4,
+      "agency": "กฟผ.",
+      "risk_zone": "riverine",
+      "is_flash_flood": false,
+      "registry_known": true,
+      "stale": false,
+      "situation_missing": false,
+      "bank_missing": false,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 7.4,
+      "rain_72h_mm": 57.4,
+      "api_7d_mm": 54.75,
+      "rain_sensor_gap": false,
+      "nearest_rain_gauge": "สะพานอาเส็น (1.3 กม.)",
+      "forecast_6h_mm": 2.0,
+      "forecast_24h_mm": 13.5,
+      "forecast_72h_mm": 20.2,
+      "assessment": {
+        "formula_version": 3,
+        "score": 9.4,
+        "score_level": 1,
+        "floor_level": 2,
+        "flash_bonus": 0,
+        "level": 2,
+        "label_th": "เฝ้าระวัง",
+        "color": "#F9A825",
+        "action_th": "ติดตามข่าวใกล้ชิด เตรียมถุงยังชีพและชาร์จแบต",
+        "should_push": true,
+        "has_primary_signal": true,
+        "flood_mechanism": "monitoring",
+        "confidence": "high",
+        "reason_codes": [],
+        "lead_time_hours": null,
+        "signals": {
+          "W": 0.0,
+          "R": 0.2208,
+          "A": 0.3042,
+          "F": 0.1227,
+          "D": 0.0,
+          "C": 0.0,
+          "dH_m": 0.0
+        },
+        "flags": [
+          "h_normal_bootstrap"
+        ]
+      }
+    },
+    {
+      "id": 1346030147,
+      "oldcode": "X.273",
+      "name": "บ้านปายอยือนิ",
+      "short_name": "บ้านปายอยือนิ",
+      "name_en": "Ban Payo Yuni",
+      "name_zh": "班帕约尤尼",
+      "name_ms": "Ban Payo Yuni",
+      "river": "แม่น้ำสายบุรี",
+      "amphoe": "รามัน",
+      "tumbon": "ตะโล๊ะหะลอ",
+      "lat": 6.47977,
+      "lon": 101.44474,
+      "level_msl": 12.71,
+      "previous_msl": 12.66,
+      "bank_m": 16.5,
+      "watch_m": 15.0,
+      "critical_m": 16.5,
+      "bank_source": "api",
+      "remaining_to_bank_m": 3.79,
+      "situation_level": null,
+      "storage_percent": null,
+      "storage_anomaly": false,
+      "observed_at": "2026-11-24 23:00",
+      "age_minutes": 55.4,
+      "agency": "ชป.",
+      "risk_zone": "riverine",
+      "is_flash_flood": false,
+      "registry_known": true,
+      "stale": false,
+      "situation_missing": true,
+      "bank_missing": false,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 0.0,
+      "rain_72h_mm": 63.2,
+      "api_7d_mm": 64.05,
+      "rain_sensor_gap": false,
+      "nearest_rain_gauge": "4066-แม่น้ำสายบุรี (0.1 กม.)",
+      "forecast_6h_mm": 6.7,
+      "forecast_24h_mm": 14.9,
+      "forecast_72h_mm": 19.1,
+      "assessment": {
+        "formula_version": 3,
+        "score": 10.5,
+        "score_level": 1,
+        "floor_level": 1,
+        "flash_bonus": 0,
+        "level": 1,
+        "label_th": "ปกติ",
+        "color": "#2E7D32",
+        "action_th": "ติดตามสถานการณ์ได้ตามปกติ",
+        "should_push": false,
+        "has_primary_signal": false,
+        "flood_mechanism": "monitoring",
+        "confidence": "high",
+        "reason_codes": [],
+        "lead_time_hours": null,
+        "signals": {
+          "W": 0.0,
+          "R": 0.2431,
+          "A": 0.3558,
+          "F": 0.1355,
+          "D": 0.0,
+          "C": 0.0,
+          "dH_m": 0.05
+        },
+        "flags": [
+          "h_normal_bootstrap"
+        ]
+      }
+    },
+    {
+      "id": 1346024635,
+      "oldcode": "BLGTU02",
+      "name": "สะพานบ้าน กม.29 อ.เบตง จ.ยะลา",
+      "short_name": "สะพาน กม.29",
+      "name_en": "Ban KM.29 Bridge (Betong)",
+      "name_zh": "勿洞29公里桥",
+      "name_ms": "Jambatan KM.29 (Betong)",
+      "river": "แม่น้ำปัตตานี",
+      "amphoe": "เบตง",
+      "tumbon": "อัยเยอร์เวง",
+      "lat": 5.920578,
+      "lon": 101.182086,
+      "level_msl": 117.12,
+      "previous_msl": 117.13,
+      "bank_m": 120.37,
+      "watch_m": 118.5,
+      "critical_m": 120.37,
+      "bank_source": "api",
+      "remaining_to_bank_m": 3.25,
+      "situation_level": 2,
+      "storage_percent": 28.52,
+      "storage_anomaly": false,
+      "observed_at": "2026-11-24 23:00",
+      "age_minutes": 55.4,
+      "agency": "กฟผ.",
+      "risk_zone": "flash",
+      "is_flash_flood": true,
+      "registry_known": true,
+      "stale": false,
+      "situation_missing": false,
+      "bank_missing": false,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 9.2,
+      "rain_72h_mm": 39.6,
+      "api_7d_mm": 41.37,
+      "rain_sensor_gap": false,
+      "nearest_rain_gauge": "ชุมชนบ้านเหมือง (6.2 กม.)",
+      "forecast_6h_mm": 0.0,
+      "forecast_24h_mm": 15.5,
+      "forecast_72h_mm": 21.8,
+      "assessment": {
+        "formula_version": 3,
+        "score": 9.0,
+        "score_level": 1,
+        "floor_level": 2,
+        "flash_bonus": 0,
+        "level": 2,
+        "label_th": "เฝ้าระวัง",
+        "color": "#F9A825",
+        "action_th": "ติดตามข่าวใกล้ชิด เตรียมถุงยังชีพและชาร์จแบต",
+        "should_push": true,
+        "has_primary_signal": true,
+        "flood_mechanism": "monitoring",
+        "confidence": "high",
+        "reason_codes": [],
+        "lead_time_hours": null,
+        "signals": {
+          "W": 0.044,
+          "R": 0.1523,
+          "A": 0.2298,
+          "F": 0.1409,
+          "D": 0.0,
+          "C": 0.0,
+          "dH_m": -0.01
+        },
+        "flags": [
+          "h_normal_bootstrap"
+        ]
+      }
+    },
+    {
+      "id": 1346036361,
+      "oldcode": "MOU454",
+      "name": "คลองเบตง (ชุมชนกุนุงจนอง)",
+      "short_name": "คลองเบตง",
+      "name_en": "Khlong Betong (Kunung Chanong)",
+      "name_zh": "勿洞河 (古农查农)",
+      "name_ms": "Sungai Betong (Kunung Chanong)",
+      "river": "คลองตาโล๊ะ",
+      "amphoe": "เบตง",
+      "tumbon": "เบตง",
+      "lat": 5.785312,
+      "lon": 101.058685,
+      "level_msl": 281.75,
+      "previous_msl": 281.75,
+      "bank_m": 286.432,
+      "watch_m": 284.8,
+      "critical_m": 286.432,
+      "bank_source": "api",
+      "remaining_to_bank_m": 4.682,
+      "situation_level": 1,
+      "storage_percent": 2.15,
+      "storage_anomaly": false,
+      "observed_at": "2026-11-24 23:40",
+      "age_minutes": 15.4,
+      "agency": "พพภ",
+      "risk_zone": "flash",
+      "is_flash_flood": true,
+      "registry_known": true,
+      "stale": false,
+      "situation_missing": false,
+      "bank_missing": false,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 9.2,
+      "rain_72h_mm": 39.6,
+      "api_7d_mm": 41.37,
+      "rain_sensor_gap": false,
+      "nearest_rain_gauge": "คลองเบตง (ชุมชนกุนุงจนอง) (0.0 กม.)",
+      "forecast_6h_mm": 0.0,
+      "forecast_24h_mm": 15.5,
+      "forecast_72h_mm": 21.8,
+      "assessment": {
+        "formula_version": 3,
+        "score": 7.3,
+        "score_level": 1,
+        "floor_level": 1,
+        "flash_bonus": 0,
+        "level": 1,
+        "label_th": "ปกติ",
+        "color": "#2E7D32",
+        "action_th": "ติดตามสถานการณ์ได้ตามปกติ",
+        "should_push": false,
+        "has_primary_signal": false,
+        "flood_mechanism": "monitoring",
+        "confidence": "high",
+        "reason_codes": [],
+        "lead_time_hours": null,
+        "signals": {
+          "W": 0.0,
+          "R": 0.1523,
+          "A": 0.2298,
+          "F": 0.1409,
+          "D": 0.0,
+          "C": 0.0,
+          "dH_m": 0.0
+        },
+        "flags": [
+          "h_normal_bootstrap"
+        ]
+      }
+    },
+    {
+      "id": 1346024636,
+      "oldcode": "BLGTD03",
+      "name": "สะพานท่าสาป อ.เมือง จ.ยะลา",
+      "short_name": "สะพานท่าสาป",
+      "name_en": "Tha Sap Bridge",
+      "name_zh": "塔萨大桥",
+      "name_ms": "Jambatan Tha Sap",
+      "river": "แม่น้ำปัตตานี",
+      "amphoe": "เมืองยะลา",
+      "tumbon": "สะเตง",
+      "lat": 6.552715,
+      "lon": 101.266197,
+      "level_msl": 13.21,
+      "previous_msl": 13.26,
+      "bank_m": 17.29,
+      "watch_m": 15.8,
+      "critical_m": 17.29,
+      "bank_source": "api",
+      "remaining_to_bank_m": 4.08,
+      "situation_level": 3,
+      "storage_percent": 43.36,
+      "storage_anomaly": false,
+      "observed_at": "2026-11-24 23:00",
+      "age_minutes": 55.4,
+      "agency": "กฟผ.",
+      "risk_zone": "riverine",
+      "is_flash_flood": false,
+      "registry_known": true,
+      "stale": false,
+      "situation_missing": false,
+      "bank_missing": false,
+      "rain_1h_mm": 0.0,
+      "rain_24h_mm": 13.4,
+      "rain_72h_mm": 58.0,
+      "api_7d_mm": 59.7,
+      "rain_sensor_gap": false,
+      "nearest_rain_gauge": "โครงการชลประทานยะลา (1.9 กม.)",
+      "forecast_6h_mm": 3.7,
+      "forecast_24h_mm": 16.6,
+      "forecast_72h_mm": 24.0,
+      "assessment": {
+        "formula_version": 3,
+        "score": 10.0,
+        "score_level": 1,
+        "floor_level": 3,
+        "flash_bonus": 0,
+        "level": 3,
+        "label_th": "เตือนภัย",
+        "color": "#EF6C00",
+        "action_th": "ยกของขึ้นที่สูง เตรียมเส้นทางและแผนอพยพ",
+        "should_push": true,
+        "has_primary_signal": true,
+        "flood_mechanism": "monitoring",
+        "confidence": "high",
+        "reason_codes": [],
+        "lead_time_hours": null,
+        "signals": {
+          "W": 0.0,
+          "R": 0.2231,
+          "A": 0.3317,
+          "F": 0.1509,
+          "D": 0.0,
+          "C": 0.0,
+          "dH_m": -0.05
+        },
+        "flags": [
+          "h_normal_bootstrap",
+          "situation_score_mismatch"
+        ]
+      }
+    },
+    {
+      "id": 1346036809,
       "oldcode": "PAT002",
       "name": "เมืองยะลา",
+      "short_name": "เมืองยะลา",
+      "name_en": "Mueang Yala (Ta Se)",
+      "name_zh": "也拉市区 (塔塞)",
+      "name_ms": "Mueang Yala (Ta Se)",
       "river": "เขื่อนปัตตานี",
       "amphoe": "เมืองยะลา",
       "tumbon": "ตาเซะ",
@@ -2423,13 +2676,15 @@
       "level_msl": 12.89,
       "previous_msl": 12.89,
       "bank_m": 13.85,
+      "watch_m": 12.35,
+      "critical_m": 13.85,
       "bank_source": "api",
       "remaining_to_bank_m": 0.96,
       "situation_level": 4,
       "storage_percent": 92.07,
       "storage_anomaly": false,
-      "observed_at": "2026-11-24 17:40",
-      "age_minutes": 21.0,
+      "observed_at": "2026-11-24 23:40",
+      "age_minutes": 15.4,
       "agency": "สสน.",
       "risk_zone": "riverine",
       "is_flash_flood": false,
@@ -2438,12 +2693,17 @@
       "situation_missing": false,
       "bank_missing": false,
       "rain_1h_mm": 0.0,
-      "rain_24h_mm": 14.0,
+      "rain_24h_mm": 13.4,
+      "rain_72h_mm": 58.0,
+      "api_7d_mm": 59.7,
+      "rain_sensor_gap": false,
       "nearest_rain_gauge": "เมืองยะลา (0.0 กม.)",
-      "forecast_24h_mm": 23.3,
+      "forecast_6h_mm": 3.7,
+      "forecast_24h_mm": 16.6,
+      "forecast_72h_mm": 24.0,
       "assessment": {
-        "formula_version": 2,
-        "score": 28.0,
+        "formula_version": 3,
+        "score": 37.1,
         "score_level": 2,
         "floor_level": 4,
         "flash_bonus": 0,
@@ -2453,11 +2713,17 @@
         "action_th": "พร้อมอพยพทันที ติดตามประกาศ ปภ.ยะลา (073-203559)",
         "should_push": true,
         "has_primary_signal": true,
+        "flood_mechanism": "riverine_overflow",
+        "confidence": "high",
+        "reason_codes": [
+          "near_bank"
+        ],
         "lead_time_hours": null,
         "signals": {
-          "W": 0.52,
-          "R": 0.0933,
-          "F": 0.1942,
+          "W": 0.712,
+          "R": 0.2231,
+          "A": 0.3317,
+          "F": 0.1509,
           "D": 0.0,
           "C": 0.0,
           "dH_m": 0.0
@@ -2469,38 +2735,49 @@
       }
     },
     {
-      "id": 1345903631,
+      "id": 1346030109,
       "oldcode": "X.40A",
       "name": "บ้านท่าสาป",
+      "short_name": "บ้านท่าสาป",
+      "name_en": "Ban Tha Sap",
+      "name_zh": "班塔萨",
+      "name_ms": "Ban Tha Sap",
       "river": "แม่น้ำปัตตานี",
       "amphoe": "เมืองยะลา",
       "tumbon": "สะเตง",
       "lat": 6.54053,
       "lon": 101.249763,
-      "level_msl": 13.35,
-      "previous_msl": 13.34,
+      "level_msl": 13.19,
+      "previous_msl": 13.25,
       "bank_m": 16.5,
+      "watch_m": 15.5,
+      "critical_m": 16.5,
       "bank_source": "api",
-      "remaining_to_bank_m": 3.15,
+      "remaining_to_bank_m": 3.31,
       "situation_level": null,
       "storage_percent": null,
       "storage_anomaly": false,
-      "observed_at": "2026-11-24 17:00",
-      "age_minutes": 61.0,
+      "observed_at": "2026-11-24 23:00",
+      "age_minutes": 55.4,
       "agency": "ชป.",
       "risk_zone": "riverine",
       "is_flash_flood": false,
       "registry_known": true,
-      "stale": true,
+      "stale": false,
       "situation_missing": true,
       "bank_missing": false,
       "rain_1h_mm": 0.0,
-      "rain_24h_mm": 14.0,
+      "rain_24h_mm": 13.4,
+      "rain_72h_mm": 58.0,
+      "api_7d_mm": 59.7,
+      "rain_sensor_gap": false,
       "nearest_rain_gauge": "สะพานเฉลิมพระเกียรติ 72 พรรษา มหาราชินี (0.0 กม.)",
-      "forecast_24h_mm": 23.3,
+      "forecast_6h_mm": 3.7,
+      "forecast_24h_mm": 16.6,
+      "forecast_72h_mm": 24.0,
       "assessment": {
-        "formula_version": 2,
-        "score": 4.6,
+        "formula_version": 3,
+        "score": 10.0,
         "score_level": 1,
         "floor_level": 1,
         "flash_bonus": 0,
@@ -2510,42 +2787,31 @@
         "action_th": "ติดตามสถานการณ์ได้ตามปกติ",
         "should_push": false,
         "has_primary_signal": false,
+        "flood_mechanism": "monitoring",
+        "confidence": "high",
+        "reason_codes": [],
         "lead_time_hours": null,
         "signals": {
           "W": 0.0,
-          "R": 0.0933,
-          "F": 0.1942,
+          "R": 0.2231,
+          "A": 0.3317,
+          "F": 0.1509,
           "D": 0.0,
           "C": 0.0,
-          "dH_m": 0.0
+          "dH_m": -0.06
         },
         "flags": [
-          "water_stale"
+          "h_normal_bootstrap"
         ]
       }
     }
   ],
   "rain_gauges_summary": {
     "total": 87,
-    "fresh": 29,
+    "fresh": 30,
     "top_rain_24h": [
       {
-        "id": 320619534,
-        "oldcode": "MOU139",
-        "name": "หน่วยพิทักษ์อุทยานฯ ที่ บล.๒ (น้ำตกฮาลาซะห์)",
-        "amphoe": "ธารโต",
-        "tumbon": "แม่หวาด",
-        "lat": 6.058344,
-        "lon": 101.40899,
-        "rain_1h_mm": 0.0,
-        "rain_24h_mm": 27.2,
-        "observed_at": "2026-11-24 17:00",
-        "age_minutes": 61.0,
-        "stale": false,
-        "agency": "พพภ"
-      },
-      {
-        "id": 320624107,
+        "id": 320663702,
         "oldcode": "STN2160",
         "name": "บ้านคอกช้าง",
         "amphoe": "ธารโต",
@@ -2554,13 +2820,13 @@
         "lon": 101.166291,
         "rain_1h_mm": 0.0,
         "rain_24h_mm": 21.5,
-        "observed_at": "2026-11-24 16:00",
-        "age_minutes": 121.0,
+        "observed_at": "2026-11-24 22:00",
+        "age_minutes": 115.4,
         "stale": true,
         "agency": "ทน."
       },
       {
-        "id": 320621019,
+        "id": 320660664,
         "oldcode": "BLGTU03",
         "name": "วัดคอกช้าง อ.ธารโต จ.ยะลา",
         "amphoe": "ธารโต",
@@ -2569,13 +2835,28 @@
         "lon": 101.160038,
         "rain_1h_mm": 0.0,
         "rain_24h_mm": 21.0,
-        "observed_at": "2026-11-24 16:00",
-        "age_minutes": 121.0,
+        "observed_at": "2026-11-24 22:00",
+        "age_minutes": 115.4,
         "stale": true,
         "agency": "กฟผ."
       },
       {
-        "id": 320622376,
+        "id": 320659148,
+        "oldcode": "MOU139",
+        "name": "หน่วยพิทักษ์อุทยานฯ ที่ บล.๒ (น้ำตกฮาลาซะห์)",
+        "amphoe": "ธารโต",
+        "tumbon": "แม่หวาด",
+        "lat": 6.058344,
+        "lon": 101.40899,
+        "rain_1h_mm": 0.0,
+        "rain_24h_mm": 20.2,
+        "observed_at": "2026-11-24 23:00",
+        "age_minutes": 55.4,
+        "stale": false,
+        "agency": "พพภ"
+      },
+      {
+        "id": 320661793,
         "oldcode": "STH031",
         "name": "รพ.สต.บ้านวังไทร",
         "amphoe": "ธารโต",
@@ -2584,13 +2865,13 @@
         "lon": 101.26753,
         "rain_1h_mm": 0.0,
         "rain_24h_mm": 19.6,
-        "observed_at": "2026-11-24 17:00",
-        "age_minutes": 61.0,
+        "observed_at": "2026-11-24 23:00",
+        "age_minutes": 55.4,
         "stale": false,
         "agency": "สสน."
       },
       {
-        "id": 320623710,
+        "id": 320663308,
         "oldcode": "STN1697",
         "name": "บ้านวังไทร",
         "amphoe": "ธารโต",
@@ -2599,73 +2880,13 @@
         "lon": 101.269002,
         "rain_1h_mm": 0.0,
         "rain_24h_mm": 18.0,
-        "observed_at": "2026-11-24 16:00",
-        "age_minutes": 121.0,
+        "observed_at": "2026-11-24 22:00",
+        "age_minutes": 115.4,
         "stale": true,
         "agency": "ทน."
       },
       {
-        "id": 320621020,
-        "oldcode": "BLGTU04",
-        "name": "โครงการจุฬาภรณ์พัฒนา 7 อ.ธารโต จ.ยะลา",
-        "amphoe": "ธารโต",
-        "tumbon": "แม่หวาด",
-        "lat": 6.063376,
-        "lon": 101.364834,
-        "rain_1h_mm": 0.0,
-        "rain_24h_mm": 17.0,
-        "observed_at": "2026-11-24 16:00",
-        "age_minutes": 121.0,
-        "stale": true,
-        "agency": "กฟผ."
-      },
-      {
-        "id": 320621046,
-        "oldcode": "BLGTD03",
-        "name": "สะพานท่าสาป อ.เมือง จ.ยะลา",
-        "amphoe": "เมืองยะลา",
-        "tumbon": "สะเตง",
-        "lat": 6.552715,
-        "lon": 101.266197,
-        "rain_1h_mm": 0.0,
-        "rain_24h_mm": 16.0,
-        "observed_at": "2026-11-24 16:00",
-        "age_minutes": 121.0,
-        "stale": true,
-        "agency": "กฟผ."
-      },
-      {
-        "id": 320621025,
-        "oldcode": "BLGTU06",
-        "name": "ฝายละแอ อ.บันนังสตา จ.ยะลา",
-        "amphoe": "บันนังสตา",
-        "tumbon": "เขื่อนบางลาง",
-        "lat": 6.143055,
-        "lon": 101.309167,
-        "rain_1h_mm": 0.0,
-        "rain_24h_mm": 15.0,
-        "observed_at": "2026-11-24 16:00",
-        "age_minutes": 121.0,
-        "stale": true,
-        "agency": "กฟผ."
-      },
-      {
-        "id": 320624108,
-        "oldcode": "STN2161",
-        "name": "บ้านสันติ",
-        "amphoe": "ธารโต",
-        "tumbon": "แม่หวาด",
-        "lat": 6.104922,
-        "lon": 101.301193,
-        "rain_1h_mm": 0.0,
-        "rain_24h_mm": 14.0,
-        "observed_at": "2026-11-24 16:00",
-        "age_minutes": 121.0,
-        "stale": true,
-        "agency": "ทน."
-      },
-      {
-        "id": 320621018,
+        "id": 320660662,
         "oldcode": "BLGTU02",
         "name": "สะพานบ้าน กม.29 อ.เบตง จ.ยะลา",
         "amphoe": "เบตง",
@@ -2674,13 +2895,28 @@
         "lon": 101.182086,
         "rain_1h_mm": 0.0,
         "rain_24h_mm": 14.0,
-        "observed_at": "2026-11-24 16:00",
-        "age_minutes": 121.0,
+        "observed_at": "2026-11-24 22:00",
+        "age_minutes": 115.4,
         "stale": true,
         "agency": "กฟผ."
       },
       {
-        "id": 320622374,
+        "id": 320660621,
+        "oldcode": "BLGTU06",
+        "name": "ฝายละแอ อ.บันนังสตา จ.ยะลา",
+        "amphoe": "บันนังสตา",
+        "tumbon": "เขื่อนบางลาง",
+        "lat": 6.143055,
+        "lon": 101.309167,
+        "rain_1h_mm": 0.0,
+        "rain_24h_mm": 14.0,
+        "observed_at": "2026-11-24 22:00",
+        "age_minutes": 115.4,
+        "stale": true,
+        "agency": "กฟผ."
+      },
+      {
+        "id": 320661792,
         "oldcode": "PAT002",
         "name": "เมืองยะลา",
         "amphoe": "เมืองยะลา",
@@ -2688,44 +2924,44 @@
         "lat": 6.67525,
         "lon": 101.286354,
         "rain_1h_mm": 0.0,
-        "rain_24h_mm": 14.0,
-        "observed_at": "2026-11-24 17:00",
-        "age_minutes": 61.0,
+        "rain_24h_mm": 13.4,
+        "observed_at": "2026-11-24 23:00",
+        "age_minutes": 55.4,
         "stale": false,
         "agency": "สสน."
       },
       {
-        "id": 320624192,
-        "oldcode": "STN2253",
-        "name": "ชุมชนตลาดเมืองใหม่",
-        "amphoe": "เมืองยะลา",
-        "tumbon": "สะเตง",
-        "lat": 6.552701,
-        "lon": 101.266779,
+        "id": 320660665,
+        "oldcode": "BLGTU04",
+        "name": "โครงการจุฬาภรณ์พัฒนา 7 อ.ธารโต จ.ยะลา",
+        "amphoe": "ธารโต",
+        "tumbon": "แม่หวาด",
+        "lat": 6.063376,
+        "lon": 101.364834,
         "rain_1h_mm": 0.0,
-        "rain_24h_mm": 13.5,
-        "observed_at": "2026-11-24 16:00",
-        "age_minutes": 121.0,
+        "rain_24h_mm": 12.0,
+        "observed_at": "2026-11-24 22:00",
+        "age_minutes": 115.4,
+        "stale": true,
+        "agency": "กฟผ."
+      },
+      {
+        "id": 320663703,
+        "oldcode": "STN2161",
+        "name": "บ้านสันติ",
+        "amphoe": "ธารโต",
+        "tumbon": "แม่หวาด",
+        "lat": 6.104922,
+        "lon": 101.301193,
+        "rain_1h_mm": 0.0,
+        "rain_24h_mm": 12.0,
+        "observed_at": "2026-11-24 22:00",
+        "age_minutes": 115.4,
         "stale": true,
         "agency": "ทน."
       },
       {
-        "id": 320624186,
-        "oldcode": "STN2246",
-        "name": "บ้านภักดี",
-        "amphoe": "บันนังสตา",
-        "tumbon": "เขื่อนบางลาง",
-        "lat": 6.158471,
-        "lon": 101.323802,
-        "rain_1h_mm": 0.0,
-        "rain_24h_mm": 12.5,
-        "observed_at": "2026-11-24 16:00",
-        "age_minutes": 121.0,
-        "stale": true,
-        "agency": "ทน."
-      },
-      {
-        "id": 320623714,
+        "id": 320663311,
         "oldcode": "STN1702",
         "name": "บ้านละหาด",
         "amphoe": "ธารโต",
@@ -2733,14 +2969,44 @@
         "lat": 6.007395,
         "lon": 101.194236,
         "rain_1h_mm": 0.0,
-        "rain_24h_mm": 12.5,
-        "observed_at": "2026-11-24 16:00",
-        "age_minutes": 121.0,
+        "rain_24h_mm": 12.0,
+        "observed_at": "2026-11-24 22:00",
+        "age_minutes": 115.4,
         "stale": true,
         "agency": "ทน."
       },
       {
-        "id": 320619335,
+        "id": 320663779,
+        "oldcode": "STN2246",
+        "name": "บ้านภักดี",
+        "amphoe": "บันนังสตา",
+        "tumbon": "เขื่อนบางลาง",
+        "lat": 6.158471,
+        "lon": 101.323802,
+        "rain_1h_mm": 0.0,
+        "rain_24h_mm": 12.0,
+        "observed_at": "2026-11-24 22:00",
+        "age_minutes": 115.4,
+        "stale": true,
+        "agency": "ทน."
+      },
+      {
+        "id": 320663783,
+        "oldcode": "STN2251",
+        "name": "บ้านวังใหม่",
+        "amphoe": "เบตง",
+        "tumbon": "อัยเยอร์เวง",
+        "lat": 5.957057,
+        "lon": 101.15661,
+        "rain_1h_mm": 0.0,
+        "rain_24h_mm": 11.5,
+        "observed_at": "2026-11-24 22:00",
+        "age_minutes": 115.4,
+        "stale": true,
+        "agency": "ทน."
+      },
+      {
+        "id": 320658951,
         "oldcode": "ridtele_Tpat.23",
         "name": "เทศบาลตำบลบุดี",
         "amphoe": "เมืองยะลา",
@@ -2748,11 +3014,26 @@
         "lat": 6.508855,
         "lon": 101.317897,
         "rain_1h_mm": 0.0,
-        "rain_24h_mm": 12.0,
-        "observed_at": "2026-11-24 16:00",
-        "age_minutes": 121.0,
+        "rain_24h_mm": 11.0,
+        "observed_at": "2026-11-24 22:00",
+        "age_minutes": 115.4,
         "stale": true,
         "agency": "ชป."
+      },
+      {
+        "id": 320663313,
+        "oldcode": "STN1704",
+        "name": "บ้านฮูหยงบาโร๊ะ",
+        "amphoe": "รามัน",
+        "tumbon": "กายูบอเกาะ",
+        "lat": 6.492212,
+        "lon": 101.416828,
+        "rain_1h_mm": 0.0,
+        "rain_24h_mm": 9.5,
+        "observed_at": "2026-11-24 22:00",
+        "age_minutes": 115.4,
+        "stale": true,
+        "agency": "ทน."
       }
     ]
   },
@@ -3071,6 +3352,6 @@
       }
     ]
   },
-  "generated_at": "2026-11-24T18:00:59+07:00",
-  "content_hash": "699a91ec5afe71498717f378b703a1243f0933f8566701bebe84865b13a1ec76"
+  "generated_at": "2026-11-24T23:55:22+07:00",
+  "content_hash": "3554d979188fc48d1fff5998f222a398b7bad8ed044ca51e6af7a2df08271140"
 }

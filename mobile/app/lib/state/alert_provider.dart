@@ -1,4 +1,7 @@
-import 'package:flutter/foundation.dart';
+import 'dart:math' as math;
+
+import 'package:latlong2/latlong.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:yala_flood_app/config/app_config.dart';
 import 'package:yala_flood_app/l10n/app_strings.dart';
@@ -48,16 +51,36 @@ class AlertProvider extends ChangeNotifier {
   List<AmphoeBoundary> _boundaries = const <AmphoeBoundary>[];
   List<SubdistrictBoundary> _subdistricts = const <SubdistrictBoundary>[];
   List<VillagePoint> _villages = const <VillagePoint>[];
+  List<VillageZoneBoundary> _villageZones = const <VillageZoneBoundary>[];
+  List<ElevationBandZone> _elevationZones = const <ElevationBandZone>[];
+  DemElevationGrid? _demGrid;
+  ({double lat, double lng, bool isGps})? _pinnedCoords;
   bool _gpsConsentGranted = false;
   int _dataResetVersion = 0;
 
   bool _loading = false;
   bool _initialized = false;
+  bool _disposed = false;
   String? _errorTh;
   String? _noticeTh;
   DateTime? _lastUpdated;
   WaterSource _source = WaterSource.network;
   String? _selectedStationCode;
+
+  @override
+  void notifyListeners() {
+    if (!_disposed) {
+      super.notifyListeners();
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _waterService.close();
+    _snapshotService.close();
+    super.dispose();
+  }
 
   List<Station> get stations => _stations;
   List<AlertItem> get alerts => _alerts;
@@ -68,6 +91,9 @@ class AlertProvider extends ChangeNotifier {
   List<AmphoeBoundary> get boundaries => _boundaries;
   List<SubdistrictBoundary> get subdistricts => _subdistricts;
   List<VillagePoint> get villages => _villages;
+  List<VillageZoneBoundary> get villageZones => _villageZones;
+  List<ElevationBandZone> get elevationZones => _elevationZones;
+  DemElevationGrid? get demGrid => _demGrid;
   bool get gpsConsentGranted => _gpsConsentGranted;
   int get dataResetVersion => _dataResetVersion;
   bool get loading => _loading;
@@ -104,9 +130,163 @@ class AlertProvider extends ChangeNotifier {
   List<SubdistrictBoundary> subdistrictsOf(String amphoeTh) =>
       _subdistricts.where((s) => s.amphoeTh == amphoeTh).toList();
 
+  /// ค้นหาชื่อตำบลภาษาอังกฤษจากขอบเขต 58 ตำบลเพื่อแสดงผลครบ 4 ภาษา (MEDIUM-4)
+  String? tumbonEnOf(String? amphoeTh, String tumbonTh) {
+    for (final s in _subdistricts) {
+      if (s.tumbonTh == tumbonTh && (amphoeTh == null || s.amphoeTh == amphoeTh)) {
+        if (s.tumbonEn.trim().isNotEmpty) return s.tumbonEn.trim();
+      }
+    }
+    return null;
+  }
+
   List<VillagePoint> villagesOf(String amphoeTh, String tumbonTh) => _villages
       .where((v) => v.amphoeTh == amphoeTh && v.tumbonTh == tumbonTh)
       .toList();
+
+  List<VillageZoneBoundary> villageZonesOf(String amphoeTh, String tumbonTh) =>
+      _villageZones
+          .where((v) => v.amphoeTh == amphoeTh && v.tumbonTh == tumbonTh)
+          .toList();
+
+  List<ElevationBandZone> elevationZonesOf(String? amphoeTh) => amphoeTh == null
+      ? _elevationZones
+      : _elevationZones.where((z) => z.amphoeTh == amphoeTh).toList();
+
+  /// สีไล่ระดับจริงตามความสูงภูมิประเทศ (ม.รทก.) เทียบระดับน้ำแม่น้ำและระดับแจ้งเตือนของอำเภอ
+  Color elevationGradientColor(double elevMsl, String amphoeTh) {
+    final elevRes = elevationFloodLevel(elevMsl, amphoeTh);
+    final refWater = elevRes.refWaterMsl;
+    final ampLv = amphoeAlertLevel(amphoeTh).value;
+
+    // โทนสีไล่ระดับต่อเนื่องจากระดับน้ำถึงยอดเขา:
+    // แดงเข้ม (<=0.5ม.) -> แดง (<=2.5ม.) -> ส้ม (<=6ม.) -> เหลือง (<=12ม.) -> เขียวอ่อน (<=30ม.) -> เขียวเข้ม/ฟ้าอมเขียว (>60ม.)
+    if (refWater != null) {
+      final margin = elevMsl - refWater;
+      if (ampLv == 1) {
+        // สถานการณ์ปกติ: ไล่โทนระดับความสูงจากพื้นที่ลุ่มต่ำ (เหลืองอมเขียว/เขียวอ่อน) -> ที่สูง (เขียวเข้ม/ฟ้าอมเขียว)
+        if (margin <= 3.0) return const Color(0xFF9CCC65);
+        if (margin <= 8.0) return const Color(0xFF66BB6A);
+        if (margin <= 20.0) return const Color(0xFF43A047);
+        if (margin <= 60.0) return const Color(0xFF2E7D32);
+        if (margin <= 150.0) return const Color(0xFF1B5E20);
+        return const Color(0xFF0F4C3A);
+      }
+      if (margin <= 0.5) return const Color(0xFFB71C1C);
+      if (margin <= 2.5) return const Color(0xFFE53935);
+      if (margin <= 6.0) return const Color(0xFFEF6C00);
+      if (margin <= 12.0) return const Color(0xFFF9A825);
+      if (margin <= 25.0) return const Color(0xFF9CCC65);
+      if (margin <= 60.0) return const Color(0xFF43A047);
+      if (margin <= 150.0) return const Color(0xFF2E7D32);
+      return const Color(0xFF1B5E20);
+    }
+
+    // อำเภอที่ไม่มีสถานีวัดน้ำ (เช่น อ.กาบัง): ไล่สีตามความสูง MSL + ระดับแจ้งเตือนฝน
+    if (ampLv >= 3 && elevMsl < 65) return AlertLevel.fromValue(ampLv).color;
+    if (elevMsl < 45) return ampLv >= 2 ? const Color(0xFFF9A825) : const Color(0xFF81C784);
+    if (elevMsl < 90) return const Color(0xFF4CAF50);
+    if (elevMsl < 180) return const Color(0xFF2E7D32);
+    return const Color(0xFF1B5E20);
+  }
+
+  /// ประเมินพิกัด GPS หรือหมุดที่ผู้ใช้ปักไว้บนแผนที่แบบ Hyper-Local (อำเภอ, ตำบล, ความสูง ม.รทก., เทียบระดับน้ำ)
+  UserPinAssessment? get userPinAssessment {
+    final pin = _pinnedCoords;
+    if (pin == null) return null;
+    final pt = LatLng(pin.lat, pin.lng);
+
+    String? matchedAmphoe;
+    for (final b in _boundaries) {
+      if (SnapshotService.pointInRings(pt, b.rings)) {
+        matchedAmphoe = b.amphoeTh;
+        break;
+      }
+    }
+
+    String? matchedTumbon;
+    String? matchedTumbonEn;
+    for (final s in _subdistricts) {
+      if (matchedAmphoe != null && s.amphoeTh != matchedAmphoe) continue;
+      if (SnapshotService.pointInRings(pt, s.rings)) {
+        matchedTumbon = s.tumbonTh;
+        matchedTumbonEn = s.tumbonEn;
+        matchedAmphoe ??= s.amphoeTh;
+        break;
+      }
+    }
+
+    // ความสูงภูมิประเทศจริงจาก Copernicus DEM grid (ออฟไลน์) หรือ fallback หมู่บ้านใกล้สุด
+    double? elevMsl = _demGrid?.elevationAt(pin.lat, pin.lng);
+    if (elevMsl == null && _villages.isNotEmpty) {
+      VillagePoint? nearestV;
+      var bestDist = double.infinity;
+      for (final v in _villages) {
+        if (v.elevationMsl == null) continue;
+        final d = _haversineKm(pin.lat, pin.lng, v.lat, v.lon);
+        if (d < bestDist) {
+          bestDist = d;
+          nearestV = v;
+        }
+      }
+      if (nearestV != null && bestDist <= 10.0) {
+        elevMsl = nearestV.elevationMsl;
+      }
+    }
+
+    // หาสถานีวัดระดับน้ำใกล้ที่สุด
+    Station? nearestSt;
+    var nearestDist = double.infinity;
+    for (final st in _stations) {
+      if (!st.hasCoordinate) continue;
+      final d = _haversineKm(pin.lat, pin.lng, st.lat!, st.lng!);
+      if (d < nearestDist) {
+        nearestDist = d;
+        nearestSt = st;
+      }
+    }
+
+    final amphoeForEval = matchedAmphoe ?? nearestSt?.amphoeTh ?? 'เมืองยะลา';
+    final elevEval = elevationFloodLevel(elevMsl, amphoeForEval);
+
+    return UserPinAssessment(
+      lat: pin.lat,
+      lng: pin.lng,
+      isGps: pin.isGps,
+      level: elevEval.level,
+      amphoeTh: matchedAmphoe,
+      tumbonTh: matchedTumbon,
+      tumbonEn: matchedTumbonEn,
+      elevationMsl: elevMsl,
+      refWaterMsl: elevEval.refWaterMsl ?? nearestSt?.displayLevel,
+      marginMeters: elevEval.marginMeters,
+      nearestStationCode: nearestSt?.code,
+      nearestStationDistKm: nearestSt != null ? nearestDist : null,
+    );
+  }
+
+  Future<void> setPinnedLocation(double lat, double lng, {bool isGps = false}) async {
+    _pinnedCoords = (lat: lat, lng: lng, isGps: isGps);
+    await _store?.savePinnedLocation(lat, lng, isGps: isGps);
+    notifyListeners();
+  }
+
+  Future<void> clearPinnedLocation() async {
+    _pinnedCoords = null;
+    await _store?.clearPinnedLocation();
+    notifyListeners();
+  }
+
+  static double _haversineKm(double lat1, double lon1, double lat2, double lon2) {
+    const r = 6371.0;
+    final p1 = lat1 * math.pi / 180.0;
+    final p2 = lat2 * math.pi / 180.0;
+    final dp = (lat2 - lat1) * math.pi / 180.0;
+    final dl = (lon2 - lon1) * math.pi / 180.0;
+    final a = math.sin(dp / 2) * math.sin(dp / 2) +
+        math.cos(p1) * math.cos(p2) * math.sin(dl / 2) * math.sin(dl / 2);
+    return 2 * r * math.asin(math.sqrt(a.clamp(0.0, 1.0)));
+  }
 
   /// ระดับน้ำแม่น้ำอ้างอิงในอำเภอ (เลือกสถานีที่ใกล้ตลิ่งที่สุด)
   double? referenceWaterMslForAmphoe(String amphoeTh) {
@@ -223,17 +403,44 @@ class AlertProvider extends ChangeNotifier {
       _settings = store.loadSettings();
       _sosRequests = store.loadSosRequests();
       _gpsConsentGranted = store.loadGpsConsent();
+      _pinnedCoords = store.loadPinnedLocation();
     }
-    _boundaries = await _snapshotService.loadYalaBoundaries();
-    _subdistricts = await _snapshotService.loadYalaSubdistricts();
-    _villages = await _snapshotService.loadYalaVillages();
-    _snapshot = await _snapshotService.loadSnapshot();
+    // โหลดขอบเขตแผนที่ทั้ง 3 ระดับ, ชั้นความสูง DEM และแคชในเครื่องแบบขนานเพื่อให้เปิดหน้าจอได้ทันที
+    final results = await Future.wait<dynamic>([
+      _snapshotService.loadYalaBoundaries(),
+      _snapshotService.loadYalaSubdistricts(),
+      _snapshotService.loadYalaVillages(),
+      _snapshotService.loadVillageZones(),
+      _snapshotService.loadElevationZones(),
+      _snapshotService.loadDemGrid(),
+      _snapshotService.loadCachedOrBundledSnapshot(),
+    ]);
+    _boundaries = results[0] as List<AmphoeBoundary>;
+    _subdistricts = results[1] as List<SubdistrictBoundary>;
+    _villages = results[2] as List<VillagePoint>;
+    _villageZones = results[3] as List<VillageZoneBoundary>;
+    _elevationZones = results[4] as List<ElevationBandZone>;
+    _demGrid = results[5] as DemElevationGrid?;
+    _snapshot = results[6] as FloodSnapshot?;
     _initialized = true;
+    notifyListeners();
+
     await _notifications.syncTopicSubscription(
       pushEnabled: _settings.pushEnabled,
       selectedAmphoeTh: _settings.selectedAmphoeTh,
     );
     await refresh();
+  }
+
+  /// รีเฟรชอัตโนมัติเมื่อผู้ใช้กลับมาเปิดแอปและข้อมูลเก่าเกินค่าที่ตั้งไว้ใน settings.refreshMinutes
+  Future<void> refreshIfStale() async {
+    if (_loading) return;
+    final last = _lastUpdated;
+    if (last == null ||
+        DateTime.now().difference(last) >=
+            Duration(minutes: _settings.refreshMinutes)) {
+      await refresh();
+    }
   }
 
   Future<void> refresh({bool force = false}) async {
@@ -252,6 +459,13 @@ class AlertProvider extends ChangeNotifier {
       if (_villages.isEmpty) {
         _villages = await _snapshotService.loadYalaVillages();
       }
+      if (_villageZones.isEmpty) {
+        _villageZones = await _snapshotService.loadVillageZones();
+      }
+      if (_elevationZones.isEmpty) {
+        _elevationZones = await _snapshotService.loadElevationZones();
+      }
+      _demGrid ??= await _snapshotService.loadDemGrid();
       final snapFuture = _snapshotService.loadSnapshot();
       final result = await _waterService.fetch(forceRefresh: force);
       _stations = result.stations;
@@ -403,6 +617,7 @@ class AlertProvider extends ChangeNotifier {
     _sosRequests = const <SosRequest>[];
     _settings = const AlertSettings();
     _gpsConsentGranted = false;
+    _pinnedCoords = null;
     _dataResetVersion++;
     await _store?.deleteAllUserData();
     await _waterService.clearCache();

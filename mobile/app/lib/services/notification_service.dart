@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:yala_flood_app/config/app_config.dart';
 import 'package:yala_flood_app/models/alert.dart';
 import 'package:yala_flood_app/models/risk_level.dart';
 
@@ -38,6 +42,11 @@ class NotificationService {
   bool _ready = false;
   bool _pushConfigured = false;
   String? _activeTopic;
+  bool _desiredPushEnabled = true;
+  String? _desiredAmphoeTh;
+  SharedPreferences? _prefs;
+  StreamSubscription<RemoteMessage>? _onMessageSub;
+  StreamSubscription<String>? _onTokenRefreshSub;
 
   bool get isReady => _ready;
   bool get isPushConfigured => _pushConfigured;
@@ -68,12 +77,21 @@ class NotificationService {
   }
 
   /// เปิด Firebase/APNs ถ้ามีการตั้งค่า `GoogleService-Info.plist` (ไม่มีก็ข้าม ไม่ทำให้แอพค้าง)
+  /// รองรับการรอ APNs Token บน iPhone จริงและซิงค์ใหม่อัตโนมัติเมื่อ Token รีเฟรช
   Future<void> initializePush({
     bool pushEnabled = true,
     String? selectedAmphoeTh,
+    SharedPreferences? preferences,
   }) async {
+    _prefs ??= preferences;
+    _desiredPushEnabled = pushEnabled;
+    _desiredAmphoeTh = selectedAmphoeTh;
+    _activeTopic ??= _prefs?.getString(AppConfig.subscribedTopicPrefsKey);
+
     try {
-      await Firebase.initializeApp();
+      if (Firebase.apps.isEmpty) {
+        await Firebase.initializeApp();
+      }
       final messaging = FirebaseMessaging.instance;
       await messaging.requestPermission(
         alert: true,
@@ -85,13 +103,26 @@ class NotificationService {
         badge: true,
         sound: true,
       );
-      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        debugPrint('FCM message: ${message.notification?.title}');
+
+      _onMessageSub ??= FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        debugPrint('FCM message received: ${message.messageId ?? "unknown"}');
       });
+
+      _onTokenRefreshSub ??= messaging.onRegistered.listen((_) {
+        unawaited(
+          syncTopicSubscription(
+            pushEnabled: _desiredPushEnabled,
+            selectedAmphoeTh: _desiredAmphoeTh,
+            forceResync: true,
+          ),
+        );
+      });
+
+      await _waitForAppleApnsTokenIfNeeded(messaging);
       _pushConfigured = true;
       await syncTopicSubscription(
-        pushEnabled: pushEnabled,
-        selectedAmphoeTh: selectedAmphoeTh,
+        pushEnabled: _desiredPushEnabled,
+        selectedAmphoeTh: _desiredAmphoeTh,
       );
     } catch (error) {
       _pushConfigured = false;
@@ -99,31 +130,63 @@ class NotificationService {
     }
   }
 
-  /// ซิงค์การติดตามหัวข้อ Push ตามอำเภอที่ผู้ใช้เลือกและสถานะเปิด/ปิด Notification
+  /// บน iOS/macOS จริง Apple จะส่ง APNs token กลับมาแบบ async หลังขอสิทธิ์
+  /// รอแบบมีเพดานสูงสุด ~6 วินาที เพื่อลดโอกาสเกิด `apns-token-not-set`
+  Future<void> _waitForAppleApnsTokenIfNeeded(
+    FirebaseMessaging messaging,
+  ) async {
+    if (kIsWeb) return;
+    if (defaultTargetPlatform != TargetPlatform.iOS &&
+        defaultTargetPlatform != TargetPlatform.macOS) {
+      return;
+    }
+    for (var attempt = 0; attempt < 12; attempt++) {
+      try {
+        final apnsToken = await messaging.getAPNSToken();
+        if (apnsToken != null && apnsToken.isNotEmpty) return;
+      } catch (_) {
+        return;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+    }
+  }
+
+  /// ซิงค์การติดตามหัวข้อ Push ตามอำเภอที่ผู้ใช้เลือกแบบ Lean (ลดการยิง API ซ้ำซ้อน)
   Future<void> syncTopicSubscription({
     required bool pushEnabled,
     String? selectedAmphoeTh,
+    bool forceResync = false,
   }) async {
+    _desiredPushEnabled = pushEnabled;
+    _desiredAmphoeTh = selectedAmphoeTh;
     if (!_pushConfigured) return;
+
     try {
       final messaging = FirebaseMessaging.instance;
-      final allTopics = <String>{topicAllYala, ...amphoeTopicMap.values};
+      final previous =
+          _activeTopic ?? _prefs?.getString(AppConfig.subscribedTopicPrefsKey);
+
       if (!pushEnabled) {
-        for (final t in allTopics) {
-          await messaging.unsubscribeFromTopic(t);
+        if (previous != null && previous.isNotEmpty) {
+          await messaging.unsubscribeFromTopic(previous);
         }
         _activeTopic = null;
+        await _prefs?.remove(AppConfig.subscribedTopicPrefsKey);
         return;
       }
+
       final desired = topicForAmphoe(selectedAmphoeTh);
-      if (_activeTopic == desired) return;
-      for (final t in allTopics) {
-        if (t != desired) {
-          await messaging.unsubscribeFromTopic(t);
-        }
+      if (!forceResync && previous == desired) {
+        _activeTopic = desired;
+        return;
+      }
+
+      if (previous != null && previous.isNotEmpty && previous != desired) {
+        await messaging.unsubscribeFromTopic(previous);
       }
       await messaging.subscribeToTopic(desired);
       _activeTopic = desired;
+      await _prefs?.setString(AppConfig.subscribedTopicPrefsKey, desired);
     } catch (error) {
       debugPrint('syncTopicSubscription failed: $error');
     }

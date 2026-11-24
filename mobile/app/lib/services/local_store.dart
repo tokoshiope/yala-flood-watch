@@ -82,11 +82,40 @@ class LocalStore {
     await _prefs.setBool(AppConfig.gpsConsentPrefsKey, granted);
   }
 
+  // ── หมุดพิกัดของผู้ใช้บนแผนที่ (เก็บในเครื่องเท่านั้น) ──────────────────
+  ({double lat, double lng, bool isGps})? loadPinnedLocation() {
+    final raw = _prefs.getString(AppConfig.pinnedLocationPrefsKey);
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<String, dynamic>) return null;
+      final lat = (decoded['lat'] as num?)?.toDouble();
+      final lng = (decoded['lng'] as num?)?.toDouble();
+      if (lat == null || lng == null) return null;
+      return (lat: lat, lng: lng, isGps: decoded['isGps'] == true);
+    } on FormatException {
+      return null;
+    }
+  }
+
+  Future<void> savePinnedLocation(double lat, double lng, {bool isGps = false}) async {
+    await _prefs.setString(
+      AppConfig.pinnedLocationPrefsKey,
+      jsonEncode({'lat': lat, 'lng': lng, 'isGps': isGps}),
+    );
+  }
+
+  Future<void> clearPinnedLocation() async {
+    await _prefs.remove(AppConfig.pinnedLocationPrefsKey);
+  }
+
   /// ลบข้อมูลส่วนบุคคลและประวัติทั้งหมดในเครื่อง (สิทธิเจ้าของข้อมูล PDPA)
   Future<void> deleteAllUserData() async {
     await _prefs.remove(AppConfig.alertsPrefsKey);
     await _prefs.remove(AppConfig.settingsPrefsKey);
     await _prefs.remove(AppConfig.sosLogPrefsKey);
     await _prefs.remove(AppConfig.gpsConsentPrefsKey);
+    await _prefs.remove(AppConfig.subscribedTopicPrefsKey);
+    await _prefs.remove(AppConfig.pinnedLocationPrefsKey);
   }
 }

@@ -1,16 +1,16 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
+import 'package:yala_flood_app/l10n/app_strings.dart';
 import 'package:yala_flood_app/models/alert.dart';
 import 'package:yala_flood_app/models/risk_level.dart';
-import 'package:yala_flood_app/models/sos_request.dart';
 import 'package:yala_flood_app/models/station.dart';
 import 'package:yala_flood_app/screens/sos_screen.dart';
-import 'package:yala_flood_app/services/alert_engine.dart';
 import 'package:yala_flood_app/state/alert_provider.dart';
 import 'package:yala_flood_app/widgets/risk_badge.dart';
 
-/// หน้ารายละเอียดสถานี: ระดับน้ำ เทียบตลิ่ง กราฟจำลอง และคำแนะนำ
+/// หน้ารายละเอียดสถานี: ระดับน้ำ เทียบตลิ่ง กราฟแนวโน้ม และคำแนะนำ
+/// รองรับ iOS Dark Mode และ 4 ภาษาเต็มรูปแบบ
 class StationDetailScreen extends StatelessWidget {
   const StationDetailScreen({super.key, required this.stationCode});
 
@@ -19,15 +19,16 @@ class StationDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AlertProvider>();
+    final strings = provider.strings;
     final station = provider.stationByCode(stationCode);
 
     if (station == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('รายละเอียดสถานี')),
-        body: const Center(
+        appBar: AppBar(title: Text(strings.get('station_detail_title'))),
+        body: Center(
           child: Padding(
-            padding: EdgeInsets.all(24),
-            child: Text('ไม่พบสถานีนี้ในข้อมูล ลองโหลดข้อมูลใหม่อีกครั้ง'),
+            padding: const EdgeInsets.all(24),
+            child: Text(strings.get('station_not_found')),
           ),
         ),
       );
@@ -38,24 +39,24 @@ class StationDetailScreen extends StatelessWidget {
         .toList();
 
     return Scaffold(
-      appBar: AppBar(title: Text(station.nameTh)),
+      appBar: AppBar(title: Text(strings.stationFullName(station))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
-          _HeaderCard(station: station),
+          _HeaderCard(station: station, strings: strings),
           const SizedBox(height: 12),
-          _LevelCard(station: station),
+          _LevelCard(station: station, strings: strings),
           const SizedBox(height: 12),
-          _BankCard(station: station),
+          _BankCard(station: station, strings: strings),
           const SizedBox(height: 12),
-          _ChartCard(station: station),
+          _ChartCard(station: station, strings: strings),
           const SizedBox(height: 12),
-          _GuidanceCard(station: station),
+          _GuidanceCard(station: station, strings: strings),
           const SizedBox(height: 12),
-          _InfoCard(station: station),
+          _InfoCard(station: station, strings: strings),
           if (alerts.isNotEmpty) ...[
             const SizedBox(height: 12),
-            _StationAlertsCard(alerts: alerts),
+            _StationAlertsCard(station: station, alerts: alerts, strings: strings),
           ],
           const SizedBox(height: 12),
           Row(
@@ -64,7 +65,7 @@ class StationDetailScreen extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: () => _goToSos(context),
                   icon: const Icon(Icons.emergency_share),
-                  label: const Text('ขอความช่วยเหลือ'),
+                  label: Text(strings.get('request_help_btn')),
                 ),
               ),
             ],
@@ -82,15 +83,17 @@ class StationDetailScreen extends StatelessWidget {
 }
 
 class _HeaderCard extends StatelessWidget {
-  const _HeaderCard({required this.station});
+  const _HeaderCard({required this.station, required this.strings});
 
   final Station station;
+  final AppStrings strings;
 
   @override
   Widget build(BuildContext context) {
     final level = station.riskLevel;
+    final brightness = Theme.of(context).brightness;
     return Card(
-      color: level.color.withValues(alpha: 0.08),
+      color: level.colorFor(brightness).withValues(alpha: brightness == Brightness.dark ? 0.16 : 0.08),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Row(
@@ -100,18 +103,18 @@ class _HeaderCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    station.nameTh,
+                    strings.stationFullName(station),
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${station.locationLabel} · ${station.code}',
+                    '${strings.stationLocation(station)} · ${station.code}',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
               ),
             ),
-            RiskBadge(level: level),
+            RiskBadge(level: level, strings: strings),
           ],
         ),
       ),
@@ -120,14 +123,18 @@ class _HeaderCard extends StatelessWidget {
 }
 
 class _LevelCard extends StatelessWidget {
-  const _LevelCard({required this.station});
+  const _LevelCard({required this.station, required this.strings});
 
   final Station station;
+  final AppStrings strings;
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
     final level = station.riskLevel;
+    final displayColor = level.colorFor(brightness);
     final wl = station.displayLevel;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -138,38 +145,42 @@ class _LevelCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'ระดับน้ำล่าสุด',
+                    strings.get('latest_water_level'),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    wl == null ? '—' : '${wl.toStringAsFixed(2)} ม.',
+                    wl == null ? '—' : '${wl.toStringAsFixed(2)} ${strings.get('unit_m')}',
                     style: TextStyle(
-                      fontSize: 34,
+                      fontSize: 32,
                       fontWeight: FontWeight.w800,
-                      color: level.color,
+                      color: displayColor,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text('ม.ระดับน้ำทะเลปานกลาง (MSL)'),
+                  Text(strings.get('msl_full_label')),
                 ],
               ),
             ),
             const SizedBox(width: 12),
             Column(
               children: [
-                Icon(station.trend.icon, size: 30, color: station.trend.color),
+                Icon(
+                  station.trend.icon,
+                  size: 30,
+                  color: station.trend.colorFor(brightness),
+                ),
                 const SizedBox(height: 4),
                 Text(
-                  station.trend.labelTh,
+                  strings.waterTrendLabel(station.trend),
                   style: TextStyle(
-                    color: station.trend.color,
+                    color: station.trend.colorFor(brightness),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'ข้อมูล ${station.datetime ?? 'ไม่ระบุ'}',
+                  station.datetime ?? strings.get('unknown'),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
@@ -182,12 +193,14 @@ class _LevelCard extends StatelessWidget {
 }
 
 class _BankCard extends StatelessWidget {
-  const _BankCard({required this.station});
+  const _BankCard({required this.station, required this.strings});
 
   final Station station;
+  final AppStrings strings;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final bank = station.bankLevel;
     final wl = station.displayLevel;
     final remaining = station.remainingToBank;
@@ -204,42 +217,39 @@ class _BankCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'เทียบตลิ่ง',
+                    strings.get('compare_bank_title'),
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                 ),
                 Text(
                   bank == null || bank <= 0
-                      ? 'ไม่มีข้อมูลตลิ่ง'
-                      : 'ตลิ่ง ${bank.toStringAsFixed(2)} ม.',
+                      ? strings.get('no_bank_data')
+                      : '${strings.get('bank_label')} ${bank.toStringAsFixed(2)} ${strings.get('unit_m')}',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
             ),
             const SizedBox(height: 10),
             if (bank != null && bank > 0 && wl != null)
-              _BankBar(station: station)
+              _BankBar(station: station, strings: strings)
             else
-              const Text(
-                'สถานีนี้ไม่มีค่าระดับตลิ่งจากกระทรวง จึงเปรียบเทียบไม่ได้ '
-                'โปรดติดตามจาก ศูนย์ปภ.ยะลา',
-              ),
+              Text(strings.get('no_bank_explain')),
             if (remaining != null) ...[
               const SizedBox(height: 10),
               Text(
-                remaining >= 0
-                    ? 'เหลือ ${remaining.toStringAsFixed(2)} ม. ก่อนถึงตลิ่ง'
-                    : 'ล้นตลิ่งแล้ว ${(-remaining).toStringAsFixed(2)} ม.',
+                strings.remainingToBankText(remaining),
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
-                  color: remaining >= 0 ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                  color: remaining >= 0
+                      ? (isDark ? const Color(0xFF66BB6A) : const Color(0xFF2E7D32))
+                      : (isDark ? const Color(0xFFFF6B6B) : const Color(0xFFC62828)),
                 ),
               ),
             ],
             if (station.storagePercent != null) ...[
               const SizedBox(height: 8),
               Text(
-                'ความจุอ่างเก็บน้ำ ${station.storagePercent!.toStringAsFixed(1)}%',
+                '${strings.get('reservoir_capacity')} ${station.storagePercent!.toStringAsFixed(1)}%',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -251,12 +261,14 @@ class _BankCard extends StatelessWidget {
 }
 
 class _BankBar extends StatelessWidget {
-  const _BankBar({required this.station});
+  const _BankBar({required this.station, required this.strings});
 
   final Station station;
+  final AppStrings strings;
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final bank = station.bankLevel!;
     final ground = station.groundLevel ?? 0;
     final wl = station.displayLevel ?? ground;
@@ -272,11 +284,11 @@ class _BankBar extends StatelessWidget {
             height: 14,
             child: Stack(
               children: [
-                Container(color: const Color(0xFFE3F2FD)),
+                Container(color: cs.surfaceContainerHighest),
                 FractionallySizedBox(
                   widthFactor: ratio,
                   child: Container(
-                    color: station.riskLevel.color,
+                    color: station.riskLevel.colorFor(Theme.of(context).brightness),
                   ),
                 ),
               ],
@@ -289,12 +301,12 @@ class _BankBar extends StatelessWidget {
           children: [
             Text(
               ground > 0
-                  ? 'ระดับพื้น ${ground.toStringAsFixed(1)}'
-                  : 'ระดับพื้น —',
+                  ? '${strings.get('ground_level_label')} ${ground.toStringAsFixed(1)}'
+                  : '${strings.get('ground_level_label')} —',
               style: Theme.of(context).textTheme.bodySmall,
             ),
             Text(
-              'ตลิ่ง ${bank.toStringAsFixed(1)} ม.',
+              '${strings.get('bank_label')} ${bank.toStringAsFixed(1)} ${strings.get('unit_m')}',
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
@@ -305,12 +317,15 @@ class _BankBar extends StatelessWidget {
 }
 
 class _ChartCard extends StatelessWidget {
-  const _ChartCard({required this.station});
+  const _ChartCard({required this.station, required this.strings});
 
   final Station station;
+  final AppStrings strings;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -323,12 +338,12 @@ class _ChartCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'แนวโน้มระดับน้ำ',
+                    strings.get('trend_chart_title'),
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                 ),
                 Text(
-                  'จำลองจากค่าก่อนหน้า',
+                  strings.get('trend_chart_sub'),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
@@ -338,7 +353,12 @@ class _ChartCard extends StatelessWidget {
               height: 170,
               width: double.infinity,
               child: CustomPaint(
-                painter: _LevelTrendPainter(station: station),
+                painter: _LevelTrendPainter(
+                  station: station,
+                  strings: strings,
+                  isDark: isDark,
+                  labelColor: cs.onSurface,
+                ),
               ),
             ),
           ],
@@ -348,18 +368,30 @@ class _ChartCard extends StatelessWidget {
   }
 }
 
-/// วาดกราฟระดับน้ำ 2 จุด (ก่อนหน้า → ล่าสุด) พร้อมเส้นตลิ่ง
 class _LevelTrendPainter extends CustomPainter {
-  _LevelTrendPainter({required this.station});
+  _LevelTrendPainter({
+    required this.station,
+    required this.strings,
+    required this.isDark,
+    required this.labelColor,
+  });
 
   final Station station;
+  final AppStrings strings;
+  final bool isDark;
+  final Color labelColor;
 
   @override
   void paint(Canvas canvas, Size size) {
     final wl = station.displayLevel;
     final prev = station.waterLevelMslPrev;
     if (wl == null) {
-      _text(canvas, size.center(Offset.zero), 'ยังไม่มีค่าระดับน้ำ');
+      _text(
+        canvas,
+        size.center(Offset.zero),
+        strings.get('no_water_reading'),
+        color: labelColor,
+      );
       return;
     }
 
@@ -385,8 +417,8 @@ class _LevelTrendPainter extends CustomPainter {
       maxV += 0.15;
     }
 
-    const leftPad = 44.0;
-    const rightPad = 12.0;
+    const leftPad = 52.0;
+    const rightPad = 14.0;
     const topPad = 18.0;
     const bottomPad = 22.0;
     final chartW = size.width - leftPad - rightPad;
@@ -395,19 +427,18 @@ class _LevelTrendPainter extends CustomPainter {
     double yOf(double v) =>
         topPad + chartH * (1 - (v - minV) / (maxV - minV));
 
-    // กริดแนวนอน
     final grid = Paint()
-      ..color = const Color(0x1A000000)
+      ..color = isDark ? const Color(0x33FFFFFF) : const Color(0x1A000000)
       ..strokeWidth = 1;
     for (var i = 0; i <= 4; i++) {
       final y = topPad + chartH * i / 4;
       canvas.drawLine(Offset(leftPad, y), Offset(size.width - rightPad, y), grid);
     }
 
-    // เส้นตลิ่ง
+    final bankColor = isDark ? const Color(0xFFFF6B6B) : const Color(0xFFC62828);
     if (bank != null && bank > 0) {
       final bankPaint = Paint()
-        ..color = const Color(0xFFC62828)
+        ..color = bankColor
         ..strokeWidth = 1.6;
       final y = yOf(bank);
       _dashedLine(
@@ -419,15 +450,15 @@ class _LevelTrendPainter extends CustomPainter {
       _text(
         canvas,
         Offset(leftPad - 4, y - 6),
-        'ตลิ่ง ${bank.toStringAsFixed(1)}',
-        color: const Color(0xFFC62828),
+        '${strings.get('bank_label')} ${bank.toStringAsFixed(1)}',
+        color: bankColor,
         alignRight: true,
       );
     }
 
-    // เส้นระดับน้ำ
+    final lineColor = station.riskLevel.colorFor(isDark ? Brightness.dark : Brightness.light);
     final linePaint = Paint()
-      ..color = station.riskLevel.color
+      ..color = lineColor
       ..strokeWidth = 3
       ..strokeCap = StrokeCap.round;
     final p1 = Offset(leftPad + chartW * 0.12, yOf(prev ?? wl));
@@ -438,11 +469,11 @@ class _LevelTrendPainter extends CustomPainter {
       ..lineTo(p2.dx, p2.dy)
       ..lineTo(p2.dx, topPad + chartH)
       ..close();
-    canvas.drawPath(fill, Paint()..color = station.riskLevel.color.withValues(alpha: 0.12));
+    canvas.drawPath(fill, Paint()..color = lineColor.withValues(alpha: 0.16));
     canvas.drawLine(p1, p2, linePaint);
 
-    canvas.drawCircle(p1, 4.5, Paint()..color = station.riskLevel.color);
-    canvas.drawCircle(p2, 5.5, Paint()..color = station.riskLevel.color);
+    canvas.drawCircle(p1, 4.5, Paint()..color = lineColor);
+    canvas.drawCircle(p2, 5.5, Paint()..color = lineColor);
     canvas.drawCircle(
       p2,
       5.5,
@@ -452,19 +483,29 @@ class _LevelTrendPainter extends CustomPainter {
         ..strokeWidth = 2,
     );
 
-    _text(canvas, Offset(p1.dx - 8, p1.dy - 18), (prev ?? wl).toStringAsFixed(2),
-        alignRight: true);
     _text(
       canvas,
-      Offset(p2.dx + 8, p2.dy - 18),
+      Offset(p1.dx - 6, p1.dy - 18),
+      (prev ?? wl).toStringAsFixed(2),
+      color: labelColor,
+      alignRight: true,
+    );
+    _text(
+      canvas,
+      Offset(p2.dx - 6, p2.dy - 18),
       wl.toStringAsFixed(2),
-      color: station.riskLevel.color,
+      color: lineColor,
+      alignRight: true,
     );
 
-    // ป้ายแกน X
-    _text(canvas, Offset(leftPad, size.height - 6), 'ก่อนหน้า');
-    _text(canvas, Offset(size.width - rightPad, size.height - 6), 'ล่าสุด',
-        alignRight: true);
+    _text(canvas, Offset(leftPad, size.height - 6), strings.get('chart_prev'), color: labelColor);
+    _text(
+      canvas,
+      Offset(size.width - rightPad, size.height - 6),
+      strings.get('chart_latest'),
+      color: labelColor,
+      alignRight: true,
+    );
   }
 
   void _dashedLine(Canvas canvas, Offset from, Offset to, Paint paint) {
@@ -481,7 +522,7 @@ class _LevelTrendPainter extends CustomPainter {
     Canvas canvas,
     Offset at,
     String value, {
-    Color color = const Color(0xFF424242),
+    required Color color,
     bool alignRight = false,
   }) {
     final painter = TextPainter(
@@ -491,25 +532,25 @@ class _LevelTrendPainter extends CustomPainter {
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    final offset = alignRight
-        ? at - Offset(painter.width, 0)
-        : at;
+    final offset = alignRight ? at - Offset(painter.width, 0) : at;
     painter.paint(canvas, offset);
   }
 
   @override
   bool shouldRepaint(covariant _LevelTrendPainter oldDelegate) =>
-      oldDelegate.station != station;
+      oldDelegate.station != station ||
+      oldDelegate.isDark != isDark ||
+      oldDelegate.strings.lang != strings.lang;
 }
 
 class _GuidanceCard extends StatelessWidget {
-  const _GuidanceCard({required this.station});
+  const _GuidanceCard({required this.station, required this.strings});
 
   final Station station;
+  final AppStrings strings;
 
   @override
   Widget build(BuildContext context) {
-    final engine = const AlertEngine();
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -520,15 +561,18 @@ class _GuidanceCard extends StatelessWidget {
               children: [
                 const Icon(Icons.support_agent, size: 18),
                 const SizedBox(width: 8),
-                Text('คำแนะนำ', style: Theme.of(context).textTheme.titleSmall),
+                Text(
+                  strings.get('guidance_title'),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
               ],
             ),
             const SizedBox(height: 8),
-            Text(engine.guidanceTh(station.riskLevel, station.amphoeTh ?? '')),
+            Text(strings.stationGuidance(station.riskLevel, station.amphoeTh ?? '')),
             const SizedBox(height: 8),
-            const Text(
-              'หากมีถุงยังชีพ เตรียมไว้ที่บ้านและอยู่ในที่สูงอย่างน้อย 1 เมตร',
-              style: TextStyle(fontSize: 13, color: Color(0xFF616161)),
+            Text(
+              strings.get('emergency_kit_note'),
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
         ),
@@ -538,9 +582,10 @@ class _GuidanceCard extends StatelessWidget {
 }
 
 class _InfoCard extends StatelessWidget {
-  const _InfoCard({required this.station});
+  const _InfoCard({required this.station, required this.strings});
 
   final Station station;
+  final AppStrings strings;
 
   @override
   Widget build(BuildContext context) {
@@ -549,13 +594,24 @@ class _InfoCard extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         child: Column(
           children: [
-            _row(context, 'รหัสสถานี', station.code),
-            _row(context, 'อำเภอ/ตำบล', station.locationLabel),
-            _row(context, 'หน่วยงาน', station.agencyShortTh ?? 'ไม่ระบุ'),
-            _row(context, 'ลุ่มน้ำ', station.basinNameTh ?? 'ไม่ระบุ'),
-            _row(context, 'แม่น้ำ', station.riverName ?? 'ไม่ระบุ'),
-            _row(context, 'พิกัด', station.hasCoordinate ? '${station.lat!.toStringAsFixed(5)}, ${station.lng!.toStringAsFixed(5)}' : 'ไม่ระบุ'),
-            _row(context, 'ครั้งล่าสุดที่มีการเปลี่ยนแปลง', station.diffWlBankText ?? 'ไม่ระบุ'),
+            _row(context, strings.get('meta_station_code'), station.code),
+            _row(context, strings.get('meta_location'), strings.stationLocation(station)),
+            _row(context, strings.get('meta_agency'), strings.agencyName(station.agencyShortTh)),
+            _row(context, strings.get('meta_basin'), strings.riverName(station.basinNameTh)),
+            _row(context, strings.get('meta_river'), strings.riverName(station.riverName)),
+            _row(
+              context,
+              strings.get('meta_coords'),
+              station.hasCoordinate
+                  ? '${station.lat!.toStringAsFixed(5)}, ${station.lng!.toStringAsFixed(5)}'
+                  : strings.get('unknown'),
+            ),
+            if (station.remainingToBank != null)
+              _row(
+                context,
+                strings.get('meta_bank_status'),
+                strings.remainingToBankText(station.remainingToBank!),
+              ),
           ],
         ),
       ),
@@ -569,7 +625,7 @@ class _InfoCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 150,
+            width: 145,
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodySmall,
@@ -588,9 +644,15 @@ class _InfoCard extends StatelessWidget {
 }
 
 class _StationAlertsCard extends StatelessWidget {
-  const _StationAlertsCard({required this.alerts});
+  const _StationAlertsCard({
+    required this.station,
+    required this.alerts,
+    required this.strings,
+  });
 
+  final Station station;
   final List<AlertItem> alerts;
+  final AppStrings strings;
 
   @override
   Widget build(BuildContext context) {
@@ -601,7 +663,7 @@ class _StationAlertsCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'ประวัติแจ้งเตือนของสถานีนี้',
+              strings.get('station_alert_history'),
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 8),
@@ -610,11 +672,11 @@ class _StationAlertsCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 child: Row(
                   children: [
-                    RiskBadge(level: alert.level, compact: true),
+                    RiskBadge(level: alert.level, compact: true, strings: strings),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '${alert.title}\n${thaiRelativeTime(alert.createdAt)}',
+                        '${strings.riskLevelLabel(alert.level)}: ${strings.stationFullName(station)}\n${strings.relativeTime(alert.createdAt)}',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),

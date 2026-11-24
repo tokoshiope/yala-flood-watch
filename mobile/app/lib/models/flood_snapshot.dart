@@ -40,6 +40,11 @@ class AmphoeForecastSummary {
     required this.forecast24hMm,
     required this.forecast72hMm,
     required this.hourlyNext24h,
+    this.rain72hMm = 0.0,
+    this.api7dMm = 0.0,
+    this.forecast6hMm = 0.0,
+    this.floodMechanism = 'monitoring',
+    this.confidence = 'high',
     this.leadTimeHours,
   });
 
@@ -51,8 +56,13 @@ class AmphoeForecastSummary {
   final String actionTh;
   final double rain1hMaxMm;
   final double rain24hMaxMm;
+  final double rain72hMm;
+  final double api7dMm;
+  final double forecast6hMm;
   final double forecast24hMm;
   final double forecast72hMm;
+  final String floodMechanism;
+  final String confidence;
   final List<HourlyRainPoint> hourlyNext24h;
   final String? leadTimeHours;
 
@@ -70,8 +80,13 @@ class AmphoeForecastSummary {
       actionTh: ass['action_th']?.toString() ?? '',
       rain1hMaxMm: (rain['max_rain_1h_mm'] as num?)?.toDouble() ?? 0.0,
       rain24hMaxMm: (rain['max_rain_24h_mm'] as num?)?.toDouble() ?? 0.0,
+      rain72hMm: (wx['observed_rain_72h_mm'] as num?)?.toDouble() ?? 0.0,
+      api7dMm: (wx['api_7d_mm'] as num?)?.toDouble() ?? 0.0,
+      forecast6hMm: (wx['forecast_6h_mm'] as num?)?.toDouble() ?? 0.0,
       forecast24hMm: (wx['forecast_24h_mm'] as num?)?.toDouble() ?? 0.0,
       forecast72hMm: (wx['forecast_72h_mm'] as num?)?.toDouble() ?? 0.0,
+      floodMechanism: ass['flood_mechanism']?.toString() ?? 'monitoring',
+      confidence: ass['confidence']?.toString() ?? 'high',
       hourlyNext24h: rawHourly
           .whereType<Map<dynamic, dynamic>>()
           .map((e) => HourlyRainPoint.fromJson(e.cast<String, dynamic>()))
@@ -251,4 +266,127 @@ class ElevationFloodResult {
   final String summaryTh;
   final double? marginMeters;
   final double? refWaterMsl;
+}
+
+/// แถบความสูงภูมิประเทศจริงจาก Copernicus DEM สำหรับระบายสีไล่ระดับตาม ม.รทก. บนแผนที่
+class ElevationBandZone {
+  const ElevationBandZone({
+    required this.amphoeTh,
+    required this.band,
+    required this.elevMin,
+    required this.elevMax,
+    required this.elevMid,
+    required this.ring,
+  });
+
+  final String amphoeTh;
+  final String band;
+  final double elevMin;
+  final double elevMax;
+  final double elevMid;
+  final List<LatLng> ring;
+}
+
+/// ขอบเขตโซนหมู่บ้านแบบเว้าโค้งตามภูมิประเทศภายในขอบเขตตำบลจริง
+class VillageZoneBoundary {
+  const VillageZoneBoundary({
+    required this.code,
+    required this.moo,
+    required this.nameTh,
+    required this.nameEn,
+    required this.amphoeTh,
+    required this.tumbonTh,
+    required this.ring,
+    this.elevationMsl,
+  });
+
+  final String code;
+  final int moo;
+  final String nameTh;
+  final String nameEn;
+  final String amphoeTh;
+  final String tumbonTh;
+  final List<LatLng> ring;
+  final double? elevationMsl;
+}
+
+/// ตารางความสูงภูมิประเทศจริง (Copernicus DEM) สำหรับคำนวณ ม.รทก. ณ พิกัด GPS หรือหมุดผู้ใช้แบบออฟไลน์ทันที
+class DemElevationGrid {
+  const DemElevationGrid({
+    required this.latMin,
+    required this.lonMin,
+    required this.step,
+    required this.rows,
+    required this.cols,
+    required this.values,
+  });
+
+  final double latMin;
+  final double lonMin;
+  final double step;
+  final int rows;
+  final int cols;
+  final List<List<int?>> values;
+
+  /// คำนวณความสูง ม.รทก. แบบ Bilinear Interpolation ที่พิกัด (lat, lon)
+  double? elevationAt(double lat, double lon) {
+    if (rows <= 0 || cols <= 0 || step <= 0) return null;
+    final fr = (lat - latMin) / step;
+    final fc = (lon - lonMin) / step;
+    final r0 = fr.floor();
+    final c0 = fc.floor();
+    if (r0 < 0 || c0 < 0 || r0 >= rows || c0 >= cols) return null;
+    final r1 = (r0 + 1).clamp(0, rows - 1);
+    final c1 = (c0 + 1).clamp(0, cols - 1);
+    final dr = (fr - r0).clamp(0.0, 1.0);
+    final dc = (fc - c0).clamp(0.0, 1.0);
+
+    final v00 = values[r0][c0];
+    final v01 = values[r0][c1];
+    final v10 = values[r1][c0];
+    final v11 = values[r1][c1];
+
+    if (v00 != null && v01 != null && v10 != null && v11 != null) {
+      final top = v00 * (1 - dc) + v01 * dc;
+      final bot = v10 * (1 - dc) + v11 * dc;
+      return double.parse((top * (1 - dr) + bot * dr).toStringAsFixed(1));
+    }
+    final valid = <int>[?v00, ?v01, ?v10, ?v11];
+    if (valid.isEmpty) return null;
+    final avg = valid.reduce((a, b) => a + b) / valid.length;
+    return double.parse(avg.toStringAsFixed(1));
+  }
+}
+
+/// ข้อมูลเปรียบเทียบระดับความสูงและระดับแจ้งเตือน ณ ตำแหน่ง GPS หรือจุดปักหมุดของผู้ใช้
+class UserPinAssessment {
+  const UserPinAssessment({
+    required this.lat,
+    required this.lng,
+    required this.isGps,
+    required this.level,
+    this.amphoeTh,
+    this.tumbonTh,
+    this.tumbonEn,
+    this.elevationMsl,
+    this.refWaterMsl,
+    this.marginMeters,
+    this.nearestStationCode,
+    this.nearestStationDistKm,
+  });
+
+  final double lat;
+  final double lng;
+  final bool isGps;
+  final int level;
+  final String? amphoeTh;
+  final String? tumbonTh;
+  final String? tumbonEn;
+  final double? elevationMsl;
+  final double? refWaterMsl;
+  final double? marginMeters;
+  final String? nearestStationCode;
+  final double? nearestStationDistKm;
+
+  LatLng get point => LatLng(lat, lng);
 }

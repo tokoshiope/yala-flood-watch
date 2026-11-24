@@ -202,29 +202,29 @@ void main() {
     });
   });
 
-  group('Hysteresis (2h) & Cooldown (30m)', () {
-    test('คงระดับสูงไว้ 2 ชม. เมื่อคะแนนลดลง', () {
+  group('Hysteresis (3h per research §5ง) & Cooldown (30m)', () {
+    test('คงระดับสูงไว้ 3 ชม. เมื่อคะแนนลดลง', () {
       final t0 = DateTime(2026, 11, 24, 10, 0);
       final memory = StationAlertMemory(
         level: AlertLevel.danger,
         updatedAt: t0,
         lastNotifiedAt: t0,
       );
-      // 90 นาทีต่อมา -> ยังคงระดับ 5
+      // 150 นาทีต่อมา -> ยังคงระดับ 5
       expect(
         engine.applyHysteresis(
           current: AlertLevel.watch,
           memory: memory,
-          now: t0.add(const Duration(minutes: 90)),
+          now: t0.add(const Duration(minutes: 150)),
         ),
         AlertLevel.danger,
       );
-      // 130 นาทีต่อมา -> ลดระดับลงได้
+      // 190 นาทีต่อมา -> ลดระดับลงได้
       expect(
         engine.applyHysteresis(
           current: AlertLevel.watch,
           memory: memory,
-          now: t0.add(const Duration(minutes: 130)),
+          now: t0.add(const Duration(minutes: 190)),
         ),
         AlertLevel.watch,
       );

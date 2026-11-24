@@ -1,5 +1,5 @@
-// ค่าคงที่ทั้งหมดของแอพ "น้ำท่วมยะลา" (Yala Flood Watch)
-// เฉพาะ จ.ยะลา (รหัส 95) · formula_version = 2 · Google Maps Foundation + 4 Languages
+// ค่าคงที่ทั้งหมดของแอพ "แจ้งเตือนน้ำท่วมยะลา" (Yala Flood Watch)
+// เฉพาะ จ.ยะลา (รหัส 95) · formula_version = 3 · Google Maps Foundation + 4 Languages
 library;
 
 class AppConfig {
@@ -9,8 +9,8 @@ class AppConfig {
   static const String appName = 'แจ้งเตือนน้ำท่วมยะลา';
   static const String appNameEn = 'Yala Flood Watch';
   static const String packageName = 'net.yala.floodapp';
-  static const String appVersion = '0.4.0';
-  static const int formulaVersion = 2;
+  static const String appVersion = '0.5.0';
+  static const int formulaVersion = 3;
 
   // ── จังหวัดยะลา ────────────────────────────────────────────────────────
   static const String provinceCode = '95';
@@ -56,6 +56,9 @@ class AppConfig {
   static const String bundledGeoJsonAsset = 'assets/geo/yala_amphoes.geojson';
   static const String bundledSubdistrictsAsset = 'assets/geo/yala_subdistricts.geojson';
   static const String bundledVillagesAsset = 'assets/geo/yala_villages.json';
+  static const String bundledVillageZonesAsset = 'assets/geo/yala_village_zones.geojson';
+  static const String bundledElevationZonesAsset = 'assets/geo/yala_elevation_zones.geojson';
+  static const String bundledDemGridAsset = 'assets/geo/yala_dem_grid.json';
 
   static const int yalaDataSetHash = 95;
 
@@ -69,7 +72,7 @@ class AppConfig {
   static const String cacheSnapshotKey = 'yala_flood_snapshot_v2';
   static const Duration cacheTtl = Duration(minutes: 30);
 
-  // ── เกณฑ์แจ้งเตือน (formula_version = 2) ───────────────────────────────
+  // ── เกณฑ์แจ้งเตือน (formula_version = 3 · วิจัยน้ำท่วมยะลา) ──────────────
   static const int defaultWarningLevel = 3;
   static const int defaultDangerLevel = 4;
   static const int maxSituationLevel = 4;
@@ -77,7 +80,7 @@ class AppConfig {
   static const int rainScoreDanger = 85;
   static const double steadyBandMeters = 0.05;
   static const double risingFastMetersPerHour = 0.30;
-  static const Duration hysteresisWindow = Duration(hours: 2);
+  static const Duration hysteresisWindow = Duration(hours: 3);
   static const Duration alertCooldownWindow = Duration(minutes: 30);
 
   static const Set<String> flashFloodAmphoes = {
@@ -86,6 +89,43 @@ class AppConfig {
     'เบตง',
     'กาบัง',
     'ธารโต',
+  };
+
+  static const Set<String> urbanBasinAmphoes = {
+    'เมืองยะลา',
+    'รามัน',
+    'ยะหา',
+  };
+
+  /// เกณฑ์ระดับเฝ้าระวัง / วิกฤต อ้างอิง สทภ.8 ปี 2568 และ stations.yaml v2
+  static const Map<String, double> stationWatchMsl = {
+    'X.40A': 15.50,
+    'X.77': 38.00,
+    'X.273': 15.00,
+    'PAT002': 12.35,
+    'PAT001': 36.80,
+    'BLGTD01': 46.70,
+    'BLGTD02': 38.70,
+    'BLGTD03': 15.80,
+    'BLGTD04': 29.80,
+    'BLGTU02': 118.50,
+    'MOU454': 284.80,
+    'FOP045': 23.20,
+  };
+
+  static const Map<String, double> stationCriticalMsl = {
+    'X.40A': 16.50,
+    'X.77': 39.70,
+    'X.273': 16.50,
+    'PAT002': 13.85,
+    'PAT001': 38.678,
+    'BLGTD01': 48.678,
+    'BLGTD02': 40.71,
+    'BLGTD03': 17.29,
+    'BLGTD04': 31.55,
+    'BLGTU02': 120.37,
+    'MOU454': 286.432,
+    'FOP045': 25.128,
   };
 
   static const Map<String, String> bangLangDownstreamLeadTime = {
@@ -108,6 +148,8 @@ class AppConfig {
   static const String settingsPrefsKey = 'yala_flood_settings_v1';
   static const String sosLogPrefsKey = 'yala_flood_sos_log_v1';
   static const String gpsConsentPrefsKey = 'yala_flood_gps_consent_v1';
+  static const String subscribedTopicPrefsKey = 'yala_flood_subscribed_topic_v1';
+  static const String pinnedLocationPrefsKey = 'yala_flood_pinned_location_v1';
   static const int maxStoredAlerts = 100;
   static const int maxStoredSosRequests = 50;
 

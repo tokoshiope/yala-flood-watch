@@ -3,12 +3,14 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:yala_flood_app/config/app_config.dart';
+import 'package:yala_flood_app/l10n/app_strings.dart';
 import 'package:yala_flood_app/models/shelter.dart';
 import 'package:yala_flood_app/state/alert_provider.dart';
 
 /// ศูนย์พักพิงชั่วคราว จ.ยะลา ตรงกับ backend/registry/shelters.yaml (v3)
 /// - ไม่มีป้าย "ชื่อทางการ (พิกัดโดยประมาณ)"
 /// - ศูนย์ต่างอำเภอระบุ "อ้างอิงจากข้อมูลเดิม รอยืนยัน" ชัดเจน
+/// - รองรับ iOS Dark Mode และแปลครบ 4 ภาษา (ไทย/อังกฤษ/จีน/มาเลเซีย)
 const List<Shelter> kYalaShelters = [
   Shelter(
     nameTh: 'อาคารเรียนรู้ TK Park ยะลา (หลังเก่า)',
@@ -150,24 +152,27 @@ class _SheltersScreenState extends State<SheltersScreen> {
     return kYalaShelters.where((s) => s.amphoeTh == _amphoe).toList();
   }
 
-  Future<void> _openGoogleMaps(Shelter shelter) async {
-    final uri = Uri.parse(
+  Future<void> _openGoogleMaps(Shelter shelter, AppStrings strings) async {
+    final uri = Uri.tryParse(
       AppConfig.googleMapsDirectionsUrl(shelter.lat, shelter.lng),
     );
+    if (uri == null || uri.scheme != 'https') return;
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ไม่สามารถเปิด Google Maps ได้จากเครื่องนี้')),
+        SnackBar(content: Text(strings.get('cannot_open_maps'))),
       );
     }
   }
 
-  Future<void> _call(String phone) async {
-    final uri = Uri(scheme: 'tel', path: phone);
+  Future<void> _call(String phone, AppStrings strings) async {
+    final sanitized = phone.replaceAll(RegExp(r'[^0-9+*#]'), '');
+    if (sanitized.isEmpty) return;
+    final uri = Uri(scheme: 'tel', path: sanitized);
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ไม่สามารถโทรได้จากเครื่องนี้ ($phone)')),
+        SnackBar(content: Text('${strings.get('cannot_call')} ($phone)')),
       );
     }
   }
@@ -175,22 +180,32 @@ class _SheltersScreenState extends State<SheltersScreen> {
   @override
   Widget build(BuildContext context) {
     final strings = context.watch<AlertProvider>().strings;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(title: Text(strings.get('shelters_title'))),
       body: Column(
         children: [
           Container(
             width: double.infinity,
-            color: const Color(0xFFE3F2FD),
+            color: isDark ? const Color(0xFF0F2942) : const Color(0xFFE3F2FD),
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.info_outline, size: 16, color: Color(0xFF0E5FA6)),
-                SizedBox(width: 6),
+                Icon(
+                  Icons.info_outline,
+                  size: 16,
+                  color: isDark ? const Color(0xFF90CAF9) : const Color(0xFF0E5FA6),
+                ),
+                const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'โปรดโทร 073-203559 (ปภ.ยะลา) หรือ 073-212345 (เทศบาลนครยะลา) เพื่อตรวจสถานะการเปิดรับผู้ประสบภัยก่อนเดินทาง',
-                    style: TextStyle(fontSize: 12),
+                    strings.get('shelters_call_notice'),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? const Color(0xFFE3F2FD) : const Color(0xFF0B2545),
+                    ),
                   ),
                 ),
               ],
@@ -229,6 +244,12 @@ class _SheltersScreenState extends State<SheltersScreen> {
               separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final shelter = _filtered[index];
+                final displayName = strings.shelterName(shelter.nameTh);
+                final displayAddress =
+                    strings.shelterAddress(shelter.nameTh, shelter.addressTh);
+                final displayNotes =
+                    strings.shelterNotes(shelter.nameTh, shelter.notesTh);
+
                 return Card(
                   child: Padding(
                     padding: const EdgeInsets.all(12),
@@ -236,37 +257,49 @@ class _SheltersScreenState extends State<SheltersScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          shelter.nameTh,
-                          style: const TextStyle(
+                          displayName,
+                          style: TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 15,
+                            color: cs.onSurface,
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(shelter.addressTh, style: const TextStyle(fontSize: 12.5)),
+                        Text(
+                          displayAddress,
+                          style: TextStyle(fontSize: 12.5, color: cs.onSurfaceVariant),
+                        ),
                         if (shelter.isHistoricalUnconfirmed) ...[
                           const SizedBox(height: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFFF7ED),
+                              color: isDark
+                                  ? const Color(0xFF422006)
+                                  : const Color(0xFFFFF7ED),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: const Color(0xFFF59E0B)),
+                              border: Border.all(
+                                color: isDark
+                                    ? const Color(0xFFFBBF24)
+                                    : const Color(0xFFF59E0B),
+                              ),
                             ),
                             child: Text(
                               strings.get('hist_shelter_badge'),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFFB45309),
+                                color: isDark
+                                    ? const Color(0xFFFDE68A)
+                                    : const Color(0xFFB45309),
                               ),
                             ),
                           ),
                         ],
-                        if (shelter.notesTh.isNotEmpty) ...[
+                        if (displayNotes.isNotEmpty) ...[
                           const SizedBox(height: 6),
                           Text(
-                            shelter.notesTh,
+                            displayNotes,
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],
@@ -275,7 +308,7 @@ class _SheltersScreenState extends State<SheltersScreen> {
                           children: [
                             Expanded(
                               child: OutlinedButton.icon(
-                                onPressed: () => _openGoogleMaps(shelter),
+                                onPressed: () => _openGoogleMaps(shelter, strings),
                                 icon: const Icon(Icons.directions, size: 18),
                                 label: Text(strings.get('nav_google_maps')),
                               ),
@@ -284,7 +317,7 @@ class _SheltersScreenState extends State<SheltersScreen> {
                               const SizedBox(width: 8),
                               Expanded(
                                 child: FilledButton.icon(
-                                  onPressed: () => _call(shelter.phone!),
+                                  onPressed: () => _call(shelter.phone!, strings),
                                   icon: const Icon(Icons.phone, size: 18),
                                   label: Text(strings.get('call_shelter')),
                                 ),

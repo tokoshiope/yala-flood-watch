@@ -107,7 +107,7 @@ class ThaiWaterService {
             'ThaiWater ตอบ ${response.statusCode}',
           );
         }
-        return _parse(response.body);
+        return _parse(utf8.decode(response.bodyBytes));
       } on Exception catch (error) {
         lastError = error;
         if (attempt < AppConfig.maxRetries) {
@@ -202,5 +202,9 @@ class ThaiWaterService {
     if (prefs == null) return;
     await prefs.remove(AppConfig.cacheStationsKey);
     await prefs.remove(AppConfig.cacheUpdatedAtKey);
+  }
+
+  void close() {
+    _client.close();
   }
 }

@@ -63,7 +63,23 @@ extension RiskLevelVisual on RiskLevel {
     }
   }
 
-  Color get onColor => Colors.white;
+  Color colorFor(Brightness brightness) {
+    if (brightness == Brightness.light) return color;
+    switch (this) {
+      case RiskLevel.danger:
+        return const Color(0xFFFF6B6B);
+      case RiskLevel.warning:
+        return const Color(0xFFFFB74D);
+      case RiskLevel.watch:
+        return const Color(0xFFFFD54F);
+      case RiskLevel.normal:
+        return const Color(0xFF66BB6A);
+      case RiskLevel.unknown:
+        return const Color(0xFFB0BEC5);
+    }
+  }
+
+  Color get onColor => this == RiskLevel.watch ? const Color(0xFF111827) : Colors.white;
 
   IconData get icon {
     switch (this) {
@@ -95,6 +111,20 @@ enum AlertLevel {
   final String labelTh;
   final RiskLevel risk;
   final Color color;
+
+  Color get onSolidColor =>
+      this == AlertLevel.watch ? const Color(0xFF111827) : Colors.white;
+
+  Color colorFor(Brightness brightness) {
+    if (brightness == Brightness.light) return color;
+    return switch (this) {
+      AlertLevel.normal => const Color(0xFF66BB6A),
+      AlertLevel.watch => const Color(0xFFFFD54F),
+      AlertLevel.warning => const Color(0xFFFFB74D),
+      AlertLevel.high => const Color(0xFFEF5350),
+      AlertLevel.danger => const Color(0xFFFF6B6B),
+    };
+  }
 
   static AlertLevel fromValue(int value) {
     final clamped = value.clamp(1, 5);

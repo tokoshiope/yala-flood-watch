@@ -39,7 +39,7 @@ import pipeline as P  # noqa: E402
 
 ICT = timezone(timedelta(hours=7))
 COOLDOWN_SECONDS = 30 * 60       # 30 minutes (matching AlertEngine)
-HYSTERESIS_SECONDS = 2 * 3600    # 2 hours (matching AlertEngine hysteresis window)
+HYSTERESIS_SECONDS = 3 * 3600    # 3 hours (research §5(ง): prevent alert flapping)
 
 TOPIC_ALL_YALA = "yala_flood_all"
 AMPHOE_TOPIC_MAP: dict[str, str] = {
@@ -123,14 +123,14 @@ def should_send_topic(
     prev_level = int(prev.get("level", 0))
     prev_ts = float(prev.get("sent_at", 0.0))
     elapsed = now_ts - prev_ts
-    # Once the 2-hour hysteresis window has passed, treat prior flood event as closed
+    # Once the 3-hour hysteresis window has passed, treat prior flood event as closed
     # so a historical Level 4/5 event NEVER permanently suppresses future Level 2–3 warnings.
     if elapsed >= HYSTERESIS_SECONDS:
         return True
     # Escalation bypasses cooldown immediately
     if level > prev_level:
         return True
-    # Lower level within the active 2-hour hysteresis window does not re-alert
+    # Lower level within the active 3-hour hysteresis window does not re-alert
     if level < prev_level:
         return False
     return elapsed >= COOLDOWN_SECONDS
@@ -142,7 +142,7 @@ def reconcile_state(
     sent_messages: list[dict[str, Any]],
     now_ts: float,
 ) -> dict[str, Any]:
-    """Prune topics that returned to normal or expired (>2h), and record newly dispatched topics."""
+    """Prune topics that returned to normal or expired (>3h), and record newly dispatched topics."""
     active_push_topics: set[str] = set()
     max_active_level = 0
     for amp in snapshot.get("amphoes", []):

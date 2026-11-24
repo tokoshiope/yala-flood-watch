@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:yala_flood_app/screens/app_shell.dart';
+import 'package:yala_flood_app/screens/settings_screen.dart';
 import 'package:yala_flood_app/services/local_store.dart';
 import 'package:yala_flood_app/services/thai_water_service.dart';
 import 'package:yala_flood_app/state/alert_provider.dart';
@@ -55,9 +56,11 @@ void main() {
     );
     await tester.pump(const Duration(seconds: 1));
 
-    // แถบ 1: หัวบนสุด "แจ้งเตือนน้ำท่วมยะลา" + กรอบเขื่อนบางลาง + ปุ่มนำทาง 5 หน้า
+    // แถบ 1: หัวบนสุด "แจ้งเตือนน้ำท่วมยะลา" + กรอบเขื่อนบางลาง + ป้ายสถานีชื่อจริง (บ้านปายอยือนิ ไม่ใช่ X.273)
     expect(find.text('แจ้งเตือนน้ำท่วมยะลา'), findsOneWidget);
-    expect(find.text('เขื่อนบางลาง'), findsOneWidget);
+    expect(find.text('เขื่อนบางลาง'), findsWidgets);
+    expect(find.text('บ้านปายอยือนิ'), findsOneWidget);
+    expect(find.text('X.273'), findsNothing);
     expect(find.text('แผนที่'), findsOneWidget);
     expect(find.text('ข้อมูล'), findsWidgets);
     expect(find.text('SOS'), findsOneWidget);
@@ -81,13 +84,26 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.textContaining('พิกัดโดยประมาณ'), findsNothing);
 
-    // แถบ 5: ตั้งค่า มีเมนูเลือกภาษา 4 ภาษา + เปิดเสียงแจ้งเตือน + เปิดข้อความ Notification + ไม่มี formula_version
+    // แถบ 5: ตั้งค่า มีเมนูเลือกภาษา 4 ภาษา + คำอธิบายระดับแจ้งเตือน 1-5 + เปิดเสียง + Notification
     await tester.tap(find.text('ตั้งค่า').last);
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('ภาษาของแอป (Language)'), findsOneWidget);
-    await tester.drag(find.byType(ListView).last, const Offset(0, -450));
-    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('คำอธิบายระดับการแจ้งเตือน (1–5)'), findsOneWidget);
+    final settingsScrollable = find.descendant(
+      of: find.byType(SettingsScreen),
+      matching: find.byType(Scrollable),
+    );
+    await tester.scrollUntilVisible(
+      find.text('เปิดเสียงแจ้งเตือน'),
+      150,
+      scrollable: settingsScrollable,
+    );
     expect(find.text('เปิดเสียงแจ้งเตือน'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('เปิดข้อความ Notification'),
+      100,
+      scrollable: settingsScrollable,
+    );
     expect(find.text('เปิดข้อความ Notification'), findsOneWidget);
     expect(find.textContaining('formula_version'), findsNothing);
   });
