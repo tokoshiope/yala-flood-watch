@@ -52,7 +52,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>แอปแจ้งเตือนน้ำท่วมยะลาขอใช้ตำแหน่งเฉพาะขณะเปิดแอป เพื่อช่วยแสดงสถานีวัดระดับน้ำ ศูนย์พักพิงใกล้คุณ และแนบพิกัดกรณีขอความช่วยเหลือ (SOS) โดยไม่ติดตามตำแหน่งพื้นหลัง</string>
+	<string>แอปแจ้งเตือนน้ำท่วมยะลาขอใช้ตำแหน่งเฉพาะขณะเปิดแอป เพื่อเปรียบเทียบความสูงพื้นที่กับระดับน้ำแม่น้ำ แสดงสถานี ศูนย์พักพิงใกล้คุณ และแนบพิกัดกรณีขอความช่วยเหลือ (SOS) โดยไม่ติดตามตำแหน่งพื้นหลัง</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>แอปแจ้งเตือนน้ำท่วมยะลาใช้ตำแหน่งเฉพาะขณะเปิดใช้งานเท่านั้น เพื่อเปรียบเทียบความสูงพื้นที่กับระดับน้ำแม่น้ำและแนบพิกัด SOS โดยไม่มีการติดตามตำแหน่งพื้นหลัง</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
