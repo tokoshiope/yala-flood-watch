@@ -397,7 +397,9 @@ class AlertEngine {
             : ' (ล้นตลิ่ง ${(-rem).toStringAsFixed(2)} ม.)',
       );
     }
-    buf.write(' · คะแนนความเสี่ยง ${assessment.score.toStringAsFixed(1)}/100');
+    if (assessment.leadTimeHours != null && assessment.leadTimeHours!.isNotEmpty) {
+      buf.write(' · คาดน้ำเดินทางถึงใน ${assessment.leadTimeHours}');
+    }
     return buf.toString();
   }
 

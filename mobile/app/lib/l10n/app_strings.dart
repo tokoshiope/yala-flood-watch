@@ -13,13 +13,13 @@ class AppStrings {
 
   static const Map<String, Map<String, String>> _dict = {
     'app_title': {
-      'th': 'น้ำท่วมยะลา',
-      'en': 'Yala Flood Watch',
+      'th': 'แจ้งเตือนน้ำท่วมยะลา',
+      'en': 'Yala Flood Warning',
       'zh': '也拉洪水预警',
       'ms': 'Amaran Banjir Yala',
     },
-    'tab_home': {'th': 'หน้าหลัก', 'en': 'Home', 'zh': '首页', 'ms': 'Utama'},
-    'tab_alerts': {'th': 'แจ้งเตือน', 'en': 'Alerts', 'zh': '预警', 'ms': 'Amaran'},
+    'tab_home': {'th': 'แผนที่', 'en': 'Map', 'zh': '地图', 'ms': 'Peta'},
+    'tab_alerts': {'th': 'ข้อมูล', 'en': 'Info', 'zh': '数据', 'ms': 'Info'},
     'tab_sos': {'th': 'SOS', 'en': 'SOS', 'zh': '求救', 'ms': 'SOS'},
     'tab_shelters': {
       'th': 'ศูนย์พักพิง',
@@ -28,11 +28,24 @@ class AppStrings {
       'ms': 'Pusat Pemindahan',
     },
     'tab_settings': {'th': 'ตั้งค่า', 'en': 'Settings', 'zh': '设置', 'ms': 'Tetapan'},
+    'info_title': {'th': 'ข้อมูล', 'en': 'Flood Info', 'zh': '水情数据', 'ms': 'Maklumat Banjir'},
+    'dam_title': {
+      'th': 'เขื่อนบางลาง',
+      'en': 'Bang Lang Dam',
+      'zh': '邦朗水坝',
+      'ms': 'Empangan Bang Lang',
+    },
     'shelters_title': {
       'th': 'ศูนย์พักพิง',
       'en': 'Evacuation Centers',
       'zh': '临时避难中心',
       'ms': 'Pusat Pemindahan',
+    },
+    'hist_shelter_badge': {
+      'th': 'อ้างอิงจากข้อมูลเดิม รอยืนยัน',
+      'en': 'Historical reference — pending confirmation',
+      'zh': '参考历史数据（待确认）',
+      'ms': 'Rujukan data lama — menunggu pengesahan',
     },
     'nav_google_maps': {
       'th': 'นำทาง Google Maps',
@@ -71,16 +84,46 @@ class AppStrings {
       'ms': 'Lihat Carta Hujan 24 Jam (UTC+7)',
     },
     'latest_stations': {
-      'th': 'สถานีอัปเดตล่าสุด',
-      'en': 'Latest Stations',
-      'zh': '最新水文站',
-      'ms': 'Stesen Terkini',
+      'th': 'สถานีวัดระดับน้ำ จ.ยะลา',
+      'en': 'Yala Water Stations',
+      'zh': '也拉水文监测站',
+      'ms': 'Stesen Paras Air Yala',
     },
     'all_amphoes': {
       'th': 'ทั้ง 8 อำเภอ',
       'en': 'All 8 Districts',
       'zh': '全部 8 县',
       'ms': 'Semua 8 Daerah',
+    },
+    'sound_toggle': {
+      'th': 'เปิดเสียงแจ้งเตือน',
+      'en': 'Alert Sound',
+      'zh': '警报声音',
+      'ms': 'Bunyi Amaran',
+    },
+    'sound_toggle_sub': {
+      'th': 'ส่งเสียงเตือนทันทีเมื่อมีระดับน้ำสูงขึ้น',
+      'en': 'Play sound when a flood alert triggers',
+      'zh': '触发洪水预警时播放声音',
+      'ms': 'Mainkan bunyi apabila amaran banjir diaktifkan',
+    },
+    'notif_toggle': {
+      'th': 'เปิดข้อความ Notification',
+      'en': 'Notification Messages',
+      'zh': '通知消息 (Notification)',
+      'ms': 'Mesej Pemberitahuan (Notification)',
+    },
+    'notif_toggle_sub': {
+      'th': 'แสดงแถบข้อความแจ้งเตือนบนหน้าจอโทรศัพท์',
+      'en': 'Show push notification banners on screen',
+      'zh': '在手机屏幕上显示预警通知横幅',
+      'ms': 'Papar pemberitahuan amaran di skrin telefon',
+    },
+    'map_back_province': {
+      'th': 'กลับทั้งจังหวัดยะลา',
+      'en': 'Back to Yala Province',
+      'zh': '返回也拉全府',
+      'ms': 'Kembali ke Wilayah Yala',
     },
     'settings_title': {'th': 'ตั้งค่า', 'en': 'Settings', 'zh': '设置', 'ms': 'Tetapan'},
   };

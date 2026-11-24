@@ -56,6 +56,92 @@ class SnapshotService {
     }
   }
 
+  /// โหลดขอบเขต GeoJSON จริงของทั้ง 58 ตำบล จ.ยะลา พร้อมความสูงภูมิประเทศ (MSL)
+  Future<List<SubdistrictBoundary>> loadYalaSubdistricts() async {
+    try {
+      final raw = await rootBundle.loadString(AppConfig.bundledSubdistrictsAsset);
+      return parseGeoJsonSubdistricts(raw);
+    } on Exception {
+      return const <SubdistrictBoundary>[];
+    }
+  }
+
+  /// โหลดข้อมูล 449 หมู่บ้านจริง จ.ยะลา (DOPA + Open-Meteo Copernicus DEM MSL)
+  Future<List<VillagePoint>> loadYalaVillages() async {
+    try {
+      final raw = await rootBundle.loadString(AppConfig.bundledVillagesAsset);
+      return parseVillagesJson(raw);
+    } on Exception {
+      return const <VillagePoint>[];
+    }
+  }
+
+  static List<SubdistrictBoundary> parseGeoJsonSubdistricts(String rawJson) {
+    final decoded = jsonDecode(rawJson);
+    if (decoded is! Map<String, dynamic>) return const <SubdistrictBoundary>[];
+    final features = decoded['features'];
+    if (features is! List) return const <SubdistrictBoundary>[];
+
+    final out = <SubdistrictBoundary>[];
+    for (final f in features) {
+      if (f is! Map) continue;
+      final props = (f['properties'] as Map?)?.cast<String, dynamic>() ?? const {};
+      final geom = (f['geometry'] as Map?)?.cast<String, dynamic>() ?? const {};
+      final amphoeTh = props['amphoe_th']?.toString() ?? '';
+      final tumbonTh = props['tumbon_th']?.toString() ?? '';
+      final tumbonEn = props['tumbon_en']?.toString() ?? '';
+      final tumbonCode = props['tumbon_code']?.toString() ?? '';
+      final type = geom['type']?.toString() ?? '';
+      final coords = geom['coordinates'];
+      final rings = <List<LatLng>>[];
+
+      if (type == 'Polygon' && coords is List && coords.isNotEmpty) {
+        final ring = _parseRing(coords.first);
+        if (ring.isNotEmpty) rings.add(ring);
+      } else if (type == 'MultiPolygon' && coords is List) {
+        for (final poly in coords) {
+          if (poly is List && poly.isNotEmpty) {
+            final ring = _parseRing(poly.first);
+            if (ring.isNotEmpty) rings.add(ring);
+          }
+        }
+      }
+      if (amphoeTh.isEmpty || tumbonTh.isEmpty || rings.isEmpty) continue;
+      final lat = (props['lat'] as num?)?.toDouble();
+      final lon = (props['lon'] as num?)?.toDouble();
+      final centroid = (lat != null && lon != null)
+          ? LatLng(lat, lon)
+          : _computeCentroid(rings.first);
+      out.add(
+        SubdistrictBoundary(
+          amphoeTh: amphoeTh,
+          tumbonTh: tumbonTh,
+          tumbonEn: tumbonEn,
+          tumbonCode: tumbonCode,
+          rings: rings,
+          centroid: centroid,
+          elevationMsl: (props['elevation_msl'] as num?)?.toDouble(),
+          minElevationMsl: (props['min_elevation_msl'] as num?)?.toDouble(),
+          maxElevationMsl: (props['max_elevation_msl'] as num?)?.toDouble(),
+          villageCount: (props['village_count'] as num?)?.toInt() ?? 0,
+        ),
+      );
+    }
+    return out;
+  }
+
+  static List<VillagePoint> parseVillagesJson(String rawJson) {
+    final decoded = jsonDecode(rawJson);
+    if (decoded is! Map<String, dynamic>) return const <VillagePoint>[];
+    final items = decoded['villages'];
+    if (items is! List) return const <VillagePoint>[];
+    return items
+        .whereType<Map<dynamic, dynamic>>()
+        .map((e) => VillagePoint.fromJson(e.cast<String, dynamic>()))
+        .where((v) => v.nameTh.isNotEmpty && v.amphoeTh.isNotEmpty)
+        .toList();
+  }
+
   static List<AmphoeBoundary> parseGeoJsonBoundaries(String rawJson) {
     final decoded = jsonDecode(rawJson);
     if (decoded is! Map<String, dynamic>) return const <AmphoeBoundary>[];

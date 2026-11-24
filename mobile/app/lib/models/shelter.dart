@@ -1,7 +1,4 @@
-/// จุดอพยพพื้นฐาน (ข้อมูลตัวอย่าง 8 อำเภอ ยกเลิก/เพิ่มได้)
-///
-/// ค่าพิกัดเป็นพิกัดตัวอย่างใกล้ศูนย์กลางอำเภอ ใช้แสดงแผนที่และเปิด Google Maps ได้
-/// เมื่อจังหวัดยะลามีฐานข้อมูลจุดอพยพจริง ให้ดึงจาก API แทนการ hardcode
+/// ศูนย์พักพิงชั่วคราว จ.ยะลา (ตรงกับ backend/registry/shelters.yaml v3)
 class Shelter {
   const Shelter({
     required this.nameTh,
@@ -12,6 +9,7 @@ class Shelter {
     this.capacity,
     this.phone,
     this.notesTh = '',
+    this.isHistoricalUnconfirmed = false,
   });
 
   final String nameTh;
@@ -22,6 +20,7 @@ class Shelter {
   final int? capacity;
   final String? phone;
   final String notesTh;
+  final bool isHistoricalUnconfirmed;
 
   String get capacityLabel => capacity == null ? 'ไม่ระบุ' : 'รองรับ ~$capacity คน';
 }

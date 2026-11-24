@@ -317,6 +317,38 @@ def test_yala_geojson_covers_exact_8_amphoes_matching_registry():
     assert geo_names == reg_names
 
 
+def test_subdistricts_and_villages_with_real_elevation_msl():
+    subs = json.loads((P.REGISTRY_DIR / "yala_subdistricts.geojson").read_text(encoding="utf-8"))
+    assert len(subs["features"]) == 58
+    sub_amphoes = {f["properties"]["amphoe_th"] for f in subs["features"]}
+    assert sub_amphoes == set(_amphoes_registry().keys())
+    assert all(f["properties"].get("elevation_msl") is not None for f in subs["features"])
+
+    vils = json.loads((P.REGISTRY_DIR / "yala_villages.json").read_text(encoding="utf-8"))
+    assert vils["total_villages"] == 449
+    assert len(vils["villages"]) == 449
+    assert all(v.get("elevation_msl") is not None for v in vils["villages"])
+
+
+def test_contacts_social_links_and_historical_shelters_v3():
+    _, _, contacts, shelters = P.load_registry()
+    by_id = {c["id"]: c for c in contacts["emergency"]}
+    assert by_id["ddpm_1784"]["line_url"] == "https://line.me/R/ti/p/@1784DDPM"
+    assert by_id["ddpm_1784"]["facebook_url"] == "https://www.facebook.com/DDPMNews"
+    assert by_id["yala_municipality"]["line_url"] == "https://line.me/R/ti/p/@yalacity"
+    assert by_id["medical_1669"]["facebook_url"] == "https://www.facebook.com/thainems"
+    assert by_id["yala_hospital"]["facebook_url"] == "https://www.facebook.com/pryalahospital"
+    assert by_id["volunteer_1677"]["facebook_url"] == "https://www.facebook.com/ruamduay"
+
+    items = shelters["items"]
+    assert {s["amphoe"] for s in items} == set(_amphoes_registry().keys())
+    assert not any("พิกัดโดยประมาณ" in (s.get("address", "") + s.get("notes", "")) for s in items)
+    non_city = [s for s in items if s["amphoe"] != "เมืองยะลา"]
+    assert len(non_city) >= 7
+    assert all(s.get("is_historical_unconfirmed") is True for s in non_city)
+    assert all("อ้างอิงจากข้อมูลเดิม รอยืนยัน" in s.get("notes", "") for s in non_city)
+
+
 def test_publish_supabase_dry_run_and_tamper_fail_closed(tmp_path):
     import publish_supabase as PUB
 

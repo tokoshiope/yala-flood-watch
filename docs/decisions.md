@@ -98,3 +98,16 @@
   3. รองรับเมนูเลือกภาษา **4 ภาษา** (`ไทย`, `English`, `中文`, `Bahasa Melayu`) ทั้งใน iOS Prototype และ Flutter App
   4. ดำเนิน **Phase 2 Cloud Bridge**: สร้าง Supabase Schema + RLS + PDPA 90-day retention (`supabase/migrations/0001_initial_yala_flood_schema.sql`), Atomic CDN Publisher (`backend/publish_supabase.py`), Flutter `SnapshotService` (CDN + Offline Asset), และหน้า Legal Web PDPA/Terms (`web/` + GitHub Pages workflow)
 - **กระทบ:** `backend/registry/yala_amphoes.geojson`, `backend/publish_supabase.py`, `supabase/migrations/`, `web/`, `mobile/preview/`, `mobile/app/lib/`
+
+## DEC-015 — UX v3 สำหรับประชาชน: แผนที่เฉพาะยะลา 3 ระดับความสูง (อำเภอ→ตำบล→หมู่บ้าน), ย้ายข้อมูลไปแถบ "ข้อมูล", ศูนย์พักพิงอ้างอิงเดิม, ลิงก์ LINE/Facebook ที่ตรวจสอบ HTTP 200 แล้ว, และซ่อนภาษาเทคนิค
+- **วันที่:** 2026-11-24
+- **สถานะ:** ✅ อนุมัติโดย Founder
+- **ตัดสินใจ:**
+  1. เปลี่ยนชื่อแถบหัวบนสุดและชื่อแอปเป็น **`แจ้งเตือนน้ำท่วมยะลา`**, เปลี่ยนแถบ 1 เป็น **`แผนที่`**, และย้ายกรอบ **เขื่อนบางลาง** ขึ้นมาด้านบนต่อจากแถบหัวเรื่อง
+  2. แผนที่ Google Maps แสดง **เฉพาะเขต จ.ยะลา** (Mask พื้นที่นอกจังหวัด + ล็อกขอบเขต) พร้อมข้อมูลจริง **8 อำเภอ → 58 ตำบล (`yala_subdistricts.geojson`) → 449 หมู่บ้าน (`yala_villages.json`, DOPA)** เสริมความสูงภูมิประเทศจริงจาก Open-Meteo Copernicus DEM (MSL) เพื่อระบายสีระดับน้ำท่วมถึงตามความสูงพื้นที่เทียบระดับน้ำแม่น้ำ และกดขยาย/ย้อนกลับได้ครบทั้ง 3 ระดับ
+  3. ย้ายกราฟพยากรณ์ฝนรายชั่วโมง (UTC+7), สรุป 8 อำเภอ และรายการสถานี 14 แห่งไปรวมที่แถบ 2 เปลี่ยนชื่อเป็น **`ข้อมูล`**
+  4. สืบค้นและรวบรวมศูนย์พักพิงที่เคยใช้รับผู้ประสบภัยน้ำท่วม จ.ยะลา (พ.ศ. 2567–2568) ครบทั้ง 8 อำเภอ (เช่น วัดนิโรธสังฆาราม ต.สะเตง, วัดรังสิตาวาส ต.กายูบอเกาะ อ.รามัน, อาคารอเนกประสงค์/หอประชุมอีก 6 อำเภอ) โดยเอาป้าย `"ชื่อทางการ (พิกัดโดยประมาณ)"` ออก และติดป้าย **`อ้างอิงจากข้อมูลเดิม รอยืนยัน`** สำหรับศูนย์ต่างอำเภอ
+  5. เพิ่มช่องทาง **LINE** และ **Facebook** ที่ตรวจสอบการเข้าถึงจริง (`HTTP 200 OK`) ใน `contacts.yaml` v3, iOS Prototype และ `SosScreen` (`@1784DDPM`, `@yalacity`, `facebook.com/DDPMNews`, `thainems`, `pryalahospital`, `ruamduay`) โดยตัดลิงก์ที่ไม่ตอบสนอง (`niems.go.th` timeout, `disaster.go.th` 403) ออก
+  6. ซ่อนศัพท์เทคนิค (`formula_version`, สูตร `W/R/F/D/C`, คะแนนดิบ, `SHA-256`, `Degraded`) ออกจากหน้าจอประชาชน ขณะยังคงตรรกะ `formula_version = 2` และชุดทดสอบ parity เบื้องหลัง 100%
+  7. เพิ่มสวิตช์แยกในหน้าตั้งค่า: **เปิด/ปิดเสียงแจ้งเตือน** (`!quietMode`) และ **เปิด/ปิดข้อความ Notification** (`pushEnabled`)
+- **กระทบ:** `backend/registry/yala_subdistricts.geojson`, `backend/registry/yala_villages.json`, `backend/registry/contacts.yaml`, `backend/registry/shelters.yaml`, `mobile/preview/serve.py`, `mobile/preview/index.html`, `mobile/app/ios/Runner/Info.plist`, `mobile/app/lib/`, `mobile/app/assets/geo/`, `web/`

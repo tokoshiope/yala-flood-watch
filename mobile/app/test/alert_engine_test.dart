@@ -329,6 +329,7 @@ void main() {
       expect(first.first.level, RiskLevel.danger);
       expect(first.first.message, contains('13.00'));
       expect(first.first.message, contains('0.85'));
+      expect(first.first.message, isNot(contains('คะแนนความเสี่ยง')));
 
       final withinCooldown = engine.evaluate(
         stations: stations,
@@ -380,11 +381,29 @@ void main() {
       );
     });
 
-    test('GeoJSON ขอบเขต 8 อำเภอ จ.ยะลา parse ได้ครบทั้ง 8 อำเภอ', () {
+    test('GeoJSON ขอบเขต 8 อำเภอ, 58 ตำบล และ 449 หมู่บ้าน จ.ยะลา parse ได้ครบพร้อมความสูง MSL', () {
       final raw = File('assets/geo/yala_amphoes.geojson').readAsStringSync();
       final bounds = SnapshotService.parseGeoJsonBoundaries(raw);
       expect(bounds.length, 8);
       expect(bounds.map((b) => b.amphoeTh).toSet(), containsAll(AppConfig.riskAmphoeTh));
+
+      final subRaw = File('assets/geo/yala_subdistricts.geojson').readAsStringSync();
+      final subs = SnapshotService.parseGeoJsonSubdistricts(subRaw);
+      expect(subs.length, 58);
+      expect(subs.every((s) => s.elevationMsl != null), isTrue);
+
+      final vilRaw = File('assets/geo/yala_villages.json').readAsStringSync();
+      final vils = SnapshotService.parseVillagesJson(vilRaw);
+      expect(vils.length, 449);
+      expect(vils.every((v) => v.elevationMsl != null), isTrue);
+
+      // ตรวจสอบชื่อแอปและแท็บใหม่ + ลิงก์ LINE/FB ที่ตรวจสอบแล้ว
+      expect(const AppStrings('th').get('app_title'), 'แจ้งเตือนน้ำท่วมยะลา');
+      expect(const AppStrings('th').get('tab_home'), 'แผนที่');
+      expect(const AppStrings('th').get('tab_alerts'), 'ข้อมูล');
+      expect(AppConfig.lineDdpmUrl, 'https://line.me/R/ti/p/@1784DDPM');
+      expect(AppConfig.lineYalaCityUrl, 'https://line.me/R/ti/p/@yalacity');
+      expect(AppConfig.fbDdpmUrl, 'https://www.facebook.com/DDPMNews');
     });
   });
 }

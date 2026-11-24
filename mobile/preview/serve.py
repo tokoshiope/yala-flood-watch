@@ -275,6 +275,20 @@ class PreviewHandler(BaseHTTPRequestHandler):
             else:
                 self._send_json({"error": "yala_amphoes.geojson not found"}, status=404)
             return
+        if self.path == "/api/subdistricts":
+            sub_path = BACKEND_DIR / "registry" / "yala_subdistricts.geojson"
+            if sub_path.exists():
+                self._send_json(json.loads(sub_path.read_text(encoding="utf-8")))
+            else:
+                self._send_json({"error": "yala_subdistricts.geojson not found"}, status=404)
+            return
+        if self.path == "/api/villages":
+            vil_path = BACKEND_DIR / "registry" / "yala_villages.json"
+            if vil_path.exists():
+                self._send_json(json.loads(vil_path.read_text(encoding="utf-8")))
+            else:
+                self._send_json({"error": "yala_villages.json not found"}, status=404)
+            return
         if self.path.startswith("/api/scenario/"):
             sc_id = self.path.split("/api/scenario/", 1)[1].split("?")[0]
             if sc_id not in ("live", "banglang_spillway", "kabang_flash", "nov2025_crisis"):

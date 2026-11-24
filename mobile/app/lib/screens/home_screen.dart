@@ -8,14 +8,17 @@ import 'package:yala_flood_app/l10n/app_strings.dart';
 import 'package:yala_flood_app/models/flood_snapshot.dart';
 import 'package:yala_flood_app/models/risk_level.dart';
 import 'package:yala_flood_app/models/station.dart';
-import 'package:yala_flood_app/screens/alerts_screen.dart';
 import 'package:yala_flood_app/screens/station_detail_screen.dart';
 import 'package:yala_flood_app/state/alert_provider.dart';
 import 'package:yala_flood_app/widgets/risk_badge.dart';
 import 'package:yala_flood_app/widgets/station_marker.dart';
 
-/// หน้าหลัก: แผนที่ Google Maps แบ่งเขต 8 อำเภอระบายสีตามระดับแจ้งเตือน,
-/// เวลาไทย (UTC+7), แถบเลื่อนกราฟพยากรณ์ฝนรายชั่วโมง และรายการสถานีล่าสุด
+/// แถบที่ 1 "แผนที่":
+/// - หัวบนสุด "แจ้งเตือนน้ำท่วมยะลา" + เวลาไทย UTC+7
+/// - กรอบเขื่อนบางลางอยู่ด้านบนต่อจากแถบหัวเรื่อง
+/// - แผนที่ Google Maps แสดงเฉพาะเขต จ.ยะลา (Mask นอกจังหวัด + ล็อกขอบเขต)
+/// - ระบายสีระดับน้ำท่วมถึงอ้างอิงความสูงภูมิประเทศจริง (ม.รทก.) เทียบระดับน้ำ
+/// - กดขยาย 3 ระดับ: จังหวัดยะลา (8 อำเภอ) -> ตำบลทั้งหมด (58 ตำบล) -> หมู่บ้านทั้งหมด (449 หมู่บ้าน)
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -26,7 +29,20 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final MapController _mapController = MapController();
   String? _selectedCode;
-  bool _rainDrawerOpen = false;
+  String? _drillAmphoe;
+  String? _drillTumbon;
+
+  static final LatLngBounds _yalaBounds = LatLngBounds(
+    const LatLng(5.55, 100.78),
+    const LatLng(6.76, 101.68),
+  );
+
+  static const List<LatLng> _outerWorldMask = [
+    LatLng(-20, 60),
+    LatLng(-20, 140),
+    LatLng(35, 140),
+    LatLng(35, 60),
+  ];
 
   @override
   void dispose() {
@@ -34,12 +50,42 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  void _focusStation(Station station) {
-    final lat = station.lat;
-    final lng = station.lng;
-    if (lat == null || lng == null) return;
-    setState(() => _selectedCode = station.code);
-    _mapController.move(LatLng(lat, lng), 12.0);
+  void _drillToProvince() {
+    setState(() {
+      _drillAmphoe = null;
+      _drillTumbon = null;
+      _selectedCode = null;
+    });
+    _mapController.move(
+      const LatLng(AppConfig.defaultLat, AppConfig.defaultLng),
+      AppConfig.defaultZoom,
+    );
+  }
+
+  void _drillToAmphoe(AlertProvider provider, String amphoeTh) {
+    setState(() {
+      _drillAmphoe = amphoeTh;
+      _drillTumbon = null;
+    });
+    for (final b in provider.boundaries) {
+      if (b.amphoeTh == amphoeTh) {
+        _mapController.move(b.centroid, 10.6);
+        break;
+      }
+    }
+  }
+
+  void _drillToTumbon(AlertProvider provider, String amphoeTh, String tumbonTh) {
+    setState(() {
+      _drillAmphoe = amphoeTh;
+      _drillTumbon = tumbonTh;
+    });
+    for (final sub in provider.subdistrictsOf(amphoeTh)) {
+      if (sub.tumbonTh == tumbonTh) {
+        _mapController.move(sub.centroid, 12.2);
+        break;
+      }
+    }
   }
 
   void _openDetail(Station station) {
@@ -75,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                '${station.locationLabel} · ${station.code}',
+                station.locationLabel,
                 style: Theme.of(sheetContext).textTheme.bodySmall,
               ),
               const SizedBox(height: 10),
@@ -103,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final level = station.displayLevel;
     final buffer = StringBuffer();
     if (level != null) {
-      buffer.write('ระดับน้ำ ${level.toStringAsFixed(2)} ม. (MSL)');
+      buffer.write('ระดับน้ำ ${level.toStringAsFixed(2)} ม.รทก.');
     } else {
       buffer.write('ยังไม่มีค่าระดับน้ำ');
     }
@@ -111,8 +157,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (remaining != null) {
       buffer.write(
         remaining >= 0
-            ? ' เหลือ ${remaining.toStringAsFixed(2)} ม. ถึงตลิ่ง'
-            : ' ล้นตลิ่ง ${(-remaining).toStringAsFixed(2)} ม.',
+            ? ' · เหลือ ${remaining.toStringAsFixed(2)} ม. ถึงตลิ่ง'
+            : ' · ล้นตลิ่ง ${(-remaining).toStringAsFixed(2)} ม.',
       );
     }
     if (station.trend != WaterTrend.unknown) {
@@ -131,7 +177,10 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(strings.get('app_title'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            Text(
+              strings.get('app_title'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
             if (provider.lastUpdated != null)
               Text(
                 AppStrings.formatThailandTime(provider.lastUpdated!),
@@ -153,40 +202,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   )
                 : const Icon(Icons.refresh),
           ),
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              IconButton(
-                tooltip: strings.get('tab_alerts'),
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const AlertsScreen(),
-                  ),
-                ),
-                icon: const Icon(Icons.notifications_outlined),
-              ),
-              if (provider.unreadCount > 0)
-                Positioned(
-                  right: 6,
-                  top: 6,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Color(AppConfig.colorDanger),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      '${provider.unreadCount}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
           const SizedBox(width: 6),
         ],
       ),
@@ -205,124 +220,235 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    final focusAmphoe = _focusAmphoeForecast(provider);
+    final dam = provider.snapshot?.bangLangDam;
 
     return Column(
       children: [
         if (provider.isOffline || provider.noticeTh != null)
           _OfflineBanner(messageTh: provider.noticeTh),
+        if (dam != null) _BangLangDamCard(dam: dam, strings: provider.strings),
+        _DrillBreadcrumbBar(
+          drillAmphoe: _drillAmphoe,
+          drillTumbon: _drillTumbon,
+          provider: provider,
+          onBackProvince: _drillToProvince,
+          onBackAmphoe: _drillAmphoe == null
+              ? null
+              : () => _drillToAmphoe(provider, _drillAmphoe!),
+        ),
         Expanded(child: _buildMap(provider)),
-        if (focusAmphoe != null && focusAmphoe.hourlyNext24h.isNotEmpty)
-          _RainForecastDrawer(
-            amphoeLabel: provider.strings.amphoe(focusAmphoe.amphoeTh),
-            forecast: focusAmphoe,
-            expanded: _rainDrawerOpen,
-            strings: provider.strings,
-            onToggle: () => setState(() => _rainDrawerOpen = !_rainDrawerOpen),
-          ),
-        _StationCarousel(
-          title: provider.strings.get('latest_stations'),
-          stations: _sortedStations(provider),
-          selectedCode: _selectedCode,
-          onTap: (station) {
-            _focusStation(station);
-            _showStationSheet(station);
-          },
+        _DrillListStrip(
+          provider: provider,
+          drillAmphoe: _drillAmphoe,
+          drillTumbon: _drillTumbon,
+          onSelectAmphoe: (amp) => _drillToAmphoe(provider, amp),
+          onSelectTumbon: (amp, tam) => _drillToTumbon(provider, amp, tam),
+          onSelectVillage: (v) => _mapController.move(v.point, 14.0),
         ),
       ],
     );
   }
 
-  AmphoeForecastSummary? _focusAmphoeForecast(AlertProvider provider) {
-    final snap = provider.snapshot;
-    if (snap == null || snap.amphoes.isEmpty) return null;
-    final sub = provider.settings.selectedAmphoeTh;
-    if (sub != null) {
-      final matched = snap.byAmphoe(sub);
-      if (matched != null) return matched;
-    }
-    return snap.amphoes.first;
-  }
-
-  List<Station> _sortedStations(AlertProvider provider) {
-    final list = [...provider.stations];
-    list.sort((a, b) {
-      final aTime = DateTime.tryParse(a.datetime ?? '');
-      final bTime = DateTime.tryParse(b.datetime ?? '');
-      if (aTime != null && bTime != null) {
-        final byTime = bTime.compareTo(aTime);
-        if (byTime != 0) return byTime;
-      }
-      return b.riskLevel.severity.compareTo(a.riskLevel.severity);
-    });
-    return list;
-  }
-
   Widget _buildMap(AlertProvider provider) {
     final lang = provider.settings.languageCode;
-    final polygons = <Polygon>[];
-    final amphoeMarkers = <Marker>[];
+    final maskHoles = <List<LatLng>>[
+      for (final b in provider.boundaries) ...b.rings,
+    ];
 
-    for (final boundary in provider.boundaries) {
-      final level = provider.amphoeAlertLevel(boundary.amphoeTh);
-      final isSelected = provider.settings.selectedAmphoeTh == boundary.amphoeTh;
-      for (final ring in boundary.rings) {
-        polygons.add(
-          Polygon(
-            points: ring,
-            color: level.color.withValues(alpha: isSelected ? 0.45 : 0.28),
-            borderColor: isSelected ? const Color(0xFF0F172A) : Colors.white,
-            borderStrokeWidth: isSelected ? 2.4 : 1.4,
-          ),
-        );
-      }
-      amphoeMarkers.add(
-        Marker(
-          point: boundary.centroid,
-          width: 112,
-          height: 24,
-          child: Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.90),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: level.color, width: 1.4),
-              ),
-              child: Text(
-                '${provider.strings.amphoe(boundary.amphoeTh)} · Lv.${level.value}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800),
+    final polygons = <Polygon>[];
+    if (maskHoles.isNotEmpty) {
+      polygons.add(
+        Polygon(
+          points: _outerWorldMask,
+          holePointsList: maskHoles,
+          color: const Color(0xD90F172A),
+          borderColor: Colors.transparent,
+          borderStrokeWidth: 0,
+        ),
+      );
+    }
+
+    final areaMarkers = <Marker>[];
+
+    if (_drillAmphoe == null) {
+      // ระดับที่ 1: ทั้ง 8 อำเภอของ จ.ยะลา
+      for (final boundary in provider.boundaries) {
+        final level = provider.amphoeAlertLevel(boundary.amphoeTh);
+        for (final ring in boundary.rings) {
+          polygons.add(
+            Polygon(
+              points: ring,
+              color: level.color.withValues(alpha: 0.34),
+              borderColor: Colors.white,
+              borderStrokeWidth: 1.8,
+            ),
+          );
+        }
+        areaMarkers.add(
+          Marker(
+            point: boundary.centroid,
+            width: 118,
+            height: 28,
+            child: GestureDetector(
+              onTap: () => _drillToAmphoe(provider, boundary.amphoeTh),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.94),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: level.color, width: 1.6),
+                  ),
+                  child: Text(
+                    provider.strings.amphoe(boundary.amphoeTh),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800),
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      );
+        );
+      }
+    } else if (_drillTumbon == null) {
+      // ระดับที่ 2: ตำบลทั้งหมดในอำเภอที่เลือก (ระบายสีตามความสูง MSL เทียบระดับน้ำ)
+      final subs = provider.subdistrictsOf(_drillAmphoe!);
+      for (final sub in subs) {
+        final elev = provider.elevationFloodLevel(
+          sub.minElevationMsl ?? sub.elevationMsl,
+          sub.amphoeTh,
+        );
+        final lv = AlertLevel.fromValue(elev.level);
+        for (final ring in sub.rings) {
+          polygons.add(
+            Polygon(
+              points: ring,
+              color: lv.color.withValues(alpha: 0.42),
+              borderColor: Colors.white,
+              borderStrokeWidth: 1.5,
+            ),
+          );
+        }
+        areaMarkers.add(
+          Marker(
+            point: sub.centroid,
+            width: 120,
+            height: 28,
+            child: GestureDetector(
+              onTap: () => _drillToTumbon(provider, sub.amphoeTh, sub.tumbonTh),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.92),
+                    borderRadius: BorderRadius.circular(7),
+                    border: Border.all(color: lv.color, width: 1.5),
+                  ),
+                  child: Text(
+                    'ต.${sub.tumbonTh}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+    } else {
+      // ระดับที่ 3: หมู่บ้านทั้งหมดในตำบลที่เลือก (จุดสีตามความสูงจากระดับน้ำทะเล MSL)
+      final subs = provider.subdistrictsOf(_drillAmphoe!);
+      for (final sub in subs) {
+        final isTarget = sub.tumbonTh == _drillTumbon;
+        final elev = provider.elevationFloodLevel(
+          sub.minElevationMsl ?? sub.elevationMsl,
+          sub.amphoeTh,
+        );
+        final lv = AlertLevel.fromValue(elev.level);
+        for (final ring in sub.rings) {
+          polygons.add(
+            Polygon(
+              points: ring,
+              color: isTarget
+                  ? lv.color.withValues(alpha: 0.18)
+                  : const Color(0x331E293B),
+              borderColor: isTarget ? const Color(0xFF0E5FA6) : Colors.white54,
+              borderStrokeWidth: isTarget ? 2.4 : 1.0,
+            ),
+          );
+        }
+      }
+      final villages = provider.villagesOf(_drillAmphoe!, _drillTumbon!);
+      for (final v in villages) {
+        final elev = provider.elevationFloodLevel(v.elevationMsl, v.amphoeTh);
+        final lv = AlertLevel.fromValue(elev.level);
+        areaMarkers.add(
+          Marker(
+            point: v.point,
+            width: 118,
+            height: 36,
+            child: GestureDetector(
+              onTap: () => _showVillageSheet(v, elev, lv),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 14,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: lv.color,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.90),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      v.nameTh,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 8.5, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
     }
 
-    final markers = <Marker>[];
-    for (final station in provider.stations) {
-      final lat = station.lat;
-      final lng = station.lng;
-      if (lat == null || lng == null) continue;
-      markers.add(
-        Marker(
-          point: LatLng(lat, lng),
-          width: 92,
-          height: 62,
-          alignment: Alignment.topCenter,
-          child: StationMarker(
-            station: station,
-            selected: _selectedCode == station.code,
-            onTap: () {
-              setState(() => _selectedCode = station.code);
-              _mapController.move(LatLng(lat, lng), 12.0);
-              _showStationSheet(station);
-            },
+    final stationMarkers = <Marker>[];
+    if (_drillTumbon == null) {
+      for (final station in provider.stations) {
+        final lat = station.lat;
+        final lng = station.lng;
+        if (lat == null || lng == null) continue;
+        if (_drillAmphoe != null && station.amphoeTh != _drillAmphoe) continue;
+        stationMarkers.add(
+          Marker(
+            point: LatLng(lat, lng),
+            width: 92,
+            height: 62,
+            alignment: Alignment.topCenter,
+            child: StationMarker(
+              station: station,
+              selected: _selectedCode == station.code,
+              onTap: () {
+                setState(() => _selectedCode = station.code);
+                _mapController.move(LatLng(lat, lng), 12.0);
+                _showStationSheet(station);
+              },
+            ),
           ),
-        ),
-      );
+        );
+      }
     }
 
     return FlutterMap(
@@ -330,8 +456,9 @@ class _HomeScreenState extends State<HomeScreen> {
       options: MapOptions(
         initialCenter: const LatLng(AppConfig.defaultLat, AppConfig.defaultLng),
         initialZoom: AppConfig.defaultZoom,
-        minZoom: 7,
+        minZoom: 8.5,
         maxZoom: 16,
+        cameraConstraint: CameraConstraint.contain(bounds: _yalaBounds),
         interactionOptions: const InteractionOptions(
           flags: InteractiveFlag.pinchZoom |
               InteractiveFlag.drag |
@@ -347,8 +474,8 @@ class _HomeScreenState extends State<HomeScreen> {
           maxZoom: 18,
         ),
         if (polygons.isNotEmpty) PolygonLayer(polygons: polygons),
-        if (amphoeMarkers.isNotEmpty) MarkerLayer(markers: amphoeMarkers),
-        MarkerLayer(markers: markers),
+        if (areaMarkers.isNotEmpty) MarkerLayer(markers: areaMarkers),
+        if (stationMarkers.isNotEmpty) MarkerLayer(markers: stationMarkers),
         RichAttributionWidget(
           attributions: [
             TextSourceAttribution(
@@ -360,121 +487,343 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
-}
 
-/// แถบเลื่อนกราฟพยากรณ์ฝนรายชั่วโมง (UTC+7) แสดงช่องเวลาชัดเจน
-class _RainForecastDrawer extends StatelessWidget {
-  const _RainForecastDrawer({
-    required this.amphoeLabel,
-    required this.forecast,
-    required this.expanded,
-    required this.strings,
-    required this.onToggle,
-  });
-
-  final String amphoeLabel;
-  final AmphoeForecastSummary forecast;
-  final bool expanded;
-  final AppStrings strings;
-  final VoidCallback onToggle;
-
-  Color _barColor(double mm) {
-    if (mm >= 20) return const Color(0xFFB71C1C);
-    if (mm >= 10) return const Color(0xFFEF6C00);
-    if (mm >= 3) return const Color(0xFFF59E0B);
-    if (mm > 0) return const Color(0xFF0284C7);
-    return const Color(0xFF94A3B8);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final maxMm = forecast.hourlyNext24h.fold<double>(
-      10.0,
-      (prev, e) => e.mm > prev ? e.mm : prev,
-    );
-
-    return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFFF8FAFC),
-        border: Border(top: BorderSide(color: Color(0x22000000))),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          InkWell(
-            onTap: onToggle,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
+  Future<void> _showVillageSheet(
+    VillagePoint v,
+    ElevationFloodResult elev,
+    AlertLevel lv,
+  ) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  const Icon(Icons.water_drop_outlined, size: 16, color: Color(0xFF0E5FA6)),
-                  const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      '$amphoeLabel · 24h: ${forecast.forecast24hMm.toStringAsFixed(1)} มม. · '
-                      '${expanded ? strings.get('rain_drawer_open') : strings.get('rain_drawer_closed')}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      'หมู่ ${v.moo} ${v.nameTh}',
+                      style: Theme.of(sheetContext).textTheme.titleMedium,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: lv.color,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      lv.labelTh,
                       style: const TextStyle(
-                        fontSize: 12,
+                        color: Colors.white,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF0E5FA6),
+                        fontSize: 12,
                       ),
                     ),
                   ),
-                  Icon(expanded ? Icons.expand_less : Icons.expand_more, size: 18, color: const Color(0xFF0E5FA6)),
                 ],
               ),
+              const SizedBox(height: 6),
+              Text('ต.${v.tumbonTh} อ.${v.amphoeTh} จ.ยะลา'),
+              const SizedBox(height: 8),
+              Text(
+                'ความสูงพื้นที่: ${v.elevationMsl?.toStringAsFixed(0) ?? '-'} ม.รทก. · ${elev.summaryTh}',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              if (elev.refWaterMsl != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    'ระดับน้ำแม่น้ำอ้างอิงในอำเภอ: ${elev.refWaterMsl!.toStringAsFixed(2)} ม.รทก.',
+                    style: Theme.of(sheetContext).textTheme.bodySmall,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// กรอบสถานะเขื่อนบางลาง ด้านบนต่อจากแถบ "แจ้งเตือนน้ำท่วมยะลา"
+class _BangLangDamCard extends StatelessWidget {
+  const _BangLangDamCard({required this.dam, required this.strings});
+
+  final BangLangDamStatus dam;
+  final AppStrings strings;
+
+  @override
+  Widget build(BuildContext context) {
+    final spill = dam.spillwayActive;
+    final bgStart = spill ? const Color(0xFF991B1B) : const Color(0xFF0B3B75);
+    final bgEnd = spill ? const Color(0xFFDC2626) : const Color(0xFF145DA0);
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(10, 6, 10, 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [bgStart, bgEnd]),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.water, color: Colors.white, size: 17),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  strings.get('dam_title'),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13.5,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: spill ? Colors.amber : Colors.white24,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  spill ? 'ระบายน้ำล้นฉุกเฉิน' : 'ควบคุมปกติ',
+                  style: TextStyle(
+                    color: spill ? const Color(0xFF111827) : Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              _metric(
+                'ความจุน้ำ',
+                dam.storagePercent != null
+                    ? '${dam.storagePercent!.toStringAsFixed(1)}%'
+                    : '—',
+              ),
+              const SizedBox(width: 8),
+              _metric(
+                'ปริมาณน้ำ',
+                dam.storageMcm != null
+                    ? '${dam.storageMcm!.toStringAsFixed(0)} ล้าน ลบ.ม.'
+                    : '—',
+              ),
+              const SizedBox(width: 8),
+              _metric(
+                'ระบายน้ำ/วัน',
+                dam.releasedDailyMcm != null
+                    ? '${dam.releasedDailyMcm!.toStringAsFixed(2)} ล้าน ลบ.ม.'
+                    : '—',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _metric(String label, String value) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: const TextStyle(color: Colors.white70, fontSize: 10)),
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DrillBreadcrumbBar extends StatelessWidget {
+  const _DrillBreadcrumbBar({
+    required this.drillAmphoe,
+    required this.drillTumbon,
+    required this.provider,
+    required this.onBackProvince,
+    required this.onBackAmphoe,
+  });
+
+  final String? drillAmphoe;
+  final String? drillTumbon;
+  final AlertProvider provider;
+  final VoidCallback onBackProvince;
+  final VoidCallback? onBackAmphoe;
+
+  @override
+  Widget build(BuildContext context) {
+    final path = drillAmphoe == null
+        ? 'จ.ยะลา (8 อำเภอ · แตะอำเภอเพื่อดูตำบล)'
+        : drillTumbon == null
+            ? 'จ.ยะลา › อ.$drillAmphoe (${provider.subdistrictsOf(drillAmphoe!).length} ตำบล)'
+            : 'อ.$drillAmphoe › ต.$drillTumbon (${provider.villagesOf(drillAmphoe!, drillTumbon!).length} หมู่บ้าน)';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      color: const Color(0xFFF8FAFC),
+      child: Row(
+        children: [
+          const Icon(Icons.layers_outlined, size: 15, color: Color(0xFF0E5FA6)),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              path,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
             ),
           ),
-          if (expanded)
-            SizedBox(
-              height: 170,
-              child: ListView.builder(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-                itemCount: forecast.hourlyNext24h.length,
-                itemBuilder: (context, idx) {
-                  final pt = forecast.hourlyNext24h[idx];
-                  final ratio = (pt.mm / maxMm).clamp(0.0, 1.0);
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 3),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 58,
-                          child: Text(
-                            '${pt.hourMinute} น.',
-                            style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                        Expanded(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(5),
-                            child: LinearProgressIndicator(
-                              value: pt.mm > 0 ? ratio.clamp(0.06, 1.0) : 0.02,
-                              minHeight: 10,
-                              backgroundColor: const Color(0xFFE2E8F0),
-                              valueColor: AlwaysStoppedAnimation<Color>(_barColor(pt.mm)),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          width: 78,
-                          child: Text(
-                            '${pt.mm.toStringAsFixed(1)} มม. · ${pt.probPct}%',
-                            textAlign: TextAlign.right,
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+          if (drillTumbon != null && onBackAmphoe != null)
+            TextButton(
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+              ),
+              onPressed: onBackAmphoe,
+              child: const Text('กลับตำบล', style: TextStyle(fontSize: 11)),
+            ),
+          if (drillAmphoe != null)
+            TextButton(
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+              ),
+              onPressed: onBackProvince,
+              child: Text(
+                provider.strings.get('map_back_province'),
+                style: const TextStyle(fontSize: 11),
               ),
             ),
         ],
       ),
+    );
+  }
+}
+
+class _DrillListStrip extends StatelessWidget {
+  const _DrillListStrip({
+    required this.provider,
+    required this.drillAmphoe,
+    required this.drillTumbon,
+    required this.onSelectAmphoe,
+    required this.onSelectTumbon,
+    required this.onSelectVillage,
+  });
+
+  final AlertProvider provider;
+  final String? drillAmphoe;
+  final String? drillTumbon;
+  final ValueChanged<String> onSelectAmphoe;
+  final void Function(String amphoe, String tumbon) onSelectTumbon;
+  final ValueChanged<VillagePoint> onSelectVillage;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 62,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0x22000000))),
+      ),
+      child: _buildItems(),
+    );
+  }
+
+  Widget _buildItems() {
+    if (drillAmphoe == null) {
+      return ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+        itemCount: AppConfig.riskAmphoeTh.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 6),
+        itemBuilder: (_, i) {
+          final amp = AppConfig.riskAmphoeTh[i];
+          final lv = provider.amphoeAlertLevel(amp);
+          return ActionChip(
+            avatar: CircleAvatar(backgroundColor: lv.color, radius: 6),
+            label: Text(provider.strings.amphoe(amp), style: const TextStyle(fontSize: 12)),
+            onPressed: () => onSelectAmphoe(amp),
+          );
+        },
+      );
+    }
+
+    if (drillTumbon == null) {
+      final subs = provider.subdistrictsOf(drillAmphoe!);
+      return ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+        itemCount: subs.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 6),
+        itemBuilder: (_, i) {
+          final sub = subs[i];
+          final elev = provider.elevationFloodLevel(
+            sub.minElevationMsl ?? sub.elevationMsl,
+            sub.amphoeTh,
+          );
+          final lv = AlertLevel.fromValue(elev.level);
+          return ActionChip(
+            avatar: CircleAvatar(backgroundColor: lv.color, radius: 6),
+            label: Text(
+              'ต.${sub.tumbonTh} (${sub.minElevationMsl?.toStringAsFixed(0) ?? '-'} ม.รทก.)',
+              style: const TextStyle(fontSize: 11.5),
+            ),
+            onPressed: () => onSelectTumbon(sub.amphoeTh, sub.tumbonTh),
+          );
+        },
+      );
+    }
+
+    final villages = provider.villagesOf(drillAmphoe!, drillTumbon!);
+    return ListView.separated(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      itemCount: villages.length,
+      separatorBuilder: (_, _) => const SizedBox(width: 6),
+      itemBuilder: (_, i) {
+        final v = villages[i];
+        final elev = provider.elevationFloodLevel(v.elevationMsl, v.amphoeTh);
+        final lv = AlertLevel.fromValue(elev.level);
+        return ActionChip(
+          avatar: CircleAvatar(backgroundColor: lv.color, radius: 6),
+          label: Text(
+            'ม.${v.moo} ${v.nameTh} (${v.elevationMsl?.toStringAsFixed(0) ?? '-'} ม.)',
+            style: const TextStyle(fontSize: 11.5),
+          ),
+          onPressed: () => onSelectVillage(v),
+        );
+      },
     );
   }
 }
@@ -489,155 +838,18 @@ class _OfflineBanner extends StatelessWidget {
     return Container(
       width: double.infinity,
       color: const Color(0xFFFFF3E0),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Row(
         children: [
-          const Icon(Icons.cloud_off, size: 18, color: Color(0xFFEF6C00)),
+          const Icon(Icons.cloud_off, size: 16, color: Color(0xFFEF6C00)),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               messageTh ?? 'ไม่มีสัญญาณเน็ต กำลังแสดงข้อมูลล่าสุดที่บันทึกไว้',
-              style: const TextStyle(fontSize: 13, color: Color(0xFF6D4C00)),
+              style: const TextStyle(fontSize: 12, color: Color(0xFF6D4C00)),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _StationCarousel extends StatelessWidget {
-  const _StationCarousel({
-    required this.title,
-    required this.stations,
-    required this.selectedCode,
-    required this.onTap,
-  });
-
-  final String title;
-  final List<Station> stations;
-  final String? selectedCode;
-  final ValueChanged<Station> onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    if (stations.isEmpty) return const SizedBox.shrink();
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0x22000000))),
-      ),
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.update, size: 16),
-              const SizedBox(width: 6),
-              Text(title, style: Theme.of(context).textTheme.titleSmall),
-              const Spacer(),
-              Text(
-                '${stations.length} แห่ง · UTC+7',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 112,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: stations.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final station = stations[index];
-                return _StationCard(
-                  station: station,
-                  selected: station.code == selectedCode,
-                  onTap: () => onTap(station),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StationCard extends StatelessWidget {
-  const _StationCard({
-    required this.station,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final Station station;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final level = station.riskLevel;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: 200,
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: selected ? level.color.withValues(alpha: 0.10) : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: selected ? level.color : const Color(0x22000000),
-            width: selected ? 1.6 : 1,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    station.nameTh,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-                RiskDot(level: level),
-              ],
-            ),
-            const Spacer(),
-            Text(
-              station.displayLevel == null
-                  ? '— ม.'
-                  : '${station.displayLevel!.toStringAsFixed(2)} ม.',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: level.color,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Row(
-              children: [
-                Icon(station.trend.icon, size: 14, color: station.trend.color),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    station.datetime != null ? '${station.datetime} (UTC+7)' : 'ไม่ระบุเวลา',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }

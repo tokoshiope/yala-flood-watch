@@ -6,10 +6,10 @@ class AppConfig {
   AppConfig._();
 
   // ── แอพ ────────────────────────────────────────────────────────────────
-  static const String appName = 'น้ำท่วมยะลา';
+  static const String appName = 'แจ้งเตือนน้ำท่วมยะลา';
   static const String appNameEn = 'Yala Flood Watch';
   static const String packageName = 'net.yala.floodapp';
-  static const String appVersion = '0.3.0';
+  static const String appVersion = '0.4.0';
   static const int formulaVersion = 2;
 
   // ── จังหวัดยะลา ────────────────────────────────────────────────────────
@@ -51,6 +51,8 @@ class AppConfig {
 
   static const String bundledSnapshotAsset = 'assets/snapshots/latest.json';
   static const String bundledGeoJsonAsset = 'assets/geo/yala_amphoes.geojson';
+  static const String bundledSubdistrictsAsset = 'assets/geo/yala_subdistricts.geojson';
+  static const String bundledVillagesAsset = 'assets/geo/yala_villages.json';
 
   static const int yalaDataSetHash = 95;
 
@@ -135,7 +137,21 @@ class AppConfig {
   static const String emergencyMedical = '1669';
   static const String emergencyDisaster = '199';
   static const String emergencyPolice = '191';
+  static const String emergencyYalaHospital = '073228934';
+  static const String emergencyYalaHospitalDisplay = '073-228934';
+  static const String emergencyArmyMtb46 = '073340141';
+  static const String emergencyArmyMtb46Display = '073-340141';
   static const String emergencyVolunteer = '1677';
+
+  // ── ช่องทางออนไลน์ทางการที่ตรวจสอบ HTTP 200 แล้ว (contacts.yaml v3) ────────
+  static const String lineDdpmUrl = 'https://line.me/R/ti/p/@1784DDPM';
+  static const String lineYalaCityUrl = 'https://line.me/R/ti/p/@yalacity';
+  static const String fbDdpmUrl = 'https://www.facebook.com/DDPMNews';
+  static const String fbNiemsUrl = 'https://www.facebook.com/thainems';
+  static const String fbYalaHospitalUrl = 'https://www.facebook.com/pryalahospital';
+  static const String fbRuamduayUrl = 'https://www.facebook.com/ruamduay';
+  static const String webYalaCityUrl = 'https://www.yalacity.go.th';
+  static const String webYalaHospitalUrl = 'https://www.yalahospital.go.th';
 
   static const String lifeSafetyDisclaimerTh =
       'แอปนี้เป็นเครื่องมือเฝ้าระวังและแจ้งเตือนล่วงหน้าอิสระ ไม่ใช่ช่องทางกู้ภัยหลักของทางราชการ '

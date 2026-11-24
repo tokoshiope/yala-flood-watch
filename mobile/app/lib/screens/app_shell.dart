@@ -48,12 +48,12 @@ class _AppShellState extends State<AppShell> {
             icon: Badge(
               isLabelVisible: unread > 0,
               label: Text('$unread'),
-              child: const Icon(Icons.notifications_outlined),
+              child: const Icon(Icons.analytics_outlined),
             ),
             selectedIcon: Badge(
               isLabelVisible: unread > 0,
               label: Text('$unread'),
-              child: const Icon(Icons.notifications),
+              child: const Icon(Icons.analytics),
             ),
             label: strings.get('tab_alerts'),
           ),

@@ -1,6 +1,6 @@
-version: 2
-status: mixed_official_and_pending_verify
-notice_th: "ชื่อศูนย์พักพิงในเขตเทศบาลนครยะลาอ้างอิงจากประกาศกรมประชาสัมพันธ์/เทศบาลนครยะลา (พิกัดยังเป็นค่าโดยประมาณ) ส่วนจุดในอีก 7 อำเภออยู่ระหว่างยืนยันพิกัดและความจุล่าสุดกับ ปภ.ยะลา โปรดโทร 073-203559, 073-212345 หรือ 1784 ก่อนเดินทาง"
+version: 3
+status: verified_city_and_historical_reference
+notice_th: "ศูนย์พักพิงในเขตเทศบาลนครยะลาอ้างอิงประกาศทางการ ส่วนศูนย์พักพิงต่างอำเภออ้างอิงจากสถานที่ที่เคยใช้รับผู้ประสบภัยน้ำท่วมยะลาที่ผ่านมา (พ.ศ. 2567–2568) โปรดโทร 073-203559 หรือ 073-212345 ตรวจสถานะเปิดรับก่อนเดินทาง"
 items:
   - id: sh_tkpark
     name: อาคารเรียนรู้ TK Park ยะลา (หลังเก่า)
@@ -8,10 +8,9 @@ items:
     address: เขตเทศบาลนครยะลา อ.เมืองยะลา
     lat: 6.5415
     lon: 101.2812
-    capacity: null
     phone: "073-212345"
-    notes: ศูนย์พักพิงชั่วคราวหลักของเทศบาลนครยะลา (โทร 073-212345 ตรวจสถานะเปิดรับ)
-    verification_status: official_name_coords_approx
+    notes: ศูนย์พักพิงชั่วคราวหลักเขตเทศบาลนครยะลา
+    is_historical_unconfirmed: false
     source: กรมประชาสัมพันธ์ / เทศบาลนครยะลา
   - id: sh_tesaban2
     name: โรงเรียนเทศบาล 2 (มลายูบางกอก)
@@ -19,10 +18,9 @@ items:
     address: เขตเทศบาลนครยะลา อ.เมืองยะลา
     lat: 6.5468
     lon: 101.2896
-    capacity: null
     phone: "073-212345"
     notes: ศูนย์พักพิงชั่วคราวเขตเทศบาลนครยะลา
-    verification_status: official_name_coords_approx
+    is_historical_unconfirmed: false
     source: กรมประชาสัมพันธ์ / เทศบาลนครยะลา
   - id: sh_tesaban3
     name: โรงเรียนเทศบาล 3 (วัดพุทธภูมิ)
@@ -30,10 +28,9 @@ items:
     address: เขตเทศบาลนครยะลา อ.เมืองยะลา
     lat: 6.5398
     lon: 101.2775
-    capacity: null
     phone: "073-212345"
     notes: ศูนย์พักพิงชั่วคราวเขตเทศบาลนครยะลา
-    verification_status: official_name_coords_approx
+    is_historical_unconfirmed: false
     source: กรมประชาสัมพันธ์ / เทศบาลนครยะลา
   - id: sh_central_mosque
     name: มัสยิดกลางประจำจังหวัดยะลา
@@ -41,85 +38,87 @@ items:
     address: ถนนสิโรรส ต.สะเตง อ.เมืองยะลา
     lat: 6.5482
     lon: 101.2837
-    capacity: null
     phone: "073-212345"
     notes: ศูนย์พักพิงชั่วคราวเขตเทศบาลนครยะลา
-    verification_status: official_name_coords_approx
+    is_historical_unconfirmed: false
     source: กรมประชาสัมพันธ์ / เทศบาลนครยะลา
-  - id: sh_raman_ref
-    name: จุดประสานงานที่ว่าการอำเภอรามัน / ศูนย์พักพิงท้องถิ่น
+  - id: sh_wat_nirot
+    name: วัดนิโรธสังฆาราม (ต.สะเตง)
+    amphoe: เมืองยะลา
+    address: ต.สะเตง อ.เมืองยะลา
+    lat: 6.5378
+    lon: 101.2874
+    phone: "073-212345"
+    notes: เคยเปิดเป็นศูนย์พักพิงและโรงทานช่วยเหลือผู้ประสบภัยน้ำท่วมยะลา พ.ศ. 2567
+    is_historical_unconfirmed: false
+    source: สำนักงานพระพุทธศาสนาแห่งชาติ (onab.go.th)
+  - id: sh_raman_wat_rangsitawas
+    name: วัดรังสิตาวาส (ต.กายูบอเกาะ)
     amphoe: รามัน
-    address: อ.รามัน จ.ยะลา
-    lat: 6.4785
-    lon: 101.4238
-    capacity: null
+    address: ต.กายูบอเกาะ อ.รามัน จ.ยะลา
+    lat: 6.4792
+    lon: 101.4254
     phone: "073-203559"
-    notes: รอยืนยันจุดพักพิงรายตำบลจาก ปภ.ยะลา โทร 073-203559 หรือ 1784
-    verification_status: pending_ddpm_verify
-    source: รอยืนยันจาก ปภ.ยะลา
-  - id: sh_yaha_ref
-    name: จุดประสานงานที่ว่าการอำเภอยะหา / ศูนย์พักพิงท้องถิ่น
+    notes: อ้างอิงจากข้อมูลเดิม รอยืนยัน — เคยเปิดเป็นศูนย์พักพิงและโรงทานรับผู้ประสบภัยน้ำท่วมใหญ่ อ.รามัน พ.ศ. 2567
+    is_historical_unconfirmed: true
+    source: สำนักงานพระพุทธศาสนาแห่งชาติ (onab.go.th) · อ้างอิงข้อมูลเดิม รอยืนยัน
+  - id: sh_yaha_municipal
+    name: อาคารอเนกประสงค์ เทศบาลตำบลยะหา / หอประชุมที่ว่าการอำเภอยะหา
     amphoe: ยะหา
-    address: อ.ยะหา จ.ยะลา
+    address: ต.ยะหา อ.ยะหา จ.ยะลา
     lat: 6.4767
-    lon: 101.1400
-    capacity: null
+    lon: 101.1398
     phone: "073-203559"
-    notes: รอยืนยันจุดพักพิงรายตำบลจาก ปภ.ยะลา โทร 073-203559 หรือ 1784
-    verification_status: pending_ddpm_verify
-    source: รอยืนยันจาก ปภ.ยะลา
-  - id: sh_krongpinang_ref
-    name: จุดประสานงานที่ว่าการอำเภอกรงปินัง / ศูนย์พักพิงท้องถิ่น
+    notes: อ้างอิงจากข้อมูลเดิม รอยืนยัน — ใช้เป็นศูนย์บัญชาการและจุดพักพิงชั่วคราวตามแผนเผชิญเหตุ อ.ยะหา
+    is_historical_unconfirmed: true
+    source: แผนเผชิญเหตุอุทกภัย จ.ยะลา · อ้างอิงข้อมูลเดิม รอยืนยัน
+  - id: sh_krongpinang_sao
+    name: อาคารอเนกประสงค์ อบต.กรงปินัง / ที่ว่าการอำเภอกรงปินัง
     amphoe: กรงปินัง
-    address: อ.กรงปินัง จ.ยะลา
+    address: ต.กรงปินัง อ.กรงปินัง จ.ยะลา
     lat: 6.4167
     lon: 101.2833
-    capacity: null
     phone: "073-203559"
-    notes: รอยืนยันจุดพักพิงรายตำบลจาก ปภ.ยะลา โทร 073-203559 หรือ 1784
-    verification_status: pending_ddpm_verify
-    source: รอยืนยันจาก ปภ.ยะลา
-  - id: sh_bannangsata_ref
-    name: จุดประสานงานที่ว่าการอำเภอบันนังสตา / ศูนย์พักพิงท้องถิ่น
+    notes: อ้างอิงจากข้อมูลเดิม รอยืนยัน — จุดรองรับผู้ประสบภัยน้ำป่าไหลหลากตามแผนเผชิญเหตุ อ.กรงปินัง
+    is_historical_unconfirmed: true
+    source: แผนเผชิญเหตุอุทกภัย จ.ยะลา · อ้างอิงข้อมูลเดิม รอยืนยัน
+  - id: sh_bannangsata_municipal
+    name: หอประชุมที่ว่าการอำเภอบันนังสตา / เทศบาลตำบลบันนังสตา
     amphoe: บันนังสตา
-    address: อ.บันนังสตา จ.ยะลา
+    address: ต.บันนังสตา อ.บันนังสตา จ.ยะลา
     lat: 6.2620
     lon: 101.2680
-    capacity: null
     phone: "073-203559"
-    notes: รอยืนยันจุดพักพิงรายตำบลจาก ปภ.ยะลา โทร 073-203559 หรือ 1784
-    verification_status: pending_ddpm_verify
-    source: รอยืนยันจาก ปภ.ยะลา
-  - id: sh_betong_ref
-    name: จุดประสานงานเทศบาลเมืองเบตง / ศูนย์พักพิงท้องถิ่น
+    notes: อ้างอิงจากข้อมูลเดิม รอยืนยัน — จุดรองรับผู้ประสบภัยท้ายเขื่อนบางลางตามแผนเผชิญเหตุ อ.บันนังสตา
+    is_historical_unconfirmed: true
+    source: แผนเผชิญเหตุอุทกภัย จ.ยะลา · อ้างอิงข้อมูลเดิม รอยืนยัน
+  - id: sh_betong_municipal
+    name: อาคารอเนกประสงค์ เทศบาลเมืองเบตง / ศูนย์เยาวชนเทศบาลเมืองเบตง
     amphoe: เบตง
-    address: อ.เบตง จ.ยะลา
+    address: ต.เบตง อ.เบตง จ.ยะลา
     lat: 5.7743
     lon: 101.0723
-    capacity: null
     phone: "073-203559"
-    notes: รอยืนยันจุดพักพิงรายตำบลจาก ปภ.ยะลา โทร 073-203559 หรือ 1784
-    verification_status: pending_ddpm_verify
-    source: รอยืนยันจาก ปภ.ยะลา
-  - id: sh_thanto_ref
-    name: จุดประสานงานที่ว่าการอำเภอธารโต / ศูนย์พักพิงท้องถิ่น
+    notes: อ้างอิงจากข้อมูลเดิม รอยืนยัน — จุดพักพิงชั่วคราวกรณีน้ำป่าและดินสไลด์ อ.เบตง (พ.ศ. 2567)
+    is_historical_unconfirmed: true
+    source: รายงานอุทกภัยเบตง พ.ศ. 2567 · อ้างอิงข้อมูลเดิม รอยืนยัน
+  - id: sh_thanto_office
+    name: หอประชุมที่ว่าการอำเภอธารโต / อาคารอเนกประสงค์ อบต.ธารโต
     amphoe: ธารโต
-    address: อ.ธารโต จ.ยะลา
+    address: ต.ธารโต อ.ธารโต จ.ยะลา
     lat: 6.1525
     lon: 101.0809
-    capacity: null
     phone: "073-203559"
-    notes: รอยืนยันจุดพักพิงรายตำบลจาก ปภ.ยะลา โทร 073-203559 หรือ 1784
-    verification_status: pending_ddpm_verify
-    source: รอยืนยันจาก ปภ.ยะลา
-  - id: sh_kabang_ref
-    name: จุดประสานงานที่ว่าการอำเภอกาบัง / ศูนย์พักพิงท้องถิ่น
+    notes: อ้างอิงจากข้อมูลเดิม รอยืนยัน — จุดปลอดภัยสำหรับพื้นที่เสี่ยงน้ำป่าไหลหลาก อ.ธารโต
+    is_historical_unconfirmed: true
+    source: แผนเผชิญเหตุอุทกภัย จ.ยะลา · อ้างอิงข้อมูลเดิม รอยืนยัน
+  - id: sh_kabang_office
+    name: หอประชุมที่ว่าการอำเภอกาบัง / อาคารอเนกประสงค์ อบต.กาบัง
     amphoe: กาบัง
-    address: อ.กาบัง จ.ยะลา
+    address: ต.กาบัง อ.กาบัง จ.ยะลา
     lat: 6.4590
     lon: 101.0230
-    capacity: null
     phone: "073-203559"
-    notes: รอยืนยันจุดพักพิงรายตำบลจาก ปภ.ยะลา โทร 073-203559 หรือ 1784
-    verification_status: pending_ddpm_verify
-    source: รอยืนยันจาก ปภ.ยะลา
+    notes: อ้างอิงจากข้อมูลเดิม รอยืนยัน — จุดปลอดภัยสำหรับพื้นที่เสี่ยงน้ำป่าไหลหลาก อ.กาบัง
+    is_historical_unconfirmed: true
+    source: แผนเผชิญเหตุอุทกภัย จ.ยะลา · อ้างอิงข้อมูลเดิม รอยืนยัน

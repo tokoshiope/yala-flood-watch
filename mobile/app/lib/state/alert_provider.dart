@@ -46,6 +46,8 @@ class AlertProvider extends ChangeNotifier {
   AlertSettings _settings = const AlertSettings();
   FloodSnapshot? _snapshot;
   List<AmphoeBoundary> _boundaries = const <AmphoeBoundary>[];
+  List<SubdistrictBoundary> _subdistricts = const <SubdistrictBoundary>[];
+  List<VillagePoint> _villages = const <VillagePoint>[];
   bool _gpsConsentGranted = false;
 
   bool _loading = false;
@@ -63,6 +65,8 @@ class AlertProvider extends ChangeNotifier {
   AppStrings get strings => AppStrings(_settings.languageCode);
   FloodSnapshot? get snapshot => _snapshot;
   List<AmphoeBoundary> get boundaries => _boundaries;
+  List<SubdistrictBoundary> get subdistricts => _subdistricts;
+  List<VillagePoint> get villages => _villages;
   bool get gpsConsentGranted => _gpsConsentGranted;
   bool get loading => _loading;
   bool get initialized => _initialized;
@@ -93,6 +97,82 @@ class AlertProvider extends ChangeNotifier {
       }
     }
     return AlertLevel.fromValue(maxLv);
+  }
+
+  List<SubdistrictBoundary> subdistrictsOf(String amphoeTh) =>
+      _subdistricts.where((s) => s.amphoeTh == amphoeTh).toList();
+
+  List<VillagePoint> villagesOf(String amphoeTh, String tumbonTh) => _villages
+      .where((v) => v.amphoeTh == amphoeTh && v.tumbonTh == tumbonTh)
+      .toList();
+
+  /// ระดับน้ำแม่น้ำอ้างอิงในอำเภอ (เลือกสถานีที่ใกล้ตลิ่งที่สุด)
+  double? referenceWaterMslForAmphoe(String amphoeTh) {
+    final matching = _stations
+        .where((s) => s.amphoeTh == amphoeTh && s.displayLevel != null && s.hasBank)
+        .toList();
+    if (matching.isEmpty) return null;
+    matching.sort(
+      (a, b) => (a.remainingToBank ?? 99.0).compareTo(b.remainingToBank ?? 99.0),
+    );
+    return matching.first.displayLevel;
+  }
+
+  /// ประเมินระดับสีความเสี่ยงน้ำท่วมถึงจากความสูงจากระดับน้ำทะเล (MSL) เทียบระดับน้ำแม่น้ำ
+  /// ตรงตามสูตรใน Interactive iOS Preview 100%
+  ElevationFloodResult elevationFloodLevel(double? elevMsl, String amphoeTh) {
+    final ampLv = amphoeAlertLevel(amphoeTh).value;
+    final refWater = referenceWaterMslForAmphoe(amphoeTh);
+
+    if (elevMsl == null) {
+      return ElevationFloodResult(
+        level: ampLv,
+        summaryTh: AlertLevel.fromValue(ampLv).labelTh,
+        refWaterMsl: refWater,
+      );
+    }
+
+    if (refWater != null) {
+      final margin = double.parse((elevMsl - refWater).toStringAsFixed(1));
+      var lv = 1;
+      if (margin <= 0.5) {
+        lv = 5;
+      } else if (margin <= 2.5) {
+        lv = 4;
+      } else if (margin <= 6.0) {
+        lv = 3;
+      } else if (margin <= 12.0) {
+        lv = 2;
+      } else {
+        lv = 1;
+      }
+
+      if (ampLv == 1 && lv >= 4) lv = 2;
+      if (ampLv == 2 && lv == 5) lv = 3;
+      if (ampLv >= 5 && margin <= 5.0) {
+        lv = 5;
+      } else if (ampLv >= 4 && margin <= 3.5 && lv < 4) {
+        lv = 4;
+      }
+
+      final txt = margin <= 0
+          ? 'ต่ำกว่าระดับน้ำ ${margin.abs().toStringAsFixed(1)} ม.'
+          : 'สูงกว่าระดับน้ำ +${margin.toStringAsFixed(1)} ม.';
+      return ElevationFloodResult(
+        level: lv,
+        summaryTh: txt,
+        marginMeters: margin,
+        refWaterMsl: refWater,
+      );
+    }
+
+    // อำเภอไม่มีสถานีวัดน้ำ (เช่น อ.กาบัง)
+    var lv = ampLv;
+    if (elevMsl >= 120 && lv > 2) lv = lv - 1;
+    return ElevationFloodResult(
+      level: lv,
+      summaryTh: 'สูง ${elevMsl.toStringAsFixed(0)} ม.รทก.',
+    );
   }
 
   /// แจ้งเตือนที่กำลังมีผลอยู่ ณ ขณะนี้ (ไม่ใช้ Cooldown มาซ่อนสถานะเตือนภัยที่ยังไม่คลี่คลาย)
@@ -143,6 +223,8 @@ class AlertProvider extends ChangeNotifier {
       _gpsConsentGranted = store.loadGpsConsent();
     }
     _boundaries = await _snapshotService.loadYalaBoundaries();
+    _subdistricts = await _snapshotService.loadYalaSubdistricts();
+    _villages = await _snapshotService.loadYalaVillages();
     _snapshot = await _snapshotService.loadSnapshot();
     _initialized = true;
     await refresh();
@@ -157,6 +239,12 @@ class AlertProvider extends ChangeNotifier {
     try {
       if (_boundaries.isEmpty) {
         _boundaries = await _snapshotService.loadYalaBoundaries();
+      }
+      if (_subdistricts.isEmpty) {
+        _subdistricts = await _snapshotService.loadYalaSubdistricts();
+      }
+      if (_villages.isEmpty) {
+        _villages = await _snapshotService.loadYalaVillages();
       }
       final snapFuture = _snapshotService.loadSnapshot();
       final result = await _waterService.fetch(forceRefresh: force);

@@ -171,3 +171,84 @@ class AmphoeBoundary {
   final List<List<LatLng>> rings;
   final LatLng centroid;
 }
+
+/// ขอบเขตตำบลจริง จ.ยะลา (ครบ 58 ตำบล พร้อมความสูงภูมิประเทศจริง MSL)
+class SubdistrictBoundary {
+  const SubdistrictBoundary({
+    required this.amphoeTh,
+    required this.tumbonTh,
+    required this.tumbonEn,
+    required this.tumbonCode,
+    required this.rings,
+    required this.centroid,
+    this.elevationMsl,
+    this.minElevationMsl,
+    this.maxElevationMsl,
+    this.villageCount = 0,
+  });
+
+  final String amphoeTh;
+  final String tumbonTh;
+  final String tumbonEn;
+  final String tumbonCode;
+  final List<List<LatLng>> rings;
+  final LatLng centroid;
+  final double? elevationMsl;
+  final double? minElevationMsl;
+  final double? maxElevationMsl;
+  final int villageCount;
+}
+
+/// หมู่บ้าน / ชุมชนจริง จ.ยะลา (ครบ 449 หมู่บ้านจาก DOPA พร้อมความสูงจริง MSL)
+class VillagePoint {
+  const VillagePoint({
+    required this.code,
+    required this.moo,
+    required this.nameTh,
+    required this.nameEn,
+    required this.amphoeTh,
+    required this.tumbonTh,
+    required this.lat,
+    required this.lon,
+    this.elevationMsl,
+  });
+
+  final String code;
+  final int moo;
+  final String nameTh;
+  final String nameEn;
+  final String amphoeTh;
+  final String tumbonTh;
+  final double lat;
+  final double lon;
+  final double? elevationMsl;
+
+  LatLng get point => LatLng(lat, lon);
+
+  factory VillagePoint.fromJson(Map<String, dynamic> json) => VillagePoint(
+        code: json['code']?.toString() ?? '',
+        moo: (json['moo'] as num?)?.toInt() ?? 0,
+        nameTh: json['name_th']?.toString() ?? '',
+        nameEn: json['name_en']?.toString() ?? '',
+        amphoeTh: json['amphoe_th']?.toString() ?? '',
+        tumbonTh: json['tumbon_th']?.toString() ?? '',
+        lat: (json['lat'] as num?)?.toDouble() ?? 0.0,
+        lon: (json['lon'] as num?)?.toDouble() ?? 0.0,
+        elevationMsl: (json['elevation_msl'] as num?)?.toDouble(),
+      );
+}
+
+/// ผลประเมินระดับน้ำท่วมถึงจากความสูงพื้นที่จริง (MSL) เทียบระดับน้ำแม่น้ำ
+class ElevationFloodResult {
+  const ElevationFloodResult({
+    required this.level,
+    required this.summaryTh,
+    this.marginMeters,
+    this.refWaterMsl,
+  });
+
+  final int level;
+  final String summaryTh;
+  final double? marginMeters;
+  final double? refWaterMsl;
+}

@@ -118,6 +118,16 @@ class _SosScreenState extends State<SosScreen> {
     }
   }
 
+  Future<void> _openExternalUrl(String url) async {
+    final uri = Uri.parse(url);
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ไม่สามารถเปิดลิงก์ภายนอกได้จากเครื่องนี้')),
+      );
+    }
+  }
+
   Future<void> _sendSos() async {
     final phone = _phoneController.text.trim();
     if (phone.isNotEmpty && phone.replaceAll(RegExp(r'[^0-9]'), '').length < 6) {
@@ -179,7 +189,7 @@ class _SosScreenState extends State<SosScreen> {
         children: [
           const _SafetyBanner(),
           const SizedBox(height: 12),
-          _CallButtons(onCall: _call),
+          _CallButtons(onCall: _call, onOpenUrl: _openExternalUrl),
           const SizedBox(height: 12),
           _SosButton(onPressed: _sending ? null : _sendSos),
           const SizedBox(height: 12),
@@ -414,9 +424,10 @@ class _LocationCard extends StatelessWidget {
 }
 
 class _CallButtons extends StatelessWidget {
-  const _CallButtons({required this.onCall});
+  const _CallButtons({required this.onCall, required this.onOpenUrl});
 
   final ValueChanged<String> onCall;
+  final ValueChanged<String> onOpenUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -426,16 +437,22 @@ class _CallButtons extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('โทรศัพท์ฉุกเฉิน (ตรวจสอบยืนยันแล้ว)', style: Theme.of(context).textTheme.titleSmall),
+            Text(
+              'ช่องทางฉุกเฉิน (โทร · LINE · Facebook)',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
             const SizedBox(height: 10),
             _callTile(
               context,
               number: AppConfig.emergencyDDPM,
               display: '1784',
               title: 'สายด่วนนิรภัย กรม ปภ. (DDPM)',
-              subtitle: 'โทรฟรี 24 ชม. · LINE @1784DDPM',
+              subtitle: 'โทรฟรี 24 ชม.',
               icon: Icons.sos,
-              onCall: onCall,
+              lineLabel: 'LINE @1784DDPM',
+              lineUrl: AppConfig.lineDdpmUrl,
+              fbLabel: 'Facebook DDPM',
+              fbUrl: AppConfig.fbDdpmUrl,
             ),
             _callTile(
               context,
@@ -444,16 +461,20 @@ class _CallButtons extends StatelessWidget {
               title: AppConfig.emergencyYalaCenterLabel,
               subtitle: '073-203559–64 / 073-203562',
               icon: Icons.account_balance,
-              onCall: onCall,
+              lineLabel: 'LINE @1784DDPM',
+              lineUrl: AppConfig.lineDdpmUrl,
+              fbLabel: 'Facebook DDPM',
+              fbUrl: AppConfig.fbDdpmUrl,
             ),
             _callTile(
               context,
               number: AppConfig.emergencyYalaMunicipality,
               display: AppConfig.emergencyYalaMunicipalityDisplay,
-              title: 'ปภ. เทศบาลนครยะลา',
+              title: 'งาน ปภ. เทศบาลนครยะลา',
               subtitle: 'ช่วยเหลือน้ำท่วมเขตเมืองยะลา 24 ชม.',
               icon: Icons.fire_truck,
-              onCall: onCall,
+              lineLabel: 'LINE @yalacity',
+              lineUrl: AppConfig.lineYalaCityUrl,
             ),
             _callTile(
               context,
@@ -462,7 +483,18 @@ class _CallButtons extends StatelessWidget {
               title: 'สายด่วนการแพทย์ฉุกเฉิน (สพฉ.)',
               subtitle: 'เจ็บป่วยฉุกเฉิน / กู้ชีพ 24 ชม.',
               icon: Icons.local_hospital,
-              onCall: onCall,
+              fbLabel: 'Facebook สพฉ. 1669',
+              fbUrl: AppConfig.fbNiemsUrl,
+            ),
+            _callTile(
+              context,
+              number: AppConfig.emergencyYalaHospital,
+              display: AppConfig.emergencyYalaHospitalDisplay,
+              title: 'โรงพยาบาลยะลา',
+              subtitle: 'ฉุกเฉินทางการแพทย์ 24 ชม.',
+              icon: Icons.local_hospital_outlined,
+              fbLabel: 'Facebook รพ.ยะลา',
+              fbUrl: AppConfig.fbYalaHospitalUrl,
             ),
             _callTile(
               context,
@@ -471,7 +503,16 @@ class _CallButtons extends StatelessWidget {
               title: 'แจ้งเหตุเพลิงไหม้ / สาธารณภัย',
               subtitle: 'สายด่วน 199 (24 ชม.)',
               icon: Icons.emergency,
-              onCall: onCall,
+              lineLabel: 'LINE @1784DDPM',
+              lineUrl: AppConfig.lineDdpmUrl,
+            ),
+            _callTile(
+              context,
+              number: AppConfig.emergencyArmyMtb46,
+              display: AppConfig.emergencyArmyMtb46Display,
+              title: 'ศูนย์บรรเทาสาธารณภัย มทบ.46',
+              subtitle: 'ช่วยเหลือประชาชนช่วงภัยพิบัติ 24 ชม.',
+              icon: Icons.shield_outlined,
             ),
             _callTile(
               context,
@@ -480,7 +521,6 @@ class _CallButtons extends StatelessWidget {
               title: 'เหตุด่วนเหตุร้าย (ตำรวจ)',
               subtitle: 'สายด่วนตำรวจ 191 (24 ชม.)',
               icon: Icons.local_police,
-              onCall: onCall,
             ),
             _callTile(
               context,
@@ -489,7 +529,8 @@ class _CallButtons extends StatelessWidget {
               title: 'ร่วมด้วยช่วยกัน (อาสาสมัคร)',
               subtitle: 'เครือข่ายอาสาสมัคร 24 ชม. (ไม่ใช่เบอร์ ปภ.)',
               icon: Icons.volunteer_activism,
-              onCall: onCall,
+              fbLabel: 'Facebook ร่วมด้วยช่วยกัน',
+              fbUrl: AppConfig.fbRuamduayUrl,
             ),
           ],
         ),
@@ -504,19 +545,77 @@ class _CallButtons extends StatelessWidget {
     required String title,
     required String subtitle,
     required IconData icon,
-    required ValueChanged<String> onCall,
+    String? lineLabel,
+    String? lineUrl,
+    String? fbLabel,
+    String? fbUrl,
   }) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: CircleAvatar(
-        backgroundColor: const Color(0x14B71C1C),
-        child: Icon(icon, color: const Color(AppConfig.colorDanger)),
-      ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-      subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
-      trailing: FilledButton(
-        onPressed: () => onCall(number),
-        child: Text(display),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: const Color(0x14B71C1C),
+                child: Icon(icon, color: const Color(AppConfig.colorDanger)),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                    ),
+                    Text(subtitle, style: const TextStyle(fontSize: 12)),
+                  ],
+                ),
+              ),
+              FilledButton(
+                onPressed: () => onCall(number),
+                child: Text(display),
+              ),
+            ],
+          ),
+          if (lineUrl != null || fbUrl != null) ...[
+            const SizedBox(height: 6),
+            Padding(
+              padding: const EdgeInsets.only(left: 50),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  if (lineUrl != null)
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF06C755),
+                        side: const BorderSide(color: Color(0xFF06C755)),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      onPressed: () => onOpenUrl(lineUrl),
+                      icon: const Icon(Icons.chat_bubble_outline, size: 15),
+                      label: Text(lineLabel ?? 'LINE', style: const TextStyle(fontSize: 12)),
+                    ),
+                  if (fbUrl != null)
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF1877F2),
+                        side: const BorderSide(color: Color(0xFF1877F2)),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      onPressed: () => onOpenUrl(fbUrl),
+                      icon: const Icon(Icons.facebook, size: 15),
+                      label: Text(fbLabel ?? 'Facebook', style: const TextStyle(fontSize: 12)),
+                    ),
+                ],
+              ),
+            ),
+          ],
+          const Divider(height: 14),
+        ],
       ),
     );
   }

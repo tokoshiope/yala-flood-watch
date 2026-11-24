@@ -159,25 +159,29 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 20),
           const _SectionTitle('การแจ้งเตือน'),
           SwitchListTile(
-            secondary: const Icon(Icons.notifications_off_outlined),
-            title: const Text('โหมดเงียบ'),
-            subtitle: const Text('แสดงสถานะตามปกติ แต่ไม่เล่นเสียง/สั่น'),
-            value: settings.quietMode,
-            onChanged: (value) =>
-                provider.updateSettings(settings.copyWith(quietMode: value)),
+            secondary: Icon(
+              settings.quietMode
+                  ? Icons.volume_off_outlined
+                  : Icons.volume_up_outlined,
+            ),
+            title: Text(strings.get('sound_toggle')),
+            subtitle: Text(strings.get('sound_toggle_sub')),
+            value: !settings.quietMode,
+            onChanged: (soundOn) =>
+                provider.updateSettings(settings.copyWith(quietMode: !soundOn)),
           ),
           SwitchListTile(
             secondary: const Icon(Icons.notifications_active_outlined),
-            title: const Text('แจ้งเตือนระดับน้ำในเครื่อง'),
-            subtitle: const Text('แจ้งเตือนอัตโนมัติเมื่อระดับความเสี่ยงเพิ่มสูงขึ้น (Cooldown 30 นาที)'),
+            title: Text(strings.get('notif_toggle')),
+            subtitle: Text(strings.get('notif_toggle_sub')),
             value: settings.pushEnabled,
             onChanged: (value) =>
                 provider.updateSettings(settings.copyWith(pushEnabled: value)),
           ),
           SwitchListTile(
             secondary: const Icon(Icons.cloud_outlined),
-            title: const Text('คำนวณฝนจริง & พยากรณ์ฝนร่วมด้วย'),
-            subtitle: const Text('ใช้สูตร formula_version = 2 (ระดับน้ำ + ฝน 87 สถานี + เขื่อนบางลาง)'),
+            title: const Text('ประเมินร่วมกับฝนจริงและพยากรณ์ฝน'),
+            subtitle: const Text('ช่วยเตือนภัยล่วงหน้าในพื้นที่ฝนตกหนักและท้ายเขื่อนบางลาง'),
             value: settings.rainScoreEnabled,
             onChanged: (value) =>
                 provider.updateSettings(settings.copyWith(rainScoreEnabled: value)),
@@ -234,12 +238,10 @@ class SettingsScreen extends StatelessWidget {
           const _SectionTitle('แหล่งข้อมูลและคำชี้แจง'),
           ListTile(
             leading: const Icon(Icons.info_outline),
-            title: const Text('น้ำท่วมยะลา (Yala Flood Watch) v${AppConfig.appVersion}'),
-            subtitle: Text(
-              'สูตรเตือนภัย: formula_version = ${AppConfig.formulaVersion}\n'
-              'โหมดข้อมูล: ${provider.snapshot?.sourceLabel ?? 'ThaiWater Live 14 สถานี'}\n'
-              'แผนที่ฐาน: Google Maps + ขอบเขต 8 อำเภอ จ.ยะลา · เวลามาตรฐาน: ประเทศไทย (UTC+7)\n'
-              '5 ฐานข้อมูล: ThaiWater น้ำ 14 สถานี + ฝน 87 สถานี + เขื่อนบางลาง + Open-Meteo 72h + GloFAS 7d\n\n'
+            title: Text('${strings.get('app_title')} v${AppConfig.appVersion}'),
+            subtitle: const Text(
+              'ข้อมูลระดับน้ำและฝนจากระบบคลังข้อมูลน้ำแห่งชาติ (สสน.) และเขื่อนบางลาง · '
+              'พยากรณ์ฝนล่วงหน้าจาก Open-Meteo · เวลาแสดงผลตามเวลาประเทศไทย (UTC+7)\n\n'
               '${AppConfig.lifeSafetyDisclaimerTh}',
             ),
             isThreeLine: true,

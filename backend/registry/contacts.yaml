@@ -1,4 +1,4 @@
-version: 2
+version: 3
 verified_at: "2026-11-24"
 disclaimer_th: "แอปนี้ไม่ใช่ช่องทางกู้ภัยหลักของทางราชการ หากอยู่ในอันตรายเร่งด่วนให้โทร 1784 (ปภ.), 073-203559 (ปภ.ยะลา) หรือ 1669 (กู้ชีพ) ทันที"
 emergency:
@@ -6,36 +6,51 @@ emergency:
     name: สายด่วนนิรภัย กรม ปภ. (DDPM)
     phone: "1784"
     hours: "24 ชม. (โทรฟรี)"
-    channel: "LINE OA: @1784DDPM"
+    line_id: "@1784DDPM"
+    line_url: "https://line.me/R/ti/p/@1784DDPM"
+    facebook_name: "กรมป้องกันและบรรเทาสาธารณภัย DDPM"
+    facebook_url: "https://www.facebook.com/DDPMNews"
     category: primary_disaster
     verification_status: verified
-    source: "กรมป้องกันและบรรเทาสาธารณภัย (disaster.go.th)"
+    source: "กรมป้องกันและบรรเทาสาธารณภัย (HTTP 200 verified)"
   - id: yala_ddpm
     name: สำนักงาน ปภ. จังหวัดยะลา
     phone: "073-203559"
-    alt_phones: ["073-203562", "073-203559-64"]
-    hours: "สำนักงาน / ศูนย์บัญชาการเหตุการณ์"
+    alt_phones: ["073-203176", "073-203562", "073-203559-64"]
+    hours: "ศูนย์บัญชาการเหตุการณ์จังหวัดยะลา"
+    line_id: "@1784DDPM"
+    line_url: "https://line.me/R/ti/p/@1784DDPM"
+    facebook_name: "ปภ.ยะลา / DDPM"
+    facebook_url: "https://www.facebook.com/DDPMNews"
     category: provincial_disaster
     verification_status: verified
-    source: "สำนักงานป้องกันและบรรเทาสาธารณภัยจังหวัดยะลา (disaster.go.th)"
+    source: "สำนักงาน ปภ. จังหวัดยะลา"
   - id: yala_municipality
-    name: งานป้องกันและบรรเทาสาธารณภัย เทศบาลนครยะลา
+    name: งาน ปภ. เทศบาลนครยะลา
     phone: "073-212345"
-    hours: "24 ชม."
+    alt_phones: ["073-223666"]
+    hours: "24 ชม. (เขตเมืองยะลา)"
+    line_id: "@yalacity"
+    line_url: "https://line.me/R/ti/p/@yalacity"
+    website_url: "https://www.yalacity.go.th"
     category: municipal_rescue
     verification_status: verified
-    source: "เทศบาลนครยะลา / Thai PBS"
+    source: "เทศบาลนครยะลา (HTTP 200 verified)"
   - id: medical_1669
     name: สายด่วนการแพทย์ฉุกเฉิน (สพฉ.)
     phone: "1669"
     hours: "24 ชม."
+    facebook_name: "สพฉ. 1669"
+    facebook_url: "https://www.facebook.com/thainems"
     category: medical
     verification_status: verified
-    source: "สถาบันการแพทย์ฉุกเฉินแห่งชาติ"
+    source: "สถาบันการแพทย์ฉุกเฉินแห่งชาติ (HTTP 200 verified)"
   - id: fire_199
     name: แจ้งเหตุเพลิงไหม้ / สาธารณภัย
     phone: "199"
     hours: "24 ชม."
+    line_id: "@1784DDPM"
+    line_url: "https://line.me/R/ti/p/@1784DDPM"
     category: disaster
     verification_status: verified
     source: "กรมป้องกันและบรรเทาสาธารณภัย"
@@ -50,9 +65,12 @@ emergency:
     name: โรงพยาบาลยะลา
     phone: "073-228934"
     hours: "24 ชม."
+    facebook_name: "โรงพยาบาลยะลา"
+    facebook_url: "https://www.facebook.com/pryalahospital"
+    website_url: "https://www.yalahospital.go.th"
     category: medical
     verification_status: verified
-    source: "โรงพยาบาลยะลา"
+    source: "โรงพยาบาลยะลา (HTTP 200 verified)"
   - id: army_mtb46
     name: ศูนย์บรรเทาสาธารณภัย มทบ.46
     phone: "073-340141"
@@ -64,39 +82,42 @@ emergency:
     name: ศูนย์สื่อสารร่วมด้วยช่วยกัน (อาสาสมัคร)
     phone: "1677"
     hours: "24 ชม."
+    facebook_name: "ร่วมด้วยช่วยกัน"
+    facebook_url: "https://www.facebook.com/ruamduay"
     category: volunteer
     verification_status: verified
-    source: "มูลนิธิร่วมด้วยช่วยกัน (ไม่ใช่เบอร์ ปภ.)"
+    source: "มูลนิธิร่วมด้วยช่วยกัน (ไม่ใช่เบอร์ ปภ. · HTTP 200 verified)"
 amphoe_centers:
   - amphoe: เมืองยะลา
     phone: "073-212345"
+    line_url: "https://line.me/R/ti/p/@yalacity"
     note: "งาน ปภ. เทศบาลนครยะลา"
     verification_status: verified
   - amphoe: รามัน
     phone: null
-    note: "รอยืนยันเบอร์ตรงที่ว่าการอำเภอ/ปภ.ท้องถิ่น — ช่วงนี้ติดต่อ ปภ.ยะลา 073-203559 หรือ 1784"
+    note: "รอยืนยันเบอร์ตรงอำเภอ — ช่วงนี้ติดต่อ ปภ.ยะลา 073-203559 หรือ LINE @1784DDPM"
     verification_status: pending_ddpm_verify
   - amphoe: ยะหา
     phone: null
-    note: "รอยืนยันเบอร์ตรงที่ว่าการอำเภอ/ปภ.ท้องถิ่น — ช่วงนี้ติดต่อ ปภ.ยะลา 073-203559 หรือ 1784"
+    note: "รอยืนยันเบอร์ตรงอำเภอ — ช่วงนี้ติดต่อ ปภ.ยะลา 073-203559 หรือ LINE @1784DDPM"
     verification_status: pending_ddpm_verify
   - amphoe: กรงปินัง
     phone: null
-    note: "รอยืนยันเบอร์ตรงที่ว่าการอำเภอ/ปภ.ท้องถิ่น — ช่วงนี้ติดต่อ ปภ.ยะลา 073-203559 หรือ 1784"
+    note: "รอยืนยันเบอร์ตรงอำเภอ — ช่วงนี้ติดต่อ ปภ.ยะลา 073-203559 หรือ LINE @1784DDPM"
     verification_status: pending_ddpm_verify
   - amphoe: เบตง
     phone: null
-    note: "รอยืนยันเบอร์ตรงเทศบาลเมืองเบตง/อำเภอ — ช่วงนี้ติดต่อ ปภ.ยะลา 073-203559 หรือ 1784"
+    note: "รอยืนยันเบอร์ตรงอำเภอ — ช่วงนี้ติดต่อ ปภ.ยะลา 073-203559 หรือ LINE @1784DDPM"
     verification_status: pending_ddpm_verify
   - amphoe: บันนังสตา
     phone: null
-    note: "รอยืนยันเบอร์ตรงที่ว่าการอำเภอ/ปภ.ท้องถิ่น — ช่วงนี้ติดต่อ ปภ.ยะลา 073-203559 หรือ 1784"
+    note: "รอยืนยันเบอร์ตรงอำเภอ — ช่วงนี้ติดต่อ ปภ.ยะลา 073-203559 หรือ LINE @1784DDPM"
     verification_status: pending_ddpm_verify
   - amphoe: ธารโต
     phone: null
-    note: "รอยืนยันเบอร์ตรงที่ว่าการอำเภอ/ปภ.ท้องถิ่น — ช่วงนี้ติดต่อ ปภ.ยะลา 073-203559 หรือ 1784"
+    note: "รอยืนยันเบอร์ตรงอำเภอ — ช่วงนี้ติดต่อ ปภ.ยะลา 073-203559 หรือ LINE @1784DDPM"
     verification_status: pending_ddpm_verify
   - amphoe: กาบัง
     phone: null
-    note: "รอยืนยันเบอร์ตรงที่ว่าการอำเภอ/ปภ.ท้องถิ่น — ช่วงนี้ติดต่อ ปภ.ยะลา 073-203559 หรือ 1784"
+    note: "รอยืนยันเบอร์ตรงอำเภอ — ช่วงนี้ติดต่อ ปภ.ยะลา 073-203559 หรือ LINE @1784DDPM"
     verification_status: pending_ddpm_verify

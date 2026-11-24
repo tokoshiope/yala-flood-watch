@@ -16,7 +16,7 @@ import 'package:yala_flood_app/state/alert_provider.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('แอพครบ 5 หน้า เปิดผ่านได้ด้วยข้อมูลจริง (14 สถานี)', (tester) async {
+  testWidgets('แอพครบ 5 หน้า (แผนที่/ข้อมูล/SOS/ศูนย์พักพิง/ตั้งค่า) ตรงตามข้อกำหนด v3', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     final client = MockClient(
@@ -36,9 +36,10 @@ void main() {
 
     expect(provider.stations.length, 14);
     expect(provider.boundaries.length, 8);
+    expect(provider.subdistricts.length, 58);
+    expect(provider.villages.length, 449);
     expect(provider.snapshot, isNotNull);
     expect(provider.warningStationCount, greaterThan(0));
-    // BLOCKER-2 regression: activeAlerts ต้องไม่ว่างหลัง refresh เพื่อป้องกันแบนเนอร์สีเขียว "สถานการณ์ดีขึ้นแล้ว" ระหว่างน้ำท่วม
     expect(provider.activeAlerts, isNotEmpty);
 
     await tester.pumpWidget(
@@ -54,23 +55,40 @@ void main() {
     );
     await tester.pump(const Duration(seconds: 1));
 
-    // หน้าหลัก: แผนที่ + สถานีล่าสุด
-    expect(find.text('น้ำท่วมยะลา'), findsOneWidget);
-    expect(find.text('สถานีอัปเดตล่าสุด'), findsOneWidget);
-    expect(find.text('เมืองยะลา'), findsWidgets);
-
-    // ปุ่มนำทางครบ 5 หน้า (ใช้คำว่า ศูนย์พักพิง)
-    expect(find.text('หน้าหลัก'), findsOneWidget);
-    expect(find.text('แจ้งเตือน'), findsWidgets);
+    // แถบ 1: หัวบนสุด "แจ้งเตือนน้ำท่วมยะลา" + กรอบเขื่อนบางลาง + ปุ่มนำทาง 5 หน้า
+    expect(find.text('แจ้งเตือนน้ำท่วมยะลา'), findsOneWidget);
+    expect(find.text('เขื่อนบางลาง'), findsOneWidget);
+    expect(find.text('แผนที่'), findsOneWidget);
+    expect(find.text('ข้อมูล'), findsWidgets);
     expect(find.text('SOS'), findsOneWidget);
-    expect(find.text('ศูนย์พักพิง'), findsOneWidget);
-    expect(find.text('ตั้งค่า'), findsOneWidget);
+    expect(find.text('ศูนย์พักพิง'), findsWidgets);
+    expect(find.text('ตั้งค่า'), findsWidgets);
 
-    // เปิดหน้าตั้งค่าจากแถบล่างได้จริง และมีเมนูเลือกภาษา 4 ภาษา
-    await tester.tap(find.text('ตั้งค่า'));
-    await tester.pump(const Duration(seconds: 1));
+    // แถบ 2: ข้อมูล (กราฟพยากรณ์ฝน + 8 อำเภอ + 14 สถานี โดยไม่มี formula_version)
+    await tester.tap(find.text('ข้อมูล').last);
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.textContaining('พยากรณ์ฝน'), findsWidgets);
+    expect(find.textContaining('formula_version'), findsNothing);
+
+    // แถบ 3: SOS มีช่องทาง LINE และ Facebook ที่ตรวจสอบแล้ว
+    await tester.tap(find.text('SOS'));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('LINE @1784DDPM'), findsWidgets);
+    expect(find.text('Facebook DDPM'), findsWidgets);
+
+    // แถบ 4: ศูนย์พักพิง เอาป้าย "ชื่อทางการ (พิกัดโดยประมาณ)" ออก และแสดง "อ้างอิงจากข้อมูลเดิม รอยืนยัน"
+    await tester.tap(find.text('ศูนย์พักพิง').last);
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.textContaining('พิกัดโดยประมาณ'), findsNothing);
+
+    // แถบ 5: ตั้งค่า มีเมนูเลือกภาษา 4 ภาษา + เปิดเสียงแจ้งเตือน + เปิดข้อความ Notification + ไม่มี formula_version
+    await tester.tap(find.text('ตั้งค่า').last);
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('ภาษาของแอป (Language)'), findsOneWidget);
-    expect(find.text('พื้นที่ที่ติดตาม'), findsOneWidget);
-    expect(find.text('เกณฑ์การแจ้งเตือน'), findsOneWidget);
+    await tester.drag(find.byType(ListView).last, const Offset(0, -450));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('เปิดเสียงแจ้งเตือน'), findsOneWidget);
+    expect(find.text('เปิดข้อความ Notification'), findsOneWidget);
+    expect(find.textContaining('formula_version'), findsNothing);
   });
 }
