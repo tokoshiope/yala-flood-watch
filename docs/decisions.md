@@ -173,7 +173,7 @@
 
 ## DEC-021 — อัปเกรดเกณฑ์แจ้งเตือน 5 ระดับเป็น `formula_version = 4` (Water-Stage Primary + แก้บั๊กสเกล ThaiWater `situation_level` 1–5 + แบบที่ 1 เตือนฝน/เขื่อนสูงสุด Lv 3 + คง Hysteresis 3 ชม.)
 - **วันที่:** 2026-11-27
-- **สถานะ:** ✅ Founder อนุมัติ **Gate 2** (เลือกแบบที่ 1 + คง Hysteresis 3 ชม.) · ผ่าน Independent QA Re-Audit v8 **`PASS`** (`docs/qa/audit-2026-11-27-v8-formula-v4.md`) · ผ่าน `pytest 67/67`, `flutter analyze 0 issues`, `flutter test 99/99` · รอ Founder อนุมัติ **Gate 3** ก่อน Push / ออกบิลด์ใหม่
+- **สถานะ:** ✅ Founder อนุมัติ **Gate 2 & Gate 3** (แบบที่ 1 + คง Hysteresis 3 ชม.) · ผ่าน Independent QA Re-Audit v8 **`PASS`** (`docs/qa/audit-2026-11-27-v8-formula-v4.md`) · ผ่าน `pytest 67/67`, `flutter analyze 0 issues`, `flutter test 99/99` · Push GitHub (`403b8a7`) และอัปโหลด TestFlight **`1.0.1 (Build 9)`** สำเร็จสมบูรณ์ (`** EXPORT SUCCEEDED **`)
 - **ตัดสินใจ:**
   1. **เกณฑ์ระดับน้ำ 5 ระดับหลัก (`compute_alert_v4` ↔ `AlertEngine.assessV4` · 100% Python ↔ Dart Parity `TV4-1`–`TV4-14`):** กำหนด `watch = watch_m`, `crit = critical_m ?? bank_m`, `mid = (watch + crit) / 2`, `high = (mid + crit) / 2` และช่วงทรงตัว `steadyBand = ±0.05 ม.`
      - **ระดับ 1 ปกติ:** `H < watch` (ต่ำกว่าเส้นเฝ้าระวัง)
