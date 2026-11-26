@@ -9,7 +9,7 @@ class AppConfig {
   static const String appName = 'แจ้งเตือนน้ำท่วมยะลา';
   static const String appNameEn = 'Yala Flood Watch';
   static const String packageName = 'net.yala.floodapp';
-  static const String appVersion = '1.0.0';
+  static const String appVersion = '1.0.1';
   static const int formulaVersion = 3;
 
   // ── จังหวัดยะลา ────────────────────────────────────────────────────────
@@ -82,6 +82,7 @@ class AppConfig {
   static const String thaiWaterBaseUrl =
       'https://api-v3.thaiwater.net/api/v1/thaiwater30/public';
   static const String thaiWaterWaterLevelPath = '/waterlevel';
+  static const String thaiWaterWaterLevelGraphPath = '/waterlevel_graph';
   static const String thaiWaterRain24hPath = '/rain_24h';
   static const String thaiWaterAnalystDamUrl =
       'https://api-v3.thaiwater.net/api/v1/thaiwater30/analyst/dam';
@@ -92,6 +93,16 @@ class AppConfig {
 
   static String get waterLevelUrl =>
       '$thaiWaterBaseUrl$thaiWaterWaterLevelPath?province_code=$provinceCode';
+
+  static String waterLevelGraphUrl({
+    required int stationId,
+    required String startDate,
+    required String endDate,
+    String stationType = 'tele_waterlevel',
+  }) =>
+      '$thaiWaterBaseUrl$thaiWaterWaterLevelGraphPath'
+      '?station_type=$stationType&station_id=$stationId'
+      '&start_date=$startDate&end_date=$endDate';
 
   static String get rain24hUrl =>
       '$thaiWaterBaseUrl$thaiWaterRain24hPath?province_code=$provinceCode';
@@ -114,7 +125,8 @@ class AppConfig {
   static const String cacheStationsKey = 'yala_flood_stations_v1';
   static const String cacheUpdatedAtKey = 'yala_flood_updated_at_v1';
   static const String cacheSnapshotKey = 'yala_flood_snapshot_v2';
-  static const Duration cacheTtl = Duration(minutes: 30);
+  static const String cacheStationHistoryPrefix = 'yala_flood_hist7d_v1_';
+  static const Duration cacheTtl = Duration(minutes: 10);
 
   // ── เกณฑ์แจ้งเตือน (formula_version = 3 · วิจัยน้ำท่วมยะลา) ──────────────
   static const int defaultWarningLevel = 3;

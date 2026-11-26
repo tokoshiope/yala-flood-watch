@@ -18,6 +18,7 @@ Fail-closed guarantee:
 from __future__ import annotations
 
 import argparse
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from decimal import Decimal, ROUND_HALF_UP
 import hashlib
 import json
@@ -42,6 +43,9 @@ MOBILE_ASSET_DIR = REPO_ROOT / "mobile" / "app" / "assets" / "snapshots"
 PROVINCE_CODE = "95"
 WATERLEVEL_URL = (
     f"https://api-v3.thaiwater.net/api/v1/thaiwater30/public/waterlevel?province_code={PROVINCE_CODE}"
+)
+WATERLEVEL_GRAPH_URL = (
+    "https://api-v3.thaiwater.net/api/v1/thaiwater30/public/waterlevel_graph"
 )
 RAIN_URL = (
     f"https://api-v3.thaiwater.net/api/v1/thaiwater30/public/rain_24h?province_code={PROVINCE_CODE}"
@@ -180,6 +184,117 @@ def load_registry() -> tuple[dict, dict, dict, dict]:
 
 
 # ── Source 1: ThaiWater Waterlevel (Primary, Fail-Closed) ───────────────────
+
+# Live-verified agency update cadences (minutes):
+# สสน. (HII) & พพภ (DWR) update every 10 min; กฟผ. (EGAT) & ชป. (RID) update every 60 min
+AGENCY_UPDATE_INTERVAL_MIN = {
+    "สสน.": 10,
+    "พพภ": 10,
+    "พพภ.": 10,
+    "กฟผ.": 60,
+    "ชป.": 60,
+}
+
+
+def load_villages_registry() -> list[dict]:
+    """Load 449 Yala villages (DOPA + Copernicus DEM MSL) for village/tambon-level warning details."""
+    path = REGISTRY_DIR / "yala_villages.json"
+    if not path.exists():
+        return []
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        items = raw.get("villages") if isinstance(raw, dict) else None
+        return items if isinstance(items, list) else []
+    except Exception:
+        return []
+
+
+def infer_update_interval_minutes(agency: str | None) -> int:
+    ag = (agency or "").strip()
+    return AGENCY_UPDATE_INTERVAL_MIN.get(ag, 60)
+
+
+def fetch_station_history_7d(
+    stations: list[dict],
+    now: datetime,
+    *,
+    days: int = 7,
+    url: str | None = None,
+) -> dict[str, list[dict]]:
+    """Fetch 7-day historical water levels via ThaiWater public waterlevel_graph (best-effort, non-fatal).
+
+    Downsamples 10-minute stations to hourly readings (while preserving the latest valid reading)
+    so embedded snapshot history stays compact (~168 pts/station) for offline-first mobile charts.
+    """
+    now_ict = _ict(now)
+    start_date = (now_ict - timedelta(days=days)).strftime("%Y-%m-%d")
+    end_date = now_ict.strftime("%Y-%m-%d")
+    endpoint = url or WATERLEVEL_GRAPH_URL
+
+    def _fetch_one(st: dict) -> tuple[str, list[dict]]:
+        oc = str(st.get("oldcode") or "").strip()
+        tid = st.get("tele_station_id")
+        stype = str(st.get("station_type") or "tele_waterlevel").strip() or "tele_waterlevel"
+        if not oc or not tid:
+            return oc, []
+        payload = _http_get_json(
+            endpoint,
+            params={
+                "station_type": stype,
+                "station_id": str(tid),
+                "start_date": start_date,
+                "end_date": end_date,
+            },
+            timeout=12,
+        )
+        if not isinstance(payload, dict) or str(payload.get("result", "")).upper() != "OK":
+            return oc, []
+        data = payload.get("data")
+        gd = data.get("graph_data") if isinstance(data, dict) else None
+        if not isinstance(gd, list):
+            return oc, []
+
+        valid_pts: list[dict] = []
+        for p in gd:
+            if not isinstance(p, dict):
+                continue
+            ts = str(p.get("datetime") or "").strip()
+            val = _to_float(p.get("value"))
+            if not ts or val is None:
+                continue
+            rec: dict[str, Any] = {"t": ts[:16], "v": round(val, 3)}
+            q = _to_float(p.get("discharge"))
+            if q is not None and q >= 0:
+                rec["q"] = round(q, 2)
+            valid_pts.append(rec)
+
+        if not valid_pts:
+            return oc, []
+
+        # Keep hourly points (:00) plus the very latest reading so 7d offline snapshot stays lean
+        if len(valid_pts) > 220:
+            compact = [pt for pt in valid_pts if pt["t"].endswith(":00")]
+            if not compact or compact[-1]["t"] != valid_pts[-1]["t"]:
+                compact.append(valid_pts[-1])
+            return oc, compact[-180:]
+        return oc, valid_pts[-200:]
+
+    results: dict[str, list[dict]] = {}
+    targets = [s for s in stations if s.get("oldcode") and s.get("tele_station_id")]
+    if not targets:
+        return results
+
+    with ThreadPoolExecutor(max_workers=min(6, len(targets))) as pool:
+        futs = {pool.submit(_fetch_one, st): st.get("oldcode") for st in targets}
+        for fut in as_completed(futs):
+            try:
+                oc, pts = fut.result()
+                if oc and pts:
+                    results[oc] = pts
+            except Exception:
+                continue
+    return results
+
 
 def fetch_raw(url: str | None = None) -> list[dict]:
     payload = _http_get_json(url or API_URL)
@@ -1183,9 +1298,14 @@ def normalize(
         api_name = _th(st.get("tele_station_name")).strip()
         reg_display = str(reg_dict.get("display_name") or "").strip()
         clean_name = api_name or reg_display or oc
+        agency_short = _th((r.get("agency") or {}).get("agency_shortname")) or str(reg_dict.get("agency") or "")
+        tele_station_id = _to_int(st.get("id"))
+        station_type = str(r.get("station_type") or "tele_waterlevel").strip() or "tele_waterlevel"
 
         rec = {
             "id": r.get("id"),
+            "tele_station_id": tele_station_id,
+            "station_type": station_type,
             "oldcode": oc,
             "name": clean_name,
             "short_name": str(reg_dict.get("short_name_th") or clean_name).strip(),
@@ -1209,7 +1329,8 @@ def normalize(
             "storage_anomaly": storage_anomaly,
             "observed_at": obs_str,
             "age_minutes": age_min,
-            "agency": _th((r.get("agency") or {}).get("agency_shortname")) or str(reg_dict.get("agency") or ""),
+            "update_interval_minutes": infer_update_interval_minutes(agency_short),
+            "agency": agency_short,
             "risk_zone": reg_dict.get("risk_zone", "unknown"),
             "is_flash_flood": is_flash,
             "registry_known": reg is not None,
@@ -1231,6 +1352,52 @@ def normalize(
     return out, stats
 
 
+def _select_watch_villages(
+    amphoe_name: str,
+    amp_stations: list[dict],
+    villages: list[dict] | None,
+    limit: int = 6,
+) -> list[dict]:
+    """Identify lowest-lying / most flood-vulnerable villages & tambons in an amphoe (Copernicus DEM vs river)."""
+    if not villages:
+        return []
+    amp_villages = [
+        v for v in villages
+        if v.get("amphoe_th") == amphoe_name and _to_float(v.get("elevation_msl")) is not None
+    ]
+    if not amp_villages:
+        return []
+
+    # Reference river water level: governing station with smallest remaining_to_bank_m
+    banked = [
+        s for s in amp_stations
+        if s.get("level_msl") is not None and s.get("bank_m") is not None and (s.get("bank_m") or 0) > 0
+    ]
+    ref_water = None
+    if banked:
+        banked.sort(key=lambda s: s.get("remaining_to_bank_m") if s.get("remaining_to_bank_m") is not None else 999.0)
+        ref_water = _to_float(banked[0].get("level_msl"))
+
+    scored: list[tuple[float, dict]] = []
+    for v in amp_villages:
+        elev = _to_float(v.get("elevation_msl"))
+        if elev is None:
+            continue
+        margin = round(elev - ref_water, 1) if ref_water is not None else None
+        key = margin if margin is not None else elev
+        scored.append((key, {
+            "name_th": str(v.get("name_th") or "").strip(),
+            "name_en": str(v.get("name_en") or "").strip(),
+            "moo": _to_int(v.get("moo")) or 0,
+            "tumbon_th": str(v.get("tumbon_th") or "").strip(),
+            "elevation_msl": round(elev, 1),
+            "margin_m": margin,
+        }))
+
+    scored.sort(key=lambda x: (x[0], x[1]["tumbon_th"], x[1]["name_th"]))
+    return [item for _, item in scored[:limit]]
+
+
 def build_amphoe_summaries(
     amphoes_reg: dict,
     stations: list[dict],
@@ -1239,6 +1406,7 @@ def build_amphoe_summaries(
     banglang_dam: dict | None,
     glofas_flood: list[dict] | None = None,
     community_reports_by_amphoe: dict[str, int] | None = None,
+    villages: list[dict] | None = None,
 ) -> list[dict]:
     """Produce unified Early Warning assessments for ALL 8 Yala amphoes (including Kabang)."""
     summaries: list[dict] = []
@@ -1314,6 +1482,7 @@ def build_amphoe_summaries(
             )
             gov_station = None
 
+        watch_areas = _select_watch_villages(amp_name, amp_stations, villages)
         summaries.append({
             "amphoe": amp_name,
             "name_en": meta.get("name_en"),
@@ -1327,6 +1496,7 @@ def build_amphoe_summaries(
             "risk_villages_10yr": meta.get("risk_villages_10yr"),
             "water_station_count": len(amp_stations),
             "governing_station": gov_station,
+            "watch_areas": watch_areas,
             "rain": rain_info,
             "weather_forecast": wx_info,
             "assessment": assessment,
@@ -1381,11 +1551,12 @@ def build_snapshot(
         "province": {"code": PROVINCE_CODE, "name": "ยะลา", "name_en": "Yala"},
         "sources": {
             "thaiwater_waterlevel": WATERLEVEL_URL,
+            "thaiwater_waterlevel_graph": WATERLEVEL_GRAPH_URL,
             "thaiwater_rain_24h": RAIN_URL,
             "thaiwater_dam": DAM_URL,
             "open_meteo_weather": OPEN_METEO_WEATHER_URL,
             "open_meteo_flood": OPEN_METEO_FLOOD_URL,
-            "refresh_interval_hint_minutes": 15,
+            "refresh_interval_hint_minutes": 10,
         },
         "source_health": source_health or {},
         "degraded_sources": sorted(degraded_sources or []),
@@ -1551,6 +1722,28 @@ def run_pipeline(sync_mobile_asset: bool = False, now: datetime | None = None) -
         )
         validate(stations, stats)
 
+        # Secondary (Best-Effort): 7-Day Historical Water Levels for offline-ready 7d station charts
+        try:
+            t_hist = time.monotonic()
+            hist_map = fetch_station_history_7d(stations, now_ict, days=7)
+            for s in stations:
+                oc = s.get("oldcode")
+                if oc and oc in hist_map:
+                    s["history_7d"] = hist_map[oc]
+            source_health["thaiwater_waterlevel_graph_7d"] = {
+                "status": "ok" if hist_map else "degraded",
+                "tier": "A",
+                "stations_covered": len(hist_map),
+                "latency_ms": round((time.monotonic() - t_hist) * 1000),
+            }
+        except Exception as e:
+            source_health["thaiwater_waterlevel_graph_7d"] = {
+                "status": "degraded",
+                "tier": "A",
+                "error": str(e),
+            }
+
+        villages_reg = load_villages_registry()
         amphoe_summaries = build_amphoe_summaries(
             amphoes_reg,
             stations,
@@ -1559,6 +1752,7 @@ def run_pipeline(sync_mobile_asset: bool = False, now: datetime | None = None) -
             banglang_dam,
             glofas_flood=glofas_flood,
             community_reports_by_amphoe=community_reports_by_amphoe,
+            villages=villages_reg,
         )
 
         body = build_snapshot(

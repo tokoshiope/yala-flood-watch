@@ -1,8 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:material_ui/material_ui.dart';
@@ -20,19 +18,6 @@ import 'package:yala_flood_app/services/local_store.dart';
 import 'package:yala_flood_app/services/sos_dispatch_service.dart';
 import 'package:yala_flood_app/services/thai_water_service.dart';
 import 'package:yala_flood_app/state/alert_provider.dart';
-
-Position _fakeYalaPosition() => Position(
-      longitude: 101.281234,
-      latitude: 6.541234,
-      timestamp: DateTime.utc(2026, 11, 24, 12, 0),
-      accuracy: 8.0,
-      altitude: 16.5,
-      altitudeAccuracy: 3.0,
-      heading: 0.0,
-      headingAccuracy: 0.0,
-      speed: 0.0,
-      speedAccuracy: 0.0,
-    );
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -293,8 +278,8 @@ void main() {
     });
   });
 
-  group('SosScreen Widget Tests — Real Dispatch Sheet, Community Report & Dark Mode', () {
-    testWidgets('กดปุ่มส่ง SOS จริงเปิดหน้าต่างเลือกส่ง SMS / LINE / คัดลอก / โทร 1784 ในโหมดมืด', (tester) async {
+  group('SosScreen Widget Tests — Emergency Channels Only (Zero SOS Messaging & Zero UGC)', () {
+    testWidgets('หน้าฉุกเฉินคงเฉพาะเบอร์โทร LINE และ Facebook โดยไม่มีฟอร์มส่ง SOS หรือโพสต์ชุมชน', (tester) async {
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
       final provider = AlertProvider(
@@ -307,61 +292,28 @@ void main() {
           value: provider,
           child: MaterialApp(
             theme: ThemeData.dark(useMaterial3: true),
-            home: SosScreen(initialPositionOverride: _fakeYalaPosition()),
+            home: const SosScreen(),
           ),
         ),
       );
       await tester.pumpAndSettle();
 
-      // Scroll to SOS button & verify unlocked real SOS label (no longer "โหมดทดลอง")
-      await tester.scrollUntilVisible(
-        find.text('ส่งคำขอ SOS พร้อมพิกัดจริง'),
-        250,
-        scrollable: find.byType(Scrollable).first,
-      );
-      expect(find.text('ส่งคำขอ SOS พร้อมพิกัดจริง'), findsOneWidget);
-      expect(find.textContaining('โหมดทดลอง'), findsNothing);
+      // ต้องมีช่องทางฉุกเฉินครบ (เบอร์โทร + LINE + Facebook)
+      expect(find.text('ช่องทางฉุกเฉิน'), findsOneWidget);
+      expect(find.text('1784'), findsOneWidget);
+      expect(find.text('073-203559'), findsOneWidget);
+      expect(find.text('073-212345'), findsOneWidget);
+      expect(find.text('LINE @1784DDPM'), findsWidgets);
+      expect(find.text('Facebook DDPM'), findsWidgets);
 
-      await tester.tap(find.text('ส่งคำขอ SOS พร้อมพิกัดจริง'));
-      await tester.pumpAndSettle();
-
-      // Real Dispatch Bottom Sheet must appear with SMS / LINE / Copy / 1784 actions
-      expect(find.text('เลือกช่องทางส่งข้อความ SOS จริง'), findsOneWidget);
-      expect(find.text('ส่ง SMS ฉุกเฉิน (ใช้ได้แม้เน็ตล่ม)'), findsOneWidget);
-      expect(find.text('ส่งต่อผ่าน LINE (ญาติ / กู้ภัย / กลุ่ม)'), findsOneWidget);
-      expect(find.text('คัดลอกข้อความ + พิกัด'), findsOneWidget);
-      expect(provider.sosRequests.length, 1);
-
-      // HIGH-1 regression: tapping Copy inside modal sheet copies exact GPS/Maps message
-      // AND renders immediate in-sheet confirmation banner
-      String? copiedText;
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(SystemChannels.platform, (call) async {
-        if (call.method == 'Clipboard.setData') {
-          copiedText = (call.arguments as Map?)?['text']?.toString();
-        }
-        return null;
-      });
-      addTearDown(() {
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(SystemChannels.platform, null);
-      });
-
-      final copyBtn = find.text('คัดลอกข้อความ + พิกัด');
-      await tester.ensureVisible(copyBtn);
-      await tester.pumpAndSettle();
-      await tester.tap(copyBtn);
-      await tester.pumpAndSettle();
-      expect(copiedText, isNotNull);
-      expect(copiedText!.contains('6.541234, 101.281234'), isTrue);
-      expect(
-        find.text('คัดลอกข้อความ SOS พร้อมพิกัดแล้ว สามารถวางส่งใน LINE หรือแชทได้ทันที'),
-        findsOneWidget,
-      );
-      expect(provider.sosRequests.first.dispatchedVia, 'clipboard');
+      // ต้องตัดฟีเจอร์ส่งข้อความ SOS และรายงานชุมชน (UGC) ออกทั้งหมด
+      expect(find.text('ส่งคำขอ SOS พร้อมพิกัดจริง'), findsNothing);
+      expect(find.text('ส่ง SMS ฉุกเฉิน (ใช้ได้แม้เน็ตล่ม)'), findsNothing);
+      expect(find.text('ค้นหาพิกัด GPS'), findsNothing);
+      expect(find.byType(TextField), findsNothing);
     });
 
-    testWidgets('SosScreen ในโหมด English ไม่มีข้อความภาษาไทยรั่วและแสดงการ์ดรายงานชุมชน', (tester) async {
+    testWidgets('หน้าฉุกเฉินในโหมด English ไม่มีข้อความภาษาไทยรั่วและไม่มี UGC', (tester) async {
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
       final provider = AlertProvider(
@@ -373,20 +325,18 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<AlertProvider>.value(
           value: provider,
-          child: MaterialApp(
-            home: SosScreen(initialPositionOverride: _fakeYalaPosition()),
+          child: const MaterialApp(
+            home: SosScreen(),
           ),
         ),
       );
       await tester.pumpAndSettle();
 
-      await tester.scrollUntilVisible(
-        find.text('Community Flood Report (Anonymous)'),
-        300,
-        scrollable: find.byType(Scrollable).first,
-      );
-      expect(find.text('Community Flood Report (Anonymous)'), findsOneWidget);
-      expect(find.text('Submit Community Report'), findsOneWidget);
+      expect(find.text('Emergency Contacts'), findsOneWidget);
+      expect(find.text('Emergency Channels (Call · LINE · Facebook)'), findsOneWidget);
+      expect(find.text('Community Flood Report (Anonymous)'), findsNothing);
+      expect(find.text('Send Real SOS with GPS'), findsNothing);
+      expect(find.byType(TextField), findsNothing);
     });
 
     test('SosRequest JSON serialization รองรับ amphoeTh & dispatchedVia แบบ backward-compatible', () {

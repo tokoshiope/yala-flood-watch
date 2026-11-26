@@ -63,26 +63,28 @@ void main() {
     expect(find.text('X.273'), findsNothing);
     expect(find.text('แผนที่'), findsOneWidget);
     expect(find.text('ข้อมูล'), findsWidgets);
-    expect(find.text('SOS'), findsOneWidget);
+    expect(find.text('ฉุกเฉิน'), findsOneWidget);
     expect(find.text('ศูนย์พักพิง'), findsWidgets);
     expect(find.text('ตั้งค่า'), findsWidgets);
 
-    // แถบ 2: ข้อมูล (กราฟพยากรณ์ฝน + 8 อำเภอ + 14 สถานี โดยไม่มี formula_version)
+    // แถบ 2: ข้อมูล (กราฟแท่งพยากรณ์ฝน + 14 สถานีเน้นระยะเหลือถึงตลิ่ง + 8 อำเภอระบุหมู่บ้าน/ตำบล)
     await tester.tap(find.text('ข้อมูล').last);
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.textContaining('พยากรณ์ฝน'), findsWidgets);
     expect(find.textContaining('formula_version'), findsNothing);
 
-    // แถบ 3: SOS มีช่องทาง LINE และ Facebook ที่ตรวจสอบแล้ว
-    await tester.tap(find.text('SOS'));
+    // แถบ 3: ช่องทางฉุกเฉิน คงเฉพาะเบอร์โทร LINE และ Facebook (ไม่มีฟอร์ม SOS)
+    await tester.tap(find.text('ฉุกเฉิน'));
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('LINE @1784DDPM'), findsWidgets);
     expect(find.text('Facebook DDPM'), findsWidgets);
+    expect(find.text('ส่งคำขอ SOS พร้อมพิกัดจริง'), findsNothing);
 
-    // แถบ 4: ศูนย์พักพิง เอาป้าย "ชื่อทางการ (พิกัดโดยประมาณ)" ออก และแสดง "อ้างอิงจากข้อมูลเดิม รอยืนยัน"
+    // แถบ 4: ศูนย์พักพิง แสดงเบอร์โทรในปุ่มโทร และไม่มีป้าย "พิกัดโดยประมาณ"
     await tester.tap(find.text('ศูนย์พักพิง').last);
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.textContaining('พิกัดโดยประมาณ'), findsNothing);
+    expect(find.text('กดโทร 073-212345'), findsWidgets);
 
     // แถบ 5: ตั้งค่า มีเมนูเลือกภาษา 4 ภาษา + คำอธิบายระดับแจ้งเตือน 1-5 + เปิดเสียง + Notification
     await tester.tap(find.text('ตั้งค่า').last);

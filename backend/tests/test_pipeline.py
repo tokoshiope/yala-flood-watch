@@ -728,3 +728,80 @@ def test_publish_supabase_rejects_non_https_before_sending_service_key(monkeypat
     assert called["count"] == 0
     assert PUB._purge_expired_reports("http://insecure.supabase.co", "super-secret-key") is None
     assert called["count"] == 0
+
+
+def test_agency_update_interval_and_tele_station_id():
+    assert P.infer_update_interval_minutes("สสน.") == 10
+    assert P.infer_update_interval_minutes("พพภ") == 10
+    assert P.infer_update_interval_minutes("กฟผ.") == 60
+    assert P.infer_update_interval_minutes("ชป.") == 60
+    assert P.infer_update_interval_minutes("unknown") == 60
+
+    reg, _, _, _ = P.load_registry()
+    now = datetime(2026, 11, 26, 23, 50, tzinfo=P.ICT)
+    row = _rows_sample(n=1, minutes_ago=10, at=now)[0]
+    row["station"]["tele_station_oldcode"] = "PAT002"
+    row["station"]["id"] = 901
+    row["agency"] = {"agency_shortname": {"th": "สสน."}}
+    stations, _ = P.normalize([row], reg, now=now)
+    assert stations[0]["tele_station_id"] == 901
+    assert stations[0]["update_interval_minutes"] == 10
+    assert stations[0]["station_type"] == "tele_waterlevel"
+
+
+def test_fetch_station_history_7d_filters_nulls_and_downsamples(monkeypatch):
+    # Simulate 300 ten-minute points (>220 threshold) plus trailing None values
+    base = datetime(2026, 11, 24, 0, 0, tzinfo=P.ICT)
+    graph_data = []
+    for i in range(300):
+        dt_str = (base + timedelta(minutes=10 * i)).strftime("%Y-%m-%d %H:%M")
+        val = None if i >= 298 else round(12.0 + i * 0.002, 3)
+        graph_data.append({"datetime": dt_str, "value": val, "discharge": None})
+
+    monkeypatch.setattr(
+        P,
+        "_http_get_json",
+        lambda url, params=None, timeout=12: {"result": "OK", "data": {"graph_data": graph_data}},
+    )
+    stations = [{"oldcode": "PAT002", "tele_station_id": 901, "station_type": "tele_waterlevel"}]
+    hist = P.fetch_station_history_7d(stations, base + timedelta(days=2), days=7)
+    assert "PAT002" in hist
+    pts = hist["PAT002"]
+    assert all(pt["v"] is not None for pt in pts)
+    # Must downsample to hourly points plus the final non-null reading
+    assert len(pts) < 100
+    assert pts[-1]["t"] == (base + timedelta(minutes=10 * 297)).strftime("%Y-%m-%d %H:%M")
+
+
+def test_build_amphoe_summaries_attaches_watch_villages():
+    reg, amphoes_reg, _, _ = P.load_registry()
+    villages = P.load_villages_registry()
+    assert len(villages) >= 400
+    now = datetime(2026, 11, 26, 23, 50, tzinfo=P.ICT)
+    row = _rows_sample(n=1, minutes_ago=50, at=now)[0]
+    row["station"]["tele_station_oldcode"] = "X.40A"
+    row["station"]["left_bank"] = 16.5
+    row["waterlevel_msl"] = "14.50"
+    row["waterlevel_msl_previous"] = "14.20"
+    stations, _ = P.normalize([row], reg, now=now)
+    summaries = P.build_amphoe_summaries(
+        {"เมืองยะลา": amphoes_reg["เมืองยะลา"]},
+        stations,
+        {},
+        {},
+        None,
+        villages=villages,
+    )
+    watch = summaries[0]["watch_areas"]
+    assert len(watch) == 6
+    # Sorted by lowest margin_m relative to river water level (14.5 m MSL)
+    margins = [w["margin_m"] for w in watch]
+    assert margins == sorted(margins)
+    assert all(w["name_th"] and w["tumbon_th"] for w in watch)
+
+
+def test_snapshot_sources_hint_is_10_minutes():
+    _, _, contacts, shelters = P.load_registry()
+    snap = P.build_snapshot([], contacts, shelters)
+    assert snap["sources"]["refresh_interval_hint_minutes"] == 10
+    assert "waterlevel_graph" in snap["sources"]["thaiwater_waterlevel_graph"]

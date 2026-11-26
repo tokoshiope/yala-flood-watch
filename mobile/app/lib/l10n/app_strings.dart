@@ -25,7 +25,7 @@ class AppStrings {
     },
     'tab_home': {'th': 'แผนที่', 'en': 'Map', 'zh': '地图', 'ms': 'Peta'},
     'tab_alerts': {'th': 'ข้อมูล', 'en': 'Info', 'zh': '数据', 'ms': 'Info'},
-    'tab_sos': {'th': 'SOS', 'en': 'SOS', 'zh': '求救', 'ms': 'SOS'},
+    'tab_sos': {'th': 'ฉุกเฉิน', 'en': 'Emergency', 'zh': '紧急求助', 'ms': 'Kecemasan'},
     'tab_shelters': {
       'th': 'ศูนย์พักพิง',
       'en': 'Shelters',
@@ -42,10 +42,10 @@ class AppStrings {
       'ms': 'Pusat Pemindahan',
     },
     'sos_title': {
-      'th': 'ขอความช่วยเหลือ (SOS)',
-      'en': 'Emergency Help (SOS)',
-      'zh': '紧急求助 (SOS)',
-      'ms': 'Bantuan Kecemasan (SOS)',
+      'th': 'ช่องทางฉุกเฉิน',
+      'en': 'Emergency Contacts',
+      'zh': '紧急联络渠道',
+      'ms': 'Saluran Kecemasan',
     },
     'station_detail_title': {
       'th': 'รายละเอียดสถานี',
@@ -464,10 +464,10 @@ class AppStrings {
       'ms': 'Persetujuan Lokasi GPS (PDPA)',
     },
     'gps_consent_body': {
-      'th': 'แอปจะอ่านพิกัดของคุณเฉพาะขณะใช้งานหน้านี้เท่านั้น เพื่อเทียบระดับความสูงพื้นที่กับระดับน้ำหรือบันทึกประกอบคำขอ SOS ในเครื่อง โดยไม่มีการส่งออกหรือติดตามตำแหน่งพื้นหลัง คุณสามารถลบข้อมูลได้ทุกเมื่อในหน้าตั้งค่า',
-      'en': 'The app reads your GPS only while using this screen to compare your ground elevation against river levels or save local SOS notes. Coordinates are never tracked in the background or uploaded, and can be deleted anytime in Settings.',
-      'zh': '本应用仅在您使用当前页面时读取 GPS，用于将您的地面海拔与水位进行对比或在本地记录 SOS 信息。绝不后台追踪或上传位置，您可随时在设置中彻底删除。',
-      'ms': 'Aplikasi hanya membaca GPS semasa skrin ini digunakan bagi membandingkan ketinggian tanah dengan paras air atau menyimpan nota SOS setempat. Tiada penjejakan latar belakang dan data boleh dipadam bila-bila masa di Tetapan.',
+      'th': 'แอปจะอ่านพิกัดของคุณเฉพาะขณะใช้งานหน้าแผนที่นี้เท่านั้น เพื่อเทียบความสูงพื้นที่กับระดับน้ำแม่น้ำในเครื่อง โดยไม่มีการส่งออกหรือติดตามตำแหน่งพื้นหลัง คุณสามารถลบข้อมูลได้ทุกเมื่อในหน้าตั้งค่า',
+      'en': 'The app reads your GPS only while using the map to compare your ground elevation against river levels on-device. Coordinates are never tracked in the background or uploaded, and can be deleted anytime in Settings.',
+      'zh': '本应用仅在您使用地图时在本地读取 GPS，用于对比地面海拔与河流水位。绝不后台追踪或上传位置，您可随时在设置中删除。',
+      'ms': 'Aplikasi hanya membaca GPS semasa peta digunakan bagi membandingkan ketinggian tanah dengan paras air secara setempat. Tiada penjejakan latar belakang dan data boleh dipadam bila-bila masa di Tetapan.',
     },
     'gps_decline': {'th': 'ไม่ยินยอม', 'en': 'Decline', 'zh': '拒绝', 'ms': 'Tolak'},
     'gps_accept': {
@@ -931,10 +931,10 @@ class AppStrings {
       'ms': 'Padam Semua Data Saya (PDPA)',
     },
     'delete_all_sub': {
-      'th': 'ลบประวัติ SOS, หมุดแผนที่, พิกัดในเครื่อง, ความยินยอม GPS และแจ้งเตือนทั้งหมด',
-      'en': 'Erase SOS notes, map pin, GPS consent, cached files & all preferences',
-      'zh': '删除本机 SOS 记录、地图标记、GPS 授权、缓存与所有设置',
-      'ms': 'Padam nota SOS, pin peta, persetujuan GPS, cache & semua tetapan',
+      'th': 'ลบหมุดแผนที่, ความยินยอม GPS, แคชในเครื่อง, ประวัติแจ้งเตือน และการตั้งค่าทั้งหมด',
+      'en': 'Erase map pin, GPS consent, offline cache, alert history & all preferences',
+      'zh': '删除地图标记、GPS 授权、离线缓存、预警历史与全部设置',
+      'ms': 'Padam pin peta, persetujuan GPS, cache luar talian, sejarah amaran & semua tetapan',
     },
     'delete_dialog_title': {
       'th': 'ลบข้อมูลทั้งหมดในเครื่อง (PDPA)',
@@ -943,10 +943,10 @@ class AppStrings {
       'ms': 'Padam Semua Data Peranti (PDPA)',
     },
     'delete_dialog_body': {
-      'th': 'การดำเนินการนี้จะลบประวัติแจ้งเตือน, หมุดแผนที่, ประวัติ SOS/พิกัดในเครื่อง, ความยินยอม GPS, ข้อมูลแคช และการตั้งค่าทั้งหมดของคุณทันที ยืนยันหรือไม่?',
-      'en': 'This will immediately erase alert history, saved map pin, local SOS notes, GPS consent, offline cache, and all preferences on this device. Continue?',
-      'zh': '此操作将立即清除本机上的预警历史、地图标记、SOS 记录、GPS 授权、缓存及全部设置。是否继续？',
-      'ms': 'Tindakan ini akan memadam sejarah amaran, pin peta, rekod SOS, persetujuan GPS, cache dan semua tetapan dengan segera. Teruskan?',
+      'th': 'การดำเนินการนี้จะลบประวัติแจ้งเตือน, หมุดแผนที่, ความยินยอม GPS, ข้อมูลแคช และการตั้งค่าทั้งหมดของคุณบนเครื่องนี้ทันที ยืนยันหรือไม่?',
+      'en': 'This will immediately erase alert history, saved map pin, GPS consent, offline cache, and all preferences on this device. Continue?',
+      'zh': '此操作将立即清除本机上的预警历史、地图标记、GPS 授权、缓存及全部设置。是否继续？',
+      'ms': 'Tindakan ini akan memadam sejarah amaran, pin peta, persetujuan GPS, cache dan semua tetapan pada peranti ini dengan segera. Teruskan?',
     },
     'delete_confirm_btn': {
       'th': 'ลบข้อมูลทั้งหมด',
@@ -1019,16 +1019,93 @@ class AppStrings {
       'ms': 'Kapasiti Takungan',
     },
     'trend_chart_title': {
-      'th': 'แนวโน้มระดับน้ำ',
-      'en': 'Water Level Trend',
-      'zh': '水位变化趋势',
-      'ms': 'Trend Paras Air',
+      'th': 'แนวโน้มระดับน้ำย้อนหลัง 7 วัน',
+      'en': '7-Day Water Level Trend',
+      'zh': '近7天水位变化趋势',
+      'ms': 'Trend Paras Air 7 Hari',
     },
     'trend_chart_sub': {
-      'th': 'เทียบค่ารอบก่อนหน้า',
-      'en': 'vs previous reading',
-      'zh': '对比上一轮读数',
-      'ms': 'berbanding bacaan sebelumnya',
+      'th': 'แตะบนกราฟเพื่อดูค่าแต่ละเวลา',
+      'en': 'Tap or drag chart to inspect',
+      'zh': '点击或拖动图表查看各时段水位',
+      'ms': 'Sentuh atau seret graf untuk periksa',
+    },
+    'range_24h': {'th': '24 ชม.', 'en': '24h', 'zh': '24小时', 'ms': '24j'},
+    'range_3d': {'th': '3 วัน', 'en': '3d', 'zh': '3天', 'ms': '3h'},
+    'range_7d': {'th': '7 วัน', 'en': '7d', 'zh': '7天', 'ms': '7h'},
+    'chart_loading': {
+      'th': 'กำลังโหลดข้อมูลย้อนหลัง 7 วัน…',
+      'en': 'Loading 7-day history…',
+      'zh': '正在加载近7天历史数据…',
+      'ms': 'Memuatkan sejarah 7 hari…',
+    },
+    'remaining_to_bank_hero': {
+      'th': 'ระยะเหลือถึงตลิ่ง',
+      'en': 'Remaining to Bank',
+      'zh': '距堤岸余量',
+      'ms': 'Baki ke Tebing',
+    },
+    'below_bank_short': {
+      'th': 'เหลือถึงตลิ่ง',
+      'en': 'to bank',
+      'zh': '距堤岸',
+      'ms': 'ke tebing',
+    },
+    'over_bank_short': {
+      'th': 'ล้นตลิ่งแล้ว',
+      'en': 'over bank',
+      'zh': '已超堤岸',
+      'ms': 'melimpah tebing',
+    },
+    'watch_level_label': {
+      'th': 'เฝ้าระวัง',
+      'en': 'Watch',
+      'zh': '警戒',
+      'ms': 'Waspada',
+    },
+    'min_label': {'th': 'ต่ำสุด', 'en': 'Min', 'zh': '最低', 'ms': 'Min'},
+    'max_label': {'th': 'สูงสุด', 'en': 'Max', 'zh': '最高', 'ms': 'Maks'},
+    'rain_bar_tap_hint': {
+      'th': 'แตะแท่งกราฟเพื่อดูปริมาณฝนรายชั่วโมง',
+      'en': 'Tap any bar to inspect hourly rain',
+      'zh': '点击柱条查看逐时降雨详情',
+      'ms': 'Tekan bar untuk lihat hujan mengikut jam',
+    },
+    'rain_prob_label': {
+      'th': 'โอกาสฝนตก',
+      'en': 'Chance',
+      'zh': '降雨概率',
+      'ms': 'Peluang',
+    },
+    'watch_areas_header': {
+      'th': 'พื้นที่หมู่บ้าน/ตำบลที่ต้องเฝ้าระวัง',
+      'en': 'Villages & Subdistricts to Watch',
+      'zh': '重点关注村庄与乡镇',
+      'ms': 'Kampung & Mukim Perlu Dipantau',
+    },
+    'watch_areas_show_more': {
+      'th': 'ดูหมู่บ้าน/ตำบลเพิ่มเติม',
+      'en': 'Show more villages',
+      'zh': '查看更多村庄',
+      'ms': 'Lihat lagi kampung',
+    },
+    'watch_areas_show_less': {
+      'th': 'ย่อรายชื่อพื้นที่',
+      'en': 'Show fewer',
+      'zh': '收起列表',
+      'ms': 'Tunjuk kurang',
+    },
+    'affected_villages_near_station': {
+      'th': 'หมู่บ้านและตำบลในพื้นที่รอบสถานี',
+      'en': 'Nearby Villages & Subdistricts',
+      'zh': '监测站周边村庄与乡镇',
+      'ms': 'Kampung & Mukim Sekitar Stesen',
+    },
+    'meta_update_freq': {
+      'th': 'ความถี่อัปเดตเซ็นเซอร์',
+      'en': 'Sensor Update Rate',
+      'zh': '传感器更新频率',
+      'ms': 'Kekerapan Kemas Kini',
     },
     'chart_prev': {'th': 'ก่อนหน้า', 'en': 'Previous', 'zh': '上一轮', 'ms': 'Sebelum'},
     'chart_latest': {'th': 'ล่าสุด', 'en': 'Latest', 'zh': '最新', 'ms': 'Terkini'},
@@ -1046,10 +1123,10 @@ class AppStrings {
       'ms': 'Sediakan beg kecemasan, ubat-ubatan serta dokumen penting dan letakkan barang berharga sekurang-kurangnya 1 meter tinggi.',
     },
     'request_help_btn': {
-      'th': 'ขอความช่วยเหลือ (SOS)',
-      'en': 'Request Help (SOS)',
-      'zh': '紧急求助 (SOS)',
-      'ms': 'Mohon Bantuan (SOS)',
+      'th': 'ดูช่องทางฉุกเฉิน (โทร / LINE / Facebook)',
+      'en': 'Emergency Contacts (Call / LINE / Facebook)',
+      'zh': '查看紧急联络渠道 (电话 / LINE / Facebook)',
+      'ms': 'Saluran Kecemasan (Telefon / LINE / Facebook)',
     },
     'meta_station_code': {'th': 'รหัสสถานี', 'en': 'Station Code', 'zh': '监测站编号', 'ms': 'Kod Stesen'},
     'meta_location': {'th': 'อำเภอ/ตำบล', 'en': 'District / Subdistrict', 'zh': '县 / 乡镇', 'ms': 'Daerah / Mukim'},
@@ -1741,6 +1818,55 @@ class AppStrings {
           _ => 'โทรแจ้งเหตุแล้ว',
         },
       _ => channel,
+    };
+  }
+
+  /// จัดรูปแบบเบอร์โทรศัพท์จังหวัดยะลาให้อ่านง่าย เช่น `073212345` → `073-212345`
+  static String formatPhoneDisplay(String raw) {
+    final digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.length == 9 && digits.startsWith('0')) {
+      return '${digits.substring(0, 3)}-${digits.substring(3)}';
+    }
+    if (digits.length == 10 && digits.startsWith('0')) {
+      return '${digits.substring(0, 3)}-${digits.substring(3, 6)}-${digits.substring(6)}';
+    }
+    return raw.trim();
+  }
+
+  /// ข้อความปุ่มโทรในหน้าศูนย์พักพิง พร้อมแสดงเบอร์โทรจริง เช่น `กดโทร 073-212345`
+  String callShelterWithNumber(String rawPhone) {
+    final formatted = formatPhoneDisplay(rawPhone);
+    return switch (lang) {
+      'en' => 'Call $formatted',
+      'zh' => '致电 $formatted',
+      'ms' => 'Hubungi $formatted',
+      _ => 'กดโทร $formatted',
+    };
+  }
+
+  /// ข้อความแสดงความถี่อัปเดตของสถานีวัดระดับน้ำ
+  String updateCadenceLabel(int minutes) {
+    if (minutes <= 10) {
+      return switch (lang) {
+        'en' => 'Updates every 10 min',
+        'zh' => '每10分钟更新',
+        'ms' => 'Kemas kini setiap 10 min',
+        _ => 'อัปเดตทุก 10 นาที',
+      };
+    }
+    if (minutes < 60) {
+      return switch (lang) {
+        'en' => 'Updates every $minutes min',
+        'zh' => '每$minutes分钟更新',
+        'ms' => 'Kemas kini setiap $minutes min',
+        _ => 'อัปเดตทุก $minutes นาที',
+      };
+    }
+    return switch (lang) {
+      'en' => 'Updates hourly',
+      'zh' => '每小时更新',
+      'ms' => 'Kemas kini setiap jam',
+      _ => 'อัปเดตทุก 1 ชม.',
     };
   }
 

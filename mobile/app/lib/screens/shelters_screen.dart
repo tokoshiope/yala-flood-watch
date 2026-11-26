@@ -318,8 +318,14 @@ class _SheltersScreenState extends State<SheltersScreen> {
                               Expanded(
                                 child: FilledButton.icon(
                                   onPressed: () => _call(shelter.phone!, strings),
-                                  icon: const Icon(Icons.phone, size: 18),
-                                  label: Text(strings.get('call_shelter')),
+                                  icon: const Icon(Icons.phone, size: 17),
+                                  label: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      strings.callShelterWithNumber(shelter.phone!),
+                                      maxLines: 1,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],

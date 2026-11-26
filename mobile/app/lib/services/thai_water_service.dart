@@ -197,11 +197,143 @@ class ThaiWaterService {
     return DateTime.now().difference(updated) < cacheTtl;
   }
 
+  /// ดึงข้อมูลแนวโน้มระดับน้ำย้อนหลัง 7 วันความละเอียดเต็ม (ทุก 10 นาทีสำหรับ สสน./พพภ. หรือรายชั่วโมงสำหรับ กฟผ./ชป.)
+  /// จาก ThaiWater Public API `waterlevel_graph` พร้อมแคชในเครื่อง
+  Future<List<WaterLevelPoint>> fetchStationHistory7d(
+    Station station, {
+    int? teleStationIdOverride,
+    int days = 7,
+    bool forceRefresh = false,
+  }) async {
+    final cacheKey = '${AppConfig.cacheStationHistoryPrefix}${station.code}';
+    if (!forceRefresh) {
+      final cached = _readHistoryCache(cacheKey);
+      if (cached != null && cached.isNotEmpty) {
+        return cached;
+      }
+    }
+
+    final teleId = station.stationId ?? teleStationIdOverride;
+    if (teleId == null || teleId <= 0) {
+      return _readHistoryCache(cacheKey, ignoreTtl: true) ?? const <WaterLevelPoint>[];
+    }
+
+    // คำนวณช่วงวันที่ตามเวลาประเทศไทย (UTC+7)
+    final nowIct = DateTime.now().toUtc().add(const Duration(hours: 7));
+    final startIct = nowIct.subtract(Duration(days: days));
+    String fmtDate(DateTime d) =>
+        '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+    final url = AppConfig.waterLevelGraphUrl(
+      stationId: teleId,
+      startDate: fmtDate(startIct),
+      endDate: fmtDate(nowIct),
+      stationType: station.stationType.isEmpty ? 'tele_waterlevel' : station.stationType,
+    );
+
+    try {
+      final response = await _client
+          .get(
+            Uri.parse(url),
+            headers: const {
+              'accept': 'application/json',
+              'user-agent': 'yala-flood-app/${AppConfig.appVersion}',
+            },
+          )
+          .timeout(AppConfig.networkTimeout);
+
+      if (response.statusCode != 200) {
+        return _readHistoryCache(cacheKey, ignoreTtl: true) ?? const <WaterLevelPoint>[];
+      }
+      final points = parseHistoryGraph(utf8.decode(response.bodyBytes));
+      if (points.isNotEmpty) {
+        await _writeHistoryCache(cacheKey, points);
+        return points;
+      }
+    } on Exception {
+      // Fallback to cached history if offline or upstream slow
+    }
+    return _readHistoryCache(cacheKey, ignoreTtl: true) ?? const <WaterLevelPoint>[];
+  }
+
+  /// แปลง JSON จาก ThaiWater `waterlevel_graph` เป็นรายการ [WaterLevelPoint] (กรองค่า null ออก)
+  static List<WaterLevelPoint> parseHistoryGraph(String body) {
+    final decoded = jsonDecode(body);
+    if (decoded is! Map<String, dynamic>) return const <WaterLevelPoint>[];
+    if (decoded['result'] != null &&
+        decoded['result'].toString().toUpperCase() != 'OK') {
+      return const <WaterLevelPoint>[];
+    }
+    final data = decoded['data'];
+    final rawList = data is Map ? data['graph_data'] : data;
+    if (rawList is! List) return const <WaterLevelPoint>[];
+
+    final points = <WaterLevelPoint>[];
+    for (final item in rawList) {
+      if (item is! Map) continue;
+      final ts = item['datetime']?.toString().trim() ?? '';
+      final rawVal = item['value'];
+      if (ts.isEmpty || rawVal == null) continue;
+      final val = rawVal is num ? rawVal.toDouble() : double.tryParse(rawVal.toString());
+      if (val == null || !val.isFinite) continue;
+      final rawQ = item['discharge'];
+      final q = rawQ is num ? rawQ.toDouble() : double.tryParse(rawQ?.toString() ?? '');
+      points.add(
+        WaterLevelPoint(
+          timestamp: ts.length >= 16 ? ts.substring(0, 16) : ts,
+          valueMsl: val,
+          discharge: (q != null && q.isFinite && q >= 0) ? q : null,
+        ),
+      );
+    }
+    return points;
+  }
+
+  List<WaterLevelPoint>? _readHistoryCache(String key, {bool ignoreTtl = false}) {
+    final prefs = _prefs;
+    if (prefs == null) return null;
+    final raw = prefs.getString(key);
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final map = jsonDecode(raw);
+      if (map is! Map) return null;
+      if (!ignoreTtl) {
+        final savedMs = map['savedAt'] as int?;
+        if (savedMs == null) return null;
+        final age = DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(savedMs));
+        if (age > cacheTtl) return null;
+      }
+      final list = map['points'];
+      if (list is! List) return null;
+      return list
+          .whereType<Map<dynamic, dynamic>>()
+          .map((e) => WaterLevelPoint.fromJson(e.cast<String, dynamic>()))
+          .toList();
+    } on FormatException {
+      return null;
+    }
+  }
+
+  Future<void> _writeHistoryCache(String key, List<WaterLevelPoint> points) async {
+    final prefs = _prefs;
+    if (prefs == null || points.isEmpty) return;
+    final payload = jsonEncode({
+      'savedAt': DateTime.now().millisecondsSinceEpoch,
+      'points': points.map((p) => p.toJson()).toList(),
+    });
+    await prefs.setString(key, payload);
+  }
+
   Future<void> clearCache() async {
     final prefs = _prefs;
     if (prefs == null) return;
     await prefs.remove(AppConfig.cacheStationsKey);
     await prefs.remove(AppConfig.cacheUpdatedAtKey);
+    for (final k in prefs.getKeys().toList()) {
+      if (k.startsWith(AppConfig.cacheStationHistoryPrefix)) {
+        await prefs.remove(k);
+      }
+    }
   }
 
   void close() {

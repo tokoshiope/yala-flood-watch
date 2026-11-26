@@ -63,6 +63,9 @@ class AlertProvider extends ChangeNotifier {
   DateTime? _lastCommunityReportAt;
   bool _gpsConsentGranted = false;
   int _dataResetVersion = 0;
+  final Map<String, List<WaterLevelPoint>> _stationHistory7d =
+      <String, List<WaterLevelPoint>>{};
+  final Set<String> _loadingHistoryCodes = <String>{};
 
   bool _loading = false;
   bool _initialized = false;
@@ -153,6 +156,140 @@ class AlertProvider extends ChangeNotifier {
   List<VillagePoint> villagesOf(String amphoeTh, String tumbonTh) => _villages
       .where((v) => v.amphoeTh == amphoeTh && v.tumbonTh == tumbonTh)
       .toList();
+
+  /// รายชื่อหมู่บ้านและตำบลพื้นที่เฝ้าระวังสำคัญในอำเภอ (เรียงจากพื้นที่ลุ่มต่ำใกล้ระดับน้ำแม่น้ำมากที่สุดก่อน)
+  List<({VillagePoint village, ElevationFloodResult eval})> watchVillagesForAmphoe(
+    String amphoeTh, {
+    int limit = 12,
+  }) {
+    final matching = _villages.where((v) => v.amphoeTh == amphoeTh).toList();
+    if (matching.isEmpty) {
+      // Fallback จาก snapshot watch_areas กรณียังไม่ได้โหลดไฟล์ villages
+      final snapWatch = _snapshot?.byAmphoe(amphoeTh)?.watchAreas ?? const <WatchAreaInfo>[];
+      return snapWatch.take(limit).map((w) {
+        final vp = VillagePoint(
+          code: '',
+          moo: w.moo,
+          nameTh: w.nameTh,
+          nameEn: w.nameEn,
+          amphoeTh: amphoeTh,
+          tumbonTh: w.tumbonTh,
+          lat: AppConfig.defaultLat,
+          lon: AppConfig.defaultLng,
+          elevationMsl: w.elevationMsl,
+        );
+        return (village: vp, eval: elevationFloodLevel(w.elevationMsl, amphoeTh));
+      }).toList();
+    }
+
+    final scored = <({VillagePoint village, ElevationFloodResult eval, double sortKey})>[];
+    for (final v in matching) {
+      final ev = elevationFloodLevel(v.elevationMsl, amphoeTh);
+      final key = ev.marginMeters ?? v.elevationMsl ?? 9999.0;
+      scored.add((village: v, eval: ev, sortKey: key));
+    }
+    scored.sort((a, b) {
+      final byLv = b.eval.level.compareTo(a.eval.level);
+      if (byLv != 0) return byLv;
+      final byMargin = a.sortKey.compareTo(b.sortKey);
+      if (byMargin != 0) return byMargin;
+      return a.village.nameTh.compareTo(b.village.nameTh);
+    });
+    return scored
+        .take(limit)
+        .map((e) => (village: e.village, eval: e.eval))
+        .toList();
+  }
+
+  /// รายชื่อหมู่บ้านและตำบลในพื้นที่รอบสถานีวัดระดับน้ำ (เน้นตำบลที่ตั้งสถานีและพื้นที่ลุ่มต่ำใกล้เคียง)
+  List<({VillagePoint village, ElevationFloodResult eval, double distKm})>
+      watchVillagesNearStation(Station station, {int limit = 6}) {
+    final amp = station.amphoeTh ?? '';
+    if (amp.isEmpty || _villages.isEmpty) return const [];
+    final sLat = station.lat;
+    final sLng = station.lng;
+    final refWater = station.displayLevel ?? referenceWaterMslForAmphoe(amp);
+    final candidates = _villages.where((v) => v.amphoeTh == amp).toList();
+    if (candidates.isEmpty) return const [];
+
+    final scored = <({
+      VillagePoint village,
+      ElevationFloodResult eval,
+      double distKm,
+      bool sameTumbon,
+      double sortMargin,
+    })>[];
+    for (final v in candidates) {
+      final dist = (sLat != null && sLng != null)
+          ? _haversineKm(sLat, sLng, v.lat, v.lon)
+          : 99.0;
+      final ev = elevationFloodLevel(v.elevationMsl, amp);
+      final margin = (v.elevationMsl != null && refWater != null)
+          ? (v.elevationMsl! - refWater)
+          : (ev.marginMeters ?? v.elevationMsl ?? 999.0);
+      scored.add((
+        village: v,
+        eval: ev,
+        distKm: dist,
+        sameTumbon: station.tumbonTh != null && v.tumbonTh == station.tumbonTh,
+        sortMargin: margin,
+      ));
+    }
+    // เลือกหมู่บ้านที่ใกล้สถานี (<= 12 กม. หรืออยู่ตำบลเดียวกัน) แล้วเรียงตามความเสี่ยง/พื้นที่ลุ่มต่ำ
+    final near = scored.where((e) => e.sameTumbon || e.distKm <= 12.0).toList();
+    final pool = near.isNotEmpty ? near : scored;
+    pool.sort((a, b) {
+      final byLv = b.eval.level.compareTo(a.eval.level);
+      if (byLv != 0) return byLv;
+      final byMargin = a.sortMargin.compareTo(b.sortMargin);
+      if (byMargin != 0) return byMargin;
+      return a.distKm.compareTo(b.distKm);
+    });
+    return pool
+        .take(limit)
+        .map((e) => (village: e.village, eval: e.eval, distKm: e.distKm))
+        .toList();
+  }
+
+  /// กราฟระดับน้ำย้อนหลัง 7 วันของสถานี (คืนข้อมูลความละเอียดสูงที่โหลดแล้ว หรือ Snapshot สำรองทันที)
+  List<WaterLevelPoint> stationHistory7d(String stationCode) {
+    final live = _stationHistory7d[stationCode];
+    if (live != null && live.isNotEmpty) return live;
+    return _snapshot?.stationHistory7dByCode[stationCode] ??
+        const <WaterLevelPoint>[];
+  }
+
+  bool isStationHistoryLoading(String stationCode) =>
+      _loadingHistoryCodes.contains(stationCode);
+
+  /// โหลดข้อมูลระดับน้ำย้อนหลัง 7 วันความละเอียดเต็มจาก ThaiWater `waterlevel_graph`
+  Future<List<WaterLevelPoint>> loadStationHistory7d(
+    Station station, {
+    bool forceRefresh = false,
+  }) async {
+    final code = station.code;
+    if (_loadingHistoryCodes.contains(code)) {
+      return stationHistory7d(code);
+    }
+    _loadingHistoryCodes.add(code);
+    notifyListeners();
+    try {
+      final teleId = station.stationId ?? _snapshot?.stationTeleIdByCode[code];
+      final fetched = await _waterService.fetchStationHistory7d(
+        station,
+        teleStationIdOverride: teleId,
+        days: 7,
+        forceRefresh: forceRefresh,
+      );
+      if (fetched.isNotEmpty) {
+        _stationHistory7d[code] = fetched;
+      }
+      return stationHistory7d(code);
+    } finally {
+      _loadingHistoryCodes.remove(code);
+      notifyListeners();
+    }
+  }
 
   List<VillageZoneBoundary> villageZonesOf(String amphoeTh, String tumbonTh) =>
       _villageZones
@@ -487,19 +624,12 @@ class AlertProvider extends ChangeNotifier {
       }
       _demGrid ??= await _snapshotService.loadDemGrid();
       final snapFuture = _snapshotService.loadSnapshot();
-      final reportsFuture = _communityReports.isConfigured
-          ? _communityReports.fetchRecentReports()
-          : Future<List<CommunityReport>>.value(const <CommunityReport>[]);
       final result = await _waterService.fetch(forceRefresh: force);
       _stations = result.stations;
       _lastUpdated = result.updatedAt;
       _source = result.source;
       _noticeTh = result.messageTh;
       _snapshot = await snapFuture ?? _snapshot;
-      final fetchedReports = await reportsFuture;
-      if (fetchedReports.isNotEmpty) {
-        _recentCommunityReports = fetchedReports;
-      }
 
       final rain = await _loadRain();
       final newAlerts = _engine.evaluate(
@@ -678,6 +808,7 @@ class AlertProvider extends ChangeNotifier {
   }
 
   Future<void> clearCache() async {
+    _stationHistory7d.clear();
     await _waterService.clearCache();
     await _snapshotService.clearSnapshotCache();
     notifyListeners();

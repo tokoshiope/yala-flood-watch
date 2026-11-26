@@ -1,5 +1,35 @@
 import 'package:latlong2/latlong.dart';
 
+import 'package:yala_flood_app/models/station.dart';
+
+/// หมู่บ้านและตำบลพื้นที่เฝ้าระวังสำคัญในอำเภอ (เทียบความสูงจริง Copernicus DEM กับระดับน้ำแม่น้ำ)
+class WatchAreaInfo {
+  const WatchAreaInfo({
+    required this.nameTh,
+    required this.nameEn,
+    required this.moo,
+    required this.tumbonTh,
+    this.elevationMsl,
+    this.marginM,
+  });
+
+  final String nameTh;
+  final String nameEn;
+  final int moo;
+  final String tumbonTh;
+  final double? elevationMsl;
+  final double? marginM;
+
+  factory WatchAreaInfo.fromJson(Map<String, dynamic> json) => WatchAreaInfo(
+        nameTh: json['name_th']?.toString() ?? '',
+        nameEn: json['name_en']?.toString() ?? '',
+        moo: (json['moo'] as num?)?.toInt() ?? 0,
+        tumbonTh: json['tumbon_th']?.toString() ?? '',
+        elevationMsl: (json['elevation_msl'] as num?)?.toDouble(),
+        marginM: (json['margin_m'] as num?)?.toDouble(),
+      );
+}
+
 /// ข้อมูลพยากรณ์ฝนรายชั่วโมง (Open-Meteo, เวลาไทย UTC+7)
 class HourlyRainPoint {
   const HourlyRainPoint({
@@ -46,6 +76,7 @@ class AmphoeForecastSummary {
     this.floodMechanism = 'monitoring',
     this.confidence = 'high',
     this.leadTimeHours,
+    this.watchAreas = const <WatchAreaInfo>[],
   });
 
   final String amphoeTh;
@@ -65,12 +96,14 @@ class AmphoeForecastSummary {
   final String confidence;
   final List<HourlyRainPoint> hourlyNext24h;
   final String? leadTimeHours;
+  final List<WatchAreaInfo> watchAreas;
 
   factory AmphoeForecastSummary.fromJson(Map<String, dynamic> json) {
     final rain = (json['rain'] as Map?)?.cast<String, dynamic>() ?? const {};
     final wx = (json['weather_forecast'] as Map?)?.cast<String, dynamic>() ?? const {};
     final ass = (json['assessment'] as Map?)?.cast<String, dynamic>() ?? const {};
     final rawHourly = (wx['hourly_next_24h'] as List?) ?? const [];
+    final rawWatch = (json['watch_areas'] as List?) ?? const [];
     return AmphoeForecastSummary(
       amphoeTh: json['amphoe']?.toString() ?? '',
       basinTh: json['basin']?.toString() ?? '',
@@ -92,6 +125,10 @@ class AmphoeForecastSummary {
           .map((e) => HourlyRainPoint.fromJson(e.cast<String, dynamic>()))
           .toList(),
       leadTimeHours: ass['lead_time_hours']?.toString(),
+      watchAreas: rawWatch
+          .whereType<Map<dynamic, dynamic>>()
+          .map((e) => WatchAreaInfo.fromJson(e.cast<String, dynamic>()))
+          .toList(),
     );
   }
 }
@@ -130,6 +167,8 @@ class FloodSnapshot {
     required this.amphoes,
     required this.rainGaugeCount,
     this.bangLangDam,
+    this.stationHistory7dByCode = const <String, List<WaterLevelPoint>>{},
+    this.stationTeleIdByCode = const <String, int>{},
     this.sourceLabel = 'Bundled 5-Source Snapshot',
   });
 
@@ -139,6 +178,8 @@ class FloodSnapshot {
   final List<AmphoeForecastSummary> amphoes;
   final int rainGaugeCount;
   final BangLangDamStatus? bangLangDam;
+  final Map<String, List<WaterLevelPoint>> stationHistory7dByCode;
+  final Map<String, int> stationTeleIdByCode;
   final String sourceLabel;
 
   AmphoeForecastSummary? byAmphoe(String amphoeTh) {
@@ -153,6 +194,30 @@ class FloodSnapshot {
     String sourceLabel = 'Bundled 5-Source Snapshot',
   }) {
     final rawAmps = (json['amphoes'] as List?) ?? const [];
+    final rawStations = (json['stations'] as List?) ?? const [];
+    final histMap = <String, List<WaterLevelPoint>>{};
+    final teleIdMap = <String, int>{};
+    for (final item in rawStations) {
+      if (item is! Map) continue;
+      final oc = item['oldcode']?.toString().trim() ?? '';
+      if (oc.isEmpty) continue;
+      final tid = item['tele_station_id'];
+      if (tid is num) teleIdMap[oc] = tid.toInt();
+      final rawHist = item['history_7d'];
+      if (rawHist is List && rawHist.isNotEmpty) {
+        final pts = <WaterLevelPoint>[];
+        for (final pt in rawHist) {
+          if (pt is Map) {
+            final cast = pt.cast<String, dynamic>();
+            final val = cast['v'] ?? cast['value'];
+            if (val is num && val.isFinite) {
+              pts.add(WaterLevelPoint.fromJson(cast));
+            }
+          }
+        }
+        if (pts.isNotEmpty) histMap[oc] = pts;
+      }
+    }
     final damJson = json['banglang_dam'];
     final rainSum = (json['rain_gauges_summary'] as Map?)?.cast<String, dynamic>() ?? const {};
     return FloodSnapshot(
@@ -167,6 +232,8 @@ class FloodSnapshot {
       bangLangDam: damJson is Map
           ? BangLangDamStatus.fromJson(damJson.cast<String, dynamic>())
           : null,
+      stationHistory7dByCode: histMap,
+      stationTeleIdByCode: teleIdMap,
       sourceLabel: sourceLabel,
     );
   }

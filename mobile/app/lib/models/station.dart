@@ -17,9 +17,38 @@ import 'package:yala_flood_app/models/risk_level.dart';
 ///   "geocode": {"amphoe_name": {"th": "เมืองยะลา"}, "tumbon_name": {"th": "ตาเซะ"}}
 /// }
 /// ค่าบางค่าเป็น null ได้ (เช่น situation_level ของสถานีที่ไม่ได้ตั้งเกณฑ์)
+/// จุดข้อมูลระดับน้ำย้อนหลัง (1 จุดจาก ThaiWater waterlevel_graph หรือ Snapshot 7 วัน)
+class WaterLevelPoint {
+  const WaterLevelPoint({
+    required this.timestamp,
+    required this.valueMsl,
+    this.discharge,
+  });
+
+  /// เวลาประเทศไทย (UTC+7) เช่น `2026-11-26 23:40`
+  final String timestamp;
+  final double valueMsl;
+  final double? discharge;
+
+  DateTime? get dateTime => DateTime.tryParse(timestamp.replaceFirst(' ', 'T'));
+
+  Map<String, dynamic> toJson() => {
+        't': timestamp,
+        'v': valueMsl,
+        if (discharge != null) 'q': discharge,
+      };
+
+  factory WaterLevelPoint.fromJson(Map<String, dynamic> json) => WaterLevelPoint(
+        timestamp: _asStr(json['t'] ?? json['datetime']),
+        valueMsl: _asDouble(json['v'] ?? json['value']) ?? 0.0,
+        discharge: _asDouble(json['q'] ?? json['discharge']),
+      );
+}
+
 class Station {
   const Station({
     required this.id,
+    this.stationId,
     required this.code,
     required this.nameTh,
     this.nameEn = '',
@@ -43,9 +72,13 @@ class Station {
     this.riverName,
     this.datetime,
     this.stationType = 'tele_waterlevel',
+    this.updateIntervalMinutes,
   });
 
   final int id;
+
+  /// รหัสสถานีใน ThaiWater (`station.id`) ใช้สำหรับดึงกราฟย้อนหลัง 7 วัน (`waterlevel_graph`)
+  final int? stationId;
 
   /// รหัสสถานี เช่น PAT002, BLGTD03
   final String code;
@@ -98,15 +131,33 @@ class Station {
 
   final String stationType;
 
+  /// ความถี่อัปเดตเซ็นเซอร์ของหน่วยงาน (นาที): สสน./พพภ ทุก 10 นาที, กฟผ./ชป. ทุก 60 นาที
+  final int? updateIntervalMinutes;
+
+  int get effectiveUpdateIntervalMinutes {
+    if (updateIntervalMinutes != null && updateIntervalMinutes! > 0) {
+      return updateIntervalMinutes!;
+    }
+    return inferUpdateIntervalMinutes(agencyShortTh);
+  }
+
+  static int inferUpdateIntervalMinutes(String? agencyShort) {
+    final ag = (agencyShort ?? '').trim();
+    if (ag == 'สสน.' || ag == 'พพภ' || ag == 'พพภ.') return 10;
+    return 60;
+  }
+
   /// แปลง JSON หนึ่ง record จาก ThaiWater เป็น [Station]
   factory Station.fromThaiWaterJson(Map<String, dynamic> json) {
     final station = _asMap(json['station']);
     final geocode = _asMap(json['geocode']);
     final agency = _asMap(json['agency']);
     final basin = _asMap(json['basin']);
+    final agencyShort = _asStr(_asMap(agency['agency_shortname'])['th']);
 
     return Station(
       id: _asInt(json['id']) ?? 0,
+      stationId: _asInt(station['id']),
       code: _asStr(station['tele_station_oldcode']),
       nameTh: _asStr(_asMap(station['tele_station_name'])['th']),
       nameEn: _asStr(_asMap(station['tele_station_name'])['en']),
@@ -125,13 +176,14 @@ class Station {
       diffWlBankText: _asStr(json['diff_wl_bank_text']),
       amphoeTh: _asStr(_asMap(geocode['amphoe_name'])['th']),
       tumbonTh: _asStr(_asMap(geocode['tumbon_name'])['th']),
-      agencyShortTh: _asStr(_asMap(agency['agency_shortname'])['th']),
+      agencyShortTh: agencyShort,
       basinNameTh: _asStr(_asMap(basin['basin_name'])['th']),
       riverName: _asStr(json['river_name']),
       datetime: _asStr(json['waterlevel_datetime']),
       stationType: _asStr(json['station_type']).isEmpty
           ? 'tele_waterlevel'
           : _asStr(json['station_type']),
+      updateIntervalMinutes: inferUpdateIntervalMinutes(agencyShort),
     );
   }
 
@@ -228,6 +280,7 @@ class Station {
   /// แปลงกลับเป็น JSON เพื่อเก็บแคช
   Map<String, dynamic> toJson() => {
         'id': id,
+        'stationId': stationId,
         'code': code,
         'nameTh': nameTh,
         'nameEn': nameEn,
@@ -251,10 +304,12 @@ class Station {
         'riverName': riverName,
         'datetime': datetime,
         'stationType': stationType,
+        'updateIntervalMinutes': updateIntervalMinutes,
       };
 
   factory Station.fromJson(Map<String, dynamic> json) => Station(
         id: _asInt(json['id']) ?? 0,
+        stationId: _asInt(json['stationId']),
         code: _asStr(json['code']),
         nameTh: _asStr(json['nameTh']),
         nameEn: _asStr(json['nameEn']),
@@ -280,6 +335,7 @@ class Station {
         stationType: _asStr(json['stationType']).isEmpty
             ? 'tele_waterlevel'
             : _asStr(json['stationType']),
+        updateIntervalMinutes: _asInt(json['updateIntervalMinutes']),
       );
 
   Station copyWith({
@@ -290,6 +346,7 @@ class Station {
   }) =>
       Station(
         id: id,
+        stationId: stationId,
         code: code,
         nameTh: nameTh,
         nameEn: nameEn,
@@ -313,6 +370,7 @@ class Station {
         riverName: riverName,
         datetime: datetime ?? this.datetime,
         stationType: stationType,
+        updateIntervalMinutes: updateIntervalMinutes,
       );
 
   @override

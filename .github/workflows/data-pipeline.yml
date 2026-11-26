@@ -2,7 +2,7 @@ name: yala-flood-data-pipeline
 
 on:
   schedule:
-    - cron: "*/15 * * * *"   # ทุก 15 นาที
+    - cron: "*/10 * * * *"   # ทุก 10 นาที (ตรงรอบ สสน./พพภ.)
   workflow_dispatch:
 
 concurrency:

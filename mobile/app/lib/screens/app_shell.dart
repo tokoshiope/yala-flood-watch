@@ -64,7 +64,7 @@ class _AppShellState extends State<AppShell> {
                 color: Color(0xFFB71C1C),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.sos, color: Colors.white, size: 20),
+              child: const Icon(Icons.phone_in_talk, color: Colors.white, size: 19),
             ),
             label: strings.get('tab_sos'),
           ),

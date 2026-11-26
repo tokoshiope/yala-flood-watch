@@ -102,8 +102,8 @@ def publish(snapshot_dir: Path, bucket: str = "snapshots", dry_run: bool = False
         manifest, snap_path, latest_path, manifest_path = verify_snapshot_bundle(snapshot_dir)
         uploads = [
             (f"history/{snap_path.name}", snap_path, "public, max-age=31536000, immutable"),
-            ("latest.json", latest_path, "public, max-age=300, stale-while-revalidate=600"),
-            ("manifest.json", manifest_path, "public, max-age=120"),
+            ("latest.json", latest_path, "public, max-age=120, stale-while-revalidate=300"),
+            ("manifest.json", manifest_path, "public, max-age=60"),
         ]
         if dry_run:
             print(
