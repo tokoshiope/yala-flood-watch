@@ -8,7 +8,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:yala_flood_app/config/app_config.dart';
 import 'package:yala_flood_app/models/alert.dart';
-import 'package:yala_flood_app/models/risk_level.dart';
 
 /// จัดการแจ้งเตือนในเครื่อง (flutter_local_notifications)
 /// และ Push รายอำเภอผ่าน Firebase Cloud Messaging (APNs/FCM)
@@ -195,7 +194,7 @@ class NotificationService {
   Future<void> showFloodAlert(AlertItem alert, {bool quiet = false}) async {
     if (!_ready) return;
     final playSound = !quiet;
-    final highPriority = alert.level == RiskLevel.danger || playSound;
+    final highPriority = alert.level.isHighOrDanger || playSound;
     final android = AndroidNotificationDetails(
       'yala_flood_alerts',
       'แจ้งเตือนระดับน้ำ',

@@ -151,7 +151,7 @@ class SettingsScreen extends StatelessWidget {
 
           _SectionTitle(strings.get('threshold_section')),
           DropdownButtonFormField<int>(
-            initialValue: settings.warningLevel,
+            initialValue: settings.warningLevel.clamp(2, 4),
             decoration: InputDecoration(
               labelText: strings.get('warn_level_label'),
               prefixIcon: const Icon(Icons.warning_amber),
@@ -177,7 +177,7 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<int>(
-            initialValue: settings.dangerLevel,
+            initialValue: settings.dangerLevel.clamp(3, 5),
             decoration: InputDecoration(
               labelText: strings.get('danger_level_label'),
               prefixIcon: const Icon(Icons.dangerous_outlined),
@@ -190,11 +190,15 @@ class SettingsScreen extends StatelessWidget {
               ),
               DropdownMenuItem(
                 value: 4,
-                child: Text('4+ — ${strings.alertLevelLabel(4)} / ${strings.alertLevelLabel(5)}'),
+                child: Text('4+ — ${strings.alertLevelLabel(4)}'),
+              ),
+              DropdownMenuItem(
+                value: 5,
+                child: Text('5 — ${strings.alertLevelLabel(5)}'),
               ),
             ],
             onChanged: (value) => provider.updateSettings(
-              settings.copyWith(dangerLevel: value ?? 4),
+              settings.copyWith(dangerLevel: value ?? AppConfig.defaultDangerLevel),
             ),
           ),
           const SizedBox(height: 20),

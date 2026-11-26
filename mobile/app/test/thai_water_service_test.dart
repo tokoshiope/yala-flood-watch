@@ -36,7 +36,8 @@ void main() {
 
       expect(result.source, WaterSource.network);
       expect(result.stations.length, 14);
-      expect(result.stations.first.riskLevel, RiskLevel.danger);
+      // ใน fixture น้ำปกติ PAT002 แตะเส้นเฝ้าระวังแบบ side way (13.00 vs watch 12.35 / mid 13.10) -> RiskLevel.watch
+      expect(result.stations.first.riskLevel, RiskLevel.watch);
       // ต้องเก็บแคชไว้ด้วย
       expect(prefs.getString(AppConfig.cacheStationsKey), isNotNull);
       expect(prefs.getInt(AppConfig.cacheUpdatedAtKey), isNotNull);

@@ -199,7 +199,9 @@ def build_fcm_messages(
             continue
 
         prefix = LEVEL_TITLE_PREFIX.get(level, "แจ้งเตือนน้ำท่วม")
-        title = f"{prefix}: อ.{amphoe_th} จ.ยะลา"
+        basis = str(ass.get("alert_basis") or "")
+        basis_tag = " (เตือนภัยล่วงหน้าจากฝน/เขื่อน)" if basis == "rain_dam_early_warning" else ""
+        title = f"{prefix}: อ.{amphoe_th} จ.ยะลา{basis_tag}"
         action = str(ass.get("action_th") or "ติดตามสถานการณ์ระดับน้ำอย่างใกล้ชิด")
         lead = ass.get("lead_time_hours")
         body = f"{action} (คาดน้ำเดินทางถึงใน {lead})" if lead else action
@@ -213,8 +215,12 @@ def build_fcm_messages(
         if top_level >= 3 and should_send_topic(TOPIC_ALL_YALA, top_level, state, ts):
             amphoe_th = str(highest_amp.get("amphoe") or "")
             prefix = LEVEL_TITLE_PREFIX.get(top_level, "แจ้งเตือนน้ำท่วม")
-            title = f"{prefix} จ.ยะลา (พื้นที่สูงสุด: อ.{amphoe_th})"
-            body = str(ass.get("action_th") or "โปรดตรวจสอบแผนที่และเตรียมพร้อมอพยพตามประกาศ ปภ.ยะลา")
+            basis = str(ass.get("alert_basis") or "")
+            basis_tag = " (เตือนภัยล่วงหน้าจากฝน/เขื่อน)" if basis == "rain_dam_early_warning" else ""
+            title = f"{prefix} จ.ยะลา (พื้นที่สูงสุด: อ.{amphoe_th}){basis_tag}"
+            action = str(ass.get("action_th") or "โปรดตรวจสอบแผนที่และเตรียมพร้อมอพยพตามประกาศ ปภ.ยะลา")
+            lead = ass.get("lead_time_hours")
+            body = f"{action} (คาดน้ำเดินทางถึงใน {lead})" if lead else action
             messages.append(
                 _format_v1_payload(
                     topic=TOPIC_ALL_YALA,

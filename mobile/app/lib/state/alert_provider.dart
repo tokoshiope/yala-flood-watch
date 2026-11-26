@@ -124,7 +124,7 @@ class AlertProvider extends ChangeNotifier {
       _stations.where((s) => s.riskLevel.isAtLeastWarning).length;
 
   int get dangerStationCount =>
-      _stations.where((s) => s.riskLevel == RiskLevel.danger).length;
+      _stations.where((s) => s.riskLevel.isHighOrDanger).length;
 
   /// ระดับแจ้งเตือน 1–5 ของแต่ละอำเภอ (ใช้ระบายสี Polygon บนแผนที่ Google Maps)
   AlertLevel amphoeAlertLevel(String amphoeTh) {

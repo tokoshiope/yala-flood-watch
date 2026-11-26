@@ -14,7 +14,7 @@ import 'package:yala_flood_app/services/snapshot_service.dart';
 
 Station _station({
   required String code,
-  required int? situation,
+  int? situation,
   double? wl,
   double? prev,
   double? bank,
@@ -264,53 +264,335 @@ void main() {
     });
   });
 
-  group('AlertEngine.effectiveRisk & evaluate (Backward Compatibility)', () {
-    test('situation 4 = อันตราย, 3 = เตือนภัย, 2 = เฝ้าระวัง', () {
+  group('AlertEngine.assessV4 (100% Parity กับ Python backend/pipeline.py formula_version = 4)', () {
+    test('TV4-1: ต่ำกว่าเส้นเฝ้าระวัง + ThaiWater sit=3 (น้ำปกติ) -> ปกติ Lv 1', () {
+      final r = engine.assessV4(
+        levelMsl: 12.59,
+        previousMsl: 12.64,
+        bankM: 17.29,
+        watchM: 15.80,
+        criticalM: 17.29,
+        situationLevel: 3,
+        rain24hMm: 15.0,
+      );
+      expect(r.score, 1.8);
+      expect(r.waterStageLevel, AlertLevel.normal);
+      expect(r.level, AlertLevel.normal);
+      expect(r.alertBasis, 'monitoring');
+      expect(r.waterTrend, 'sideway');
+      expect(r.shouldPush, isFalse);
+    });
+
+    test('TV4-2: ต่ำกว่าเส้นเฝ้าระวัง + ThaiWater sit=4 (น้ำมาก) ไม่หลอนเป็นเตือนภัยสูง -> ปกติ Lv 1', () {
+      final r = engine.assessV4(
+        levelMsl: 36.01,
+        previousMsl: 36.00,
+        bankM: 38.678,
+        watchM: 36.80,
+        criticalM: 38.678,
+        situationLevel: 4,
+        rain24hMm: 20.0,
+      );
+      expect(r.score, 2.4);
+      expect(r.waterStageLevel, AlertLevel.normal);
+      expect(r.level, AlertLevel.normal);
+      expect(r.alertBasis, 'monitoring');
+      expect(r.waterTrend, 'sideway');
+      expect(r.shouldPush, isFalse);
+    });
+
+    test('TV4-3: PAT002 แตะเส้นเฝ้าระวัง + side way -> เฝ้าระวัง Lv 2', () {
+      final r = engine.assessV4(
+        levelMsl: 12.43,
+        previousMsl: 12.43,
+        bankM: 13.85,
+        watchM: 12.35,
+        criticalM: 13.85,
+        situationLevel: 4,
+      );
+      expect(r.score, 18.8);
+      expect(r.waterStageLevel, AlertLevel.watch);
+      expect(r.level, AlertLevel.watch);
+      expect(r.alertBasis, 'water_stage');
+      expect(r.waterTrend, 'sideway');
+      expect(r.shouldPush, isTrue);
+    });
+
+    test('TV4-4: แตะเส้นเฝ้าระวัง + ขึ้นเร็ว dH=+0.20 -> เตือนภัย Lv 3', () {
+      final r = engine.assessV4(
+        levelMsl: 15.70,
+        previousMsl: 15.50,
+        bankM: 16.50,
+        watchM: 15.50,
+        criticalM: 16.50,
+      );
+      expect(r.score, 25.0);
+      expect(r.waterStageLevel, AlertLevel.warning);
+      expect(r.level, AlertLevel.warning);
+      expect(r.alertBasis, 'water_stage');
+      expect(r.waterTrend, 'rising');
+      expect(r.shouldPush, isTrue);
+    });
+
+    test('TV4-5: แตะเส้นกึ่งกลาง (mid=16.00) + แนวโน้มสูงขึ้น -> เตือนภัย Lv 3', () {
+      final r = engine.assessV4(
+        levelMsl: 16.05,
+        previousMsl: 15.95,
+        bankM: 16.50,
+        watchM: 15.50,
+        criticalM: 16.50,
+      );
+      expect(r.score, 32.0);
+      expect(r.waterStageLevel, AlertLevel.warning);
+      expect(r.level, AlertLevel.warning);
+      expect(r.alertBasis, 'water_stage');
+      expect(r.waterTrend, 'rising');
+      expect(r.shouldPush, isTrue);
+    });
+
+    test('TV4-6: เหนือเส้นกึ่งกลางเกือบถึงตลิ่ง (high=16.25 <= 16.35 < 16.50) -> เตือนภัยสูง Lv 4', () {
+      final r = engine.assessV4(
+        levelMsl: 16.35,
+        previousMsl: 16.30,
+        bankM: 16.50,
+        watchM: 15.50,
+        criticalM: 16.50,
+      );
+      expect(r.score, 44.0);
+      expect(r.waterStageLevel, AlertLevel.high);
+      expect(r.level, AlertLevel.high);
+      expect(r.alertBasis, 'water_stage');
+      expect(r.waterTrend, 'sideway');
+      expect(r.shouldPush, isTrue);
+    });
+
+    test('TV4-7: เลยเส้นตลิ่ง (>= 16.50) แม้ situation_level=null -> อันตราย Lv 5', () {
+      final r = engine.assessV4(
+        levelMsl: 16.52,
+        previousMsl: 16.40,
+        bankM: 16.50,
+        watchM: 15.50,
+        criticalM: 16.50,
+      );
+      expect(r.score, 50.0);
+      expect(r.waterStageLevel, AlertLevel.danger);
+      expect(r.level, AlertLevel.danger);
+      expect(r.alertBasis, 'water_stage');
+      expect(r.waterTrend, 'rising');
+      expect(r.shouldPush, isTrue);
+    });
+
+    test('TV4-8: X.77 เกณฑ์วิกฤต สทภ.8 (39.70 ม.) -> อันตราย Lv 5', () {
+      final r = engine.assessV4(
+        levelMsl: 39.75,
+        previousMsl: 39.60,
+        bankM: 40.30,
+        watchM: 38.00,
+        criticalM: 39.70,
+      );
+      expect(r.score, 50.0);
+      expect(r.waterStageLevel, AlertLevel.danger);
+      expect(r.level, AlertLevel.danger);
+      expect(r.alertBasis, 'water_stage');
+      expect(r.waterTrend, 'rising');
+      expect(r.shouldPush, isTrue);
+    });
+
+    test('TV4-9: เตือนภัยล่วงหน้าฝนท่วมขังเขตเมือง (Option 1 สูงสุด Lv 3) พร้อมป้ายเหตุผล', () {
+      final r = engine.assessV4(
+        levelMsl: 14.20,
+        previousMsl: 14.15,
+        bankM: 16.50,
+        watchM: 15.50,
+        criticalM: 16.50,
+        rain24hMm: 155.0,
+        rain72hMm: 333.8,
+        api7dMm: 120.0,
+        isUrbanBasin: true,
+      );
+      expect(r.score, 23.3);
+      expect(r.waterStageLevel, AlertLevel.normal);
+      expect(r.level, AlertLevel.warning);
+      expect(r.alertBasis, 'rain_dam_early_warning');
+      expect(r.waterTrend, 'sideway');
+      expect(r.shouldPush, isTrue);
+    });
+
+    test('TV4-10: เขื่อนบางลางเปิด Spillway (Option 1 สูงสุด Lv 3) แม้ระดับน้ำยังต่ำกว่าเฝ้าระวัง', () {
+      final r = engine.assessV4(
+        levelMsl: 13.50,
+        previousMsl: 13.50,
+        bankM: 16.50,
+        watchM: 15.50,
+        criticalM: 16.50,
+        situationLevel: 3,
+        damSignal: 1.0,
+        damSpillwayActive: true,
+        leadTimeHours: '6–12 ชม.',
+      );
+      expect(r.score, 8.0);
+      expect(r.waterStageLevel, AlertLevel.normal);
+      expect(r.level, AlertLevel.warning);
+      expect(r.alertBasis, 'rain_dam_early_warning');
+      expect(r.waterTrend, 'sideway');
+      expect(r.shouldPush, isTrue);
+    });
+
+    test('TV4-11: อ.กาบัง (0 สถานีวัดน้ำ) ฝนหนักน้ำป่า (Option 1 สูงสุด Lv 3)', () {
+      final r = engine.assessV4(
+        rain1hMm: 51.0,
+        api7dMm: 110.0,
+        forecast24hMm: 72.0,
+        isFlashFlood: true,
+        hasWaterGauge: false,
+      );
+      expect(r.score, 26.7);
+      expect(r.waterStageLevel, AlertLevel.normal);
+      expect(r.level, AlertLevel.warning);
+      expect(r.alertBasis, 'rain_dam_early_warning');
+      expect(r.waterTrend, 'unknown');
+      expect(r.shouldPush, isTrue);
+    });
+
+    test('TV4-12: ThaiWater situation_level=5 ยืนยันล้นตลิ่ง -> อันตราย Lv 5', () {
+      final r = engine.assessV4(situationLevel: 5);
+      expect(r.score, 50.0);
+      expect(r.waterStageLevel, AlertLevel.normal);
+      expect(r.level, AlertLevel.danger);
+      expect(r.alertBasis, 'agency_overflow');
+      expect(r.waterTrend, 'unknown');
+      expect(r.shouldPush, isTrue);
+    });
+
+    test('TV4-13: เส้นกึ่งกลางพร้อมพุ่งขึ้นรุนแรง dH>=0.30 -> เตือนภัยสูง Lv 4', () {
+      final r = engine.assessV4(
+        levelMsl: 16.10,
+        previousMsl: 15.75,
+        bankM: 16.50,
+        watchM: 15.50,
+        criticalM: 16.50,
+      );
+      expect(r.score, 39.0);
+      expect(r.waterStageLevel, AlertLevel.high);
+      expect(r.level, AlertLevel.high);
+      expect(r.alertBasis, 'water_stage');
+      expect(r.waterTrend, 'rising');
+      expect(r.shouldPush, isTrue);
+    });
+
+    test('TV4-14: สถานีไร้ตลิ่ง + ThaiWater situation_level=4 -> Fallback เฝ้าระวัง Lv 2', () {
+      final r = engine.assessV4(
+        levelMsl: 101.0,
+        previousMsl: 101.0,
+        situationLevel: 4,
+      );
+      expect(r.score, 17.5);
+      expect(r.waterStageLevel, AlertLevel.watch);
+      expect(r.level, AlertLevel.watch);
+      expect(r.alertBasis, 'water_stage');
+      expect(r.waterTrend, 'sideway');
+      expect(r.shouldPush, isTrue);
+    });
+  });
+
+  group('AlertEngine.effectiveRisk & evaluate (Formula v4 Water-Stage 5 Levels)', () {
+    test('ThaiWater situation_level 5=อันตราย, 4=เฝ้าระวัง(ไร้ตลิ่ง), 1-3=ปกติ', () {
       expect(
-        engine.effectiveRisk(_station(code: 'A', situation: 4), const AlertSettings()),
+        engine.effectiveRisk(_station(code: 'A', situation: 5), const AlertSettings()),
         RiskLevel.danger,
       );
       expect(
-        engine.effectiveRisk(_station(code: 'B', situation: 3), const AlertSettings()),
-        RiskLevel.warning,
-      );
-      expect(
-        engine.effectiveRisk(_station(code: 'C', situation: 2), const AlertSettings()),
+        engine.effectiveRisk(_station(code: 'B', situation: 4), const AlertSettings()),
         RiskLevel.watch,
       );
+      expect(
+        engine.effectiveRisk(_station(code: 'C', situation: 3), const AlertSettings()),
+        RiskLevel.normal,
+      );
     });
 
-    test('ปรับเกณฑ์จากการตั้งค่าได้ (เตือนที่ระดับ 2)', () {
-      const settings = AlertSettings(warningLevel: 2, dangerLevel: 3);
+    test('ระดับน้ำเทียบเส้นเฝ้าระวัง/กึ่งกลาง/ตลิ่ง ครบ 5 ระดับ', () {
+      // bank=16.50, watch=15.00 (default crit-1.5), mid=15.75, high=16.125
       expect(
-        engine.effectiveRisk(_station(code: 'A', situation: 2), settings),
+        engine.effectiveRisk(_station(code: 'S1', wl: 14.50, bank: 16.50), const AlertSettings()),
+        RiskLevel.normal,
+      );
+      expect(
+        engine.effectiveRisk(_station(code: 'S2', wl: 15.20, bank: 16.50), const AlertSettings()),
+        RiskLevel.watch,
+      );
+      expect(
+        engine.effectiveRisk(_station(code: 'S3', wl: 15.80, bank: 16.50), const AlertSettings()),
         RiskLevel.warning,
       );
       expect(
-        engine.effectiveRisk(_station(code: 'B', situation: 3), settings),
+        engine.effectiveRisk(_station(code: 'S4', wl: 16.20, bank: 16.50), const AlertSettings()),
+        RiskLevel.high,
+      );
+      expect(
+        engine.effectiveRisk(_station(code: 'S5', wl: 16.55, bank: 16.50), const AlertSettings()),
         RiskLevel.danger,
       );
     });
 
-    test('คะแนนฝนสูงปรับระดับขึ้นได้เมื่อมีหลักฐานน้ำ', () {
+    test('คะแนนฝนสูงยกระดับได้สูงสุด Lv 3 (Option 1 cap) เมื่อมีหลักฐานน้ำ และไม่ดันเกิน Lv 3', () {
       const rain = RainForecast(score: 90, source: 'ThaiWater', summaryTh: 'ฝนตกหนัก');
-      final base = engine.effectiveRisk(
-        _station(code: 'A', situation: 3),
+      final watchBase = engine.effectiveRisk(
+        _station(code: 'A', wl: 15.20, bank: 16.50),
         const AlertSettings(),
       );
-      final withRain = engine.effectiveRisk(
-        _station(code: 'A', situation: 3),
+      final watchWithRain = engine.effectiveRisk(
+        _station(code: 'A', wl: 15.20, bank: 16.50),
         const AlertSettings(),
         rain: rain,
       );
-      expect(base, RiskLevel.warning);
-      expect(withRain, RiskLevel.danger);
+      expect(watchBase, RiskLevel.watch);
+      expect(watchWithRain, RiskLevel.warning);
+
+      final warnWithRain = engine.effectiveRisk(
+        _station(code: 'B', wl: 15.80, bank: 16.50),
+        const AlertSettings(),
+        rain: rain,
+      );
+      expect(warnWithRain, RiskLevel.warning);
+    });
+
+    test('QA MEDIUM-2 regression: evaluate() คงระดับผ่าน Hysteresis 3 ชม. แม้น้ำลดลงต่ำกว่าเส้นเฝ้าระวังชั่วคราว', () {
+      final t0 = DateTime(2026, 11, 27, 10, 0);
+      final memory = {
+        'X.40A': StationAlertMemory(
+          level: AlertLevel.high,
+          updatedAt: t0,
+          lastNotifiedAt: t0,
+        ),
+      };
+      // น้ำลดลงต่ำกว่าเส้นเฝ้าระวังชั่วคราวภายใน 1 ชม. (< 3 ชม.) -> ยังต้องคงระดับเตือนภัยสูงไว้
+      final held = engine.evaluate(
+        stations: [
+          _station(code: 'X.40A', wl: 14.80, prev: 15.20, bank: 16.50),
+        ],
+        memoryByStation: memory,
+        now: t0.add(const Duration(hours: 1)),
+      );
+      expect(held, isNotEmpty);
+      expect(held.first.level, RiskLevel.high);
+      expect(held.first.alertLevel, AlertLevel.high);
+
+      // หลังครบ 3 ชม. แล้ว -> ปล่อยให้กลับสู่ปกติได้
+      final released = engine.evaluate(
+        stations: [
+          _station(code: 'X.40A', wl: 14.80, prev: 15.20, bank: 16.50),
+        ],
+        memoryByStation: memory,
+        now: t0.add(const Duration(hours: 3, minutes: 5)),
+      );
+      expect(released, isEmpty);
     });
 
     test('ปิดการใช้คะแนนฝนแล้วระดับไม่เปลี่ยน', () {
       const rain = RainForecast(score: 95, source: 'ThaiWater', summaryTh: '');
       final level = engine.effectiveRisk(
-        _station(code: 'A', situation: 2),
+        _station(code: 'A', wl: 15.20, bank: 16.50),
         const AlertSettings(rainScoreEnabled: false),
         rain: rain,
       );
@@ -319,17 +601,17 @@ void main() {
 
     test('สร้างแจ้งเตือนเฉพาะสถานีที่ถึงเกณฑ์ และไม่ซ้ำใน Cooldown 30 นาที', () {
       final stations = [
-        _station(code: 'DANGER', situation: 4, wl: 13.0, bank: 13.85),
-        _station(code: 'WARN', situation: 3),
-        _station(code: 'WATCH', situation: 2),
-        _station(code: 'NORMAL', situation: 1),
+        _station(code: 'DANGER', wl: 16.60, bank: 16.50),
+        _station(code: 'HIGH', wl: 16.25, bank: 16.50),
+        _station(code: 'WARN', wl: 15.80, bank: 16.50),
+        _station(code: 'WATCH', wl: 15.20, bank: 16.50),
+        _station(code: 'NORMAL', wl: 14.00, bank: 16.50),
       ];
       final now = DateTime(2026, 11, 24, 12, 0);
       final first = engine.evaluate(stations: stations, now: now);
-      expect(first.map((a) => a.stationCode).toSet(), {'DANGER', 'WARN'});
+      expect(first.map((a) => a.stationCode).toSet(), {'DANGER', 'HIGH', 'WARN'});
       expect(first.first.level, RiskLevel.danger);
-      expect(first.first.message, contains('13.00'));
-      expect(first.first.message, contains('0.85'));
+      expect(first.first.message, contains('16.60'));
       expect(first.first.message, isNot(contains('คะแนนความเสี่ยง')));
 
       final withinCooldown = engine.evaluate(
@@ -342,8 +624,8 @@ void main() {
 
     test('กรองตามอำเภอที่เลือกได้ถูกต้อง', () {
       final stations = [
-        _station(code: 'A', situation: 4, amphoe: 'เมืองยะลา'),
-        _station(code: 'B', situation: 4, amphoe: 'เบตง'),
+        _station(code: 'A', wl: 16.60, bank: 16.50, amphoe: 'เมืองยะลา'),
+        _station(code: 'B', wl: 16.60, bank: 16.50, amphoe: 'เบตง'),
       ];
       final alerts = engine.evaluate(
         stations: stations,

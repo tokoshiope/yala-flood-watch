@@ -58,7 +58,8 @@ OPEN_METEO_FLOOD_URL = "https://flood-api.open-meteo.com/v1/flood"
 API_URL = WATERLEVEL_URL
 
 SCHEMA_VERSION = 2
-FORMULA_VERSION = 3
+FORMULA_VERSION = 4
+STEADY_BAND_M = 0.05
 HTTP_TIMEOUT = 15
 HTTP_RETRIES = 2
 HTTP_RETRY_BACKOFF = 0.9
@@ -67,7 +68,7 @@ MAX_STALE_MINUTES = 60
 RAIN_STALE_MINUTES = 90
 YALA_BBOX = (5.5, 7.2, 100.5, 101.9)  # lat_min, lat_max, lon_min, lon_max
 ICT = ZoneInfo("Asia/Bangkok")  # UTC+7
-USER_AGENT = "yala-flood-watch-pipeline/3.0 (+civic-open-data)"
+USER_AGENT = "yala-flood-watch-pipeline/4.0 (+civic-open-data)"
 
 FLASH_FLOOD_AMPHOES = {"บันนังสตา", "กรงปินัง", "เบตง", "กาบัง", "ธารโต"}
 URBAN_BASIN_AMPHOES = {"เมืองยะลา", "รามัน", "ยะหา"}
@@ -683,6 +684,365 @@ def compute_dam_signal(dam: dict | None, amphoe: str) -> tuple[float, bool, str 
     return 0.0, False, lead
 
 
+# ── Formula v4 Core Engine (Water-Stage Primary + Option 1 Early Warning, 100% Parity with Dart) ──
+
+def compute_alert_v4(
+    *,
+    level_msl: float | None,
+    previous_msl: float | None,
+    bank_m: float | None,
+    watch_m: float | None = None,
+    critical_m: float | None = None,
+    situation_level: int | None,
+    stale: bool,
+    rain_1h_mm: float = 0.0,
+    rain_24h_mm: float = 0.0,
+    rain_72h_mm: float = 0.0,
+    api_7d_mm: float = 0.0,
+    forecast_6h_mm: float = 0.0,
+    forecast_24h_mm: float = 0.0,
+    forecast_72h_mm: float = 0.0,
+    glofas_peak_ratio: float | None = None,
+    dam_signal: float = 0.0,
+    dam_spillway_active: bool = False,
+    community_reports_60m: int = 0,
+    is_flash_flood: bool = False,
+    is_urban_basin: bool = False,
+    has_water_gauge: bool = True,
+    rain_sensor_gap: bool = False,
+    h_normal_30d: float | None = None,
+    lead_time_hours: str | None = None,
+) -> dict:
+    """Water-Stage Primary Formula v4 evaluator (100% Parity with Dart AlertEngine.assessV4).
+
+    5-Level Physical Water-Stage Criteria (Founder Gate 2 DEC-021):
+      - Lv 1 ปกติ:        H < watch
+      - Lv 2 เฝ้าระวัง:    watch <= H < mid (side way / falling / slow rise dH < +0.15)
+      - Lv 3 เตือนภัย:     mid <= H < high (or watch <= H < mid with rapid rise dH >= +0.15)
+      - Lv 4 เตือนภัยสูง:  high <= H < crit (above mid, nearly at bank; or mid <= H < high with surge dH >= +0.30)
+      - Lv 5 อันตราย:     H >= crit (at or exceeding bank / RID8 critical line)
+
+    ThaiWater situation_level (1-5 capacity scale: 1=น้อยวิกฤต, 2=น้อย, 3=ปกติ, 4=มาก, 5=ล้นตลิ่ง):
+      - 1/2/3 are NEVER flood alerts.
+      - 5 confirms bank overflow (Lv 5).
+      - 4 is only a Lv 2 Watch fallback when the station has no bank/critical threshold.
+
+    Option 1 Non-Water Early Warning (Urban Pluvial / Flash Flood / Bang Lang Dam Spillway):
+      - Capped at Lv 3 with explicit alert_basis = "rain_dam_early_warning".
+    """
+    _ = h_normal_30d  # kept for signature compatibility
+    flags: list[str] = []
+    reason_codes: list[str] = []
+
+    if rain_sensor_gap:
+        flags.append("rain_sensor_gap")
+
+    # 1. Physical Water-Stage Thresholds (watch, mid, high, crit) & Trend (dH)
+    dh = 0.0
+    if level_msl is not None and previous_msl is not None and not stale:
+        dh = round(level_msl - previous_msl, 4)
+
+    if stale or level_msl is None:
+        water_trend = "unknown"
+    elif previous_msl is None:
+        water_trend = "sideway"
+    elif dh > STEADY_BAND_M:
+        water_trend = "rising"
+    elif dh < -STEADY_BAND_M:
+        water_trend = "falling"
+    else:
+        water_trend = "sideway"
+
+    crit = (
+        critical_m
+        if (critical_m is not None and critical_m > 0)
+        else (bank_m if (bank_m is not None and bank_m > 0) else None)
+    )
+    watch: float | None = None
+    mid_m: float | None = None
+    high_m: float | None = None
+    if crit is not None:
+        watch = watch_m if (watch_m is not None and watch_m > 0 and watch_m < crit) else (crit - 1.5)
+        mid_m = (watch + crit) / 2.0
+        high_m = (mid_m + crit) / 2.0
+
+    water_stage_level = 1
+    w_val = 0.0
+    if stale:
+        flags.append("water_stale")
+    elif crit is not None and watch is not None and mid_m is not None and high_m is not None and level_msl is not None:
+        if level_msl >= crit:
+            water_stage_level = 5
+            w_base = 1.0
+            flags.append("bank_overflow")
+            reason_codes.append("bank_overflow")
+        elif level_msl >= high_m:
+            water_stage_level = 4
+            w_base = 0.80 + 0.20 * (level_msl - high_m) / (crit - high_m)
+            flags.append("near_bank_high")
+            reason_codes.append("near_bank_high")
+        elif level_msl >= mid_m:
+            w_base = 0.60 + 0.20 * (level_msl - mid_m) / (high_m - mid_m)
+            if dh >= 0.30:
+                water_stage_level = 4
+                flags.append("mid_rapid_surge")
+                reason_codes.append("rapid_rise")
+                reason_codes.append("mid_bank_level")
+            else:
+                water_stage_level = 3
+                flags.append("mid_bank_warning")
+                reason_codes.append("mid_bank_level")
+                if dh > STEADY_BAND_M:
+                    reason_codes.append("rising_water")
+        elif level_msl >= watch:
+            w_base = 0.35 + 0.25 * (level_msl - watch) / (mid_m - watch)
+            if dh >= 0.15:
+                water_stage_level = 3
+                flags.append("watch_rapid_rise")
+                reason_codes.append("rising_water")
+                reason_codes.append("near_watch")
+            else:
+                water_stage_level = 2
+                flags.append("watch_sideway" if abs(dh) <= STEADY_BAND_M else "watch_level")
+                reason_codes.append("near_watch")
+        else:
+            water_stage_level = 1
+            w_base = 0.0
+
+        rise_bonus = 0.0
+        if level_msl >= watch:
+            if dh >= 0.30:
+                rise_bonus = 0.10
+                if "rapid_rise" not in flags:
+                    flags.append("rapid_rise")
+                if "rapid_rise" not in reason_codes:
+                    reason_codes.append("rapid_rise")
+            elif dh >= 0.15:
+                rise_bonus = 0.05
+                if "rising_watch" not in flags:
+                    flags.append("rising_watch")
+                if "rising_water" not in reason_codes:
+                    reason_codes.append("rising_water")
+        w_val = _clamp(w_base + rise_bonus, 0.0, 1.0)
+    else:
+        flags.append("no_water_signal")
+
+    # 2. ThaiWater situation_level (1-5 capacity scale; ONLY >=5 = overflow, 4 = fallback when unbanked)
+    agency_overflow_level = 1
+    if situation_level is not None and situation_level >= 5:
+        agency_overflow_level = 5
+        flags.append("thaiwater_overflow_sit5")
+        reason_codes.append("bank_overflow")
+        if crit is None or stale or level_msl is None:
+            w_val = 1.0
+    elif situation_level == 4 and (crit is None or level_msl is None) and not stale:
+        water_stage_level = max(water_stage_level, 2)
+        w_val = max(w_val, 0.35)
+        flags.append("w_from_situation_high_fallback")
+
+    # 3. R (Multi-Window Observed Rain: 1h / 24h / 72h)
+    r_val = _clamp(
+        max(
+            max(0.0, rain_1h_mm) / 60.0,
+            max(0.0, rain_24h_mm) / 150.0,
+            max(0.0, rain_72h_mm) / 260.0,
+        ),
+        0.0,
+        1.0,
+    )
+    if r_val >= 0.65:
+        reason_codes.append("heavy_rain")
+
+    # 4. A (Antecedent Wetness API 7-day)
+    a_val = _clamp(max(0.0, api_7d_mm) / 180.0, 0.0, 1.0)
+    if a_val >= 0.65:
+        reason_codes.append("saturated_soil")
+
+    # 5. F (Multi-Window Forecast Rain + GloFAS Ratio)
+    f_rain = max(
+        max(0.0, forecast_6h_mm) / 50.0,
+        max(0.0, forecast_24h_mm) / 110.0,
+        max(0.0, forecast_72h_mm) / 200.0,
+    )
+    glofas_bonus = 0.0
+    if glofas_peak_ratio is not None:
+        if glofas_peak_ratio >= 3.0:
+            glofas_bonus = 0.25
+            flags.append("glofas_high_surge")
+            reason_codes.append("river_surge_forecast")
+        elif glofas_peak_ratio >= 2.0:
+            glofas_bonus = 0.15
+            flags.append("glofas_elevated")
+            reason_codes.append("river_surge_forecast")
+    f_val = _clamp(f_rain + glofas_bonus, 0.0, 1.0)
+    if f_rain >= 0.60:
+        reason_codes.append("heavy_forecast")
+
+    # 6. D (Bang Lang Dam downstream risk)
+    d_val = _clamp(dam_signal, 0.0, 1.0)
+    if dam_spillway_active:
+        flags.append("dam_spillway_active")
+        reason_codes.append("dam_spillway")
+    elif d_val >= 0.45:
+        reason_codes.append("dam_high_flow")
+
+    # 7. C (Verified community reports, trust >= 3)
+    c_val = _clamp(max(0, community_reports_60m) / 5.0, 0.0, 1.0)
+    if c_val >= 0.60:
+        reason_codes.append("community_reports")
+
+    # 8. Diagnostic Multi-Signal Score (0..100, half-up 1 decimal — used for ranking, not overriding water stage)
+    raw = (
+        0.50 * w_val
+        + 0.18 * r_val
+        + 0.08 * a_val
+        + 0.10 * f_val
+        + 0.08 * d_val
+        + 0.06 * c_val
+    )
+    score = _clamp(_round_half_up(100.0 * raw, 1), 0.0, 100.0)
+    if score < 20.0:
+        score_level = 1
+    elif score < 40.0:
+        score_level = 2
+    elif score < 60.0:
+        score_level = 3
+    elif score < 80.0:
+        score_level = 4
+    else:
+        score_level = 5
+
+    # 9. Option 1 Non-Water Early Warning (Urban Pluvial / Flash Flood / Bang Lang Dam — CAPPED at Lv 3)
+    early_warning_level = 1
+    urban_pluvial_triggered = False
+    flash_early_triggered = False
+    dam_early_triggered = False
+
+    if dam_spillway_active:
+        early_warning_level = max(early_warning_level, 3)
+        dam_early_triggered = True
+        flags.append("dam_spillway_floor_lv3")
+    elif d_val >= 0.75:
+        early_warning_level = max(early_warning_level, 2)
+        dam_early_triggered = True
+        flags.append("dam_high_flow_watch")
+
+    if is_urban_basin:
+        urban_rain = (rain_1h_mm >= 45.0) or (rain_24h_mm >= 140.0) or (rain_72h_mm >= 240.0)
+        urban_confirm = (a_val >= 0.50) or (forecast_6h_mm >= 30.0) or (rain_1h_mm >= 55.0)
+        if urban_rain and urban_confirm:
+            urban_pluvial_triggered = True
+            early_warning_level = max(early_warning_level, 3)
+            flags.append("urban_pluvial_override")
+            reason_codes.append("urban_flood_risk")
+
+    if is_flash_flood:
+        if (r_val >= 0.65 and (a_val >= 0.50 or f_val >= 0.50 or c_val >= 0.60)) or r_val >= 0.85:
+            flash_early_triggered = True
+            early_warning_level = max(early_warning_level, 3)
+            flags.append("flash_flood_early_warning")
+            reason_codes.append("flash_flood_risk")
+        elif r_val >= 0.65 or c_val >= 0.60 or (a_val >= 0.70 and r_val >= 0.45):
+            flash_early_triggered = True
+            early_warning_level = max(early_warning_level, 2)
+            flags.append("flash_flood_watch")
+            reason_codes.append("flash_flood_risk")
+
+    early_warning_level = min(early_warning_level, 3)
+
+    # 10. Final Level & Transparent Alert Basis
+    level = max(water_stage_level, agency_overflow_level, early_warning_level)
+
+    if agency_overflow_level >= 5 and water_stage_level < 5:
+        alert_basis = "agency_overflow"
+    elif level > water_stage_level and level == early_warning_level:
+        alert_basis = "rain_dam_early_warning"
+        flags.append("early_warning_non_water")
+    elif water_stage_level >= 2:
+        alert_basis = "water_stage"
+    else:
+        alert_basis = "monitoring"
+
+    # 11. Flood mechanism classification
+    if dam_spillway_active or dam_early_triggered:
+        flood_mechanism = "dam_release"
+    elif urban_pluvial_triggered and water_stage_level < 3:
+        flood_mechanism = "urban_pluvial"
+    elif flash_early_triggered and water_stage_level < 3:
+        flood_mechanism = "flash_flood"
+    elif water_stage_level >= 2 or agency_overflow_level >= 5:
+        flood_mechanism = "riverine_overflow"
+    else:
+        flood_mechanism = "monitoring"
+
+    # 12. Confidence assessment
+    if stale or (not has_water_gauge and rain_sensor_gap):
+        confidence = "low"
+    elif rain_sensor_gap or not has_water_gauge or (crit is None and situation_level is None):
+        confidence = "medium"
+    else:
+        confidence = "high"
+
+    # 13. Push eligibility (Water Stage >= 2 OR verified non-water early warning)
+    has_primary_signal = (
+        water_stage_level >= 2
+        or agency_overflow_level >= 5
+        or dam_spillway_active
+        or d_val >= 0.75
+        or urban_pluvial_triggered
+        or c_val >= 0.60
+        or (
+            flash_early_triggered
+            and (
+                (not has_water_gauge and r_val >= 0.65 and (a_val >= 0.50 or f_val >= 0.50))
+                or r_val >= 0.85
+            )
+        )
+    )
+    should_push = (level >= 2) and has_primary_signal
+
+    # Deduplicate reason codes preserving order
+    unique_reasons: list[str] = []
+    for rc in reason_codes:
+        if rc not in unique_reasons:
+            unique_reasons.append(rc)
+
+    meta = LEVEL_META[level]
+    return {
+        "formula_version": FORMULA_VERSION,
+        "score": score,
+        "score_level": score_level,
+        "water_stage_level": water_stage_level,
+        "early_warning_level": early_warning_level,
+        "floor_level": agency_overflow_level,
+        "flash_bonus": 1 if flash_early_triggered else 0,
+        "level": level,
+        "label_th": meta["label_th"],
+        "color": meta["color"],
+        "action_th": meta["action_th"],
+        "alert_basis": alert_basis,
+        "water_trend": water_trend,
+        "should_push": should_push,
+        "has_primary_signal": has_primary_signal,
+        "flood_mechanism": flood_mechanism,
+        "confidence": confidence,
+        "reason_codes": unique_reasons,
+        "lead_time_hours": lead_time_hours if (dam_spillway_active or d_val >= 0.45) else None,
+        "signals": {
+            "W": round(w_val, 4),
+            "R": round(r_val, 4),
+            "A": round(a_val, 4),
+            "F": round(f_val, 4),
+            "D": round(d_val, 4),
+            "C": round(c_val, 4),
+            "dH_m": dh,
+        },
+        "flags": flags,
+    }
+
+
+# ── Legacy Formula v3 Core Engine (kept for regression/comparison reference) ──
+
 def compute_alert_v3(
     *,
     level_msl: float | None,
@@ -943,7 +1303,7 @@ def compute_alert_v3(
 
     meta = LEVEL_META[level]
     return {
-        "formula_version": FORMULA_VERSION,
+        "formula_version": 3,
         "score": score,
         "score_level": score_level,
         "floor_level": floor_level,
@@ -1202,7 +1562,7 @@ def normalize(
         critical_m = _to_float(reg_dict.get("critical_m")) or bank
 
         sit_raw = _to_int(r.get("situation_level"))
-        situation = sit_raw if (sit_raw is not None and 1 <= sit_raw <= 4) else None
+        situation = sit_raw if (sit_raw is not None and 1 <= sit_raw <= 5) else None
 
         storage = _to_float(r.get("storage_percent"))
         storage_anomaly = False
@@ -1268,7 +1628,7 @@ def normalize(
         is_flash = (reg_dict.get("risk_zone") == "flash") or (amphoe in FLASH_FLOOD_AMPHOES)
         is_urban = amphoe in URBAN_BASIN_AMPHOES
 
-        assessment = compute_alert_v3(
+        assessment = compute_alert_v4(
             level_msl=lvl,
             previous_msl=prev_lvl,
             bank_m=bank,
@@ -1302,6 +1662,15 @@ def normalize(
         tele_station_id = _to_int(st.get("id"))
         station_type = str(r.get("station_type") or "tele_waterlevel").strip() or "tele_waterlevel"
 
+        eff_crit = critical_m if (critical_m is not None and critical_m > 0) else bank
+        eff_watch = (
+            watch_m
+            if (watch_m is not None and eff_crit is not None and 0 < watch_m < eff_crit)
+            else ((eff_crit - 1.5) if eff_crit is not None else None)
+        )
+        mid_m = round((eff_watch + eff_crit) / 2.0, 3) if (eff_watch is not None and eff_crit is not None) else None
+        high_m = round((mid_m + eff_crit) / 2.0, 3) if (mid_m is not None and eff_crit is not None) else None
+
         rec = {
             "id": r.get("id"),
             "tele_station_id": tele_station_id,
@@ -1321,6 +1690,8 @@ def normalize(
             "previous_msl": prev_lvl,
             "bank_m": bank,
             "watch_m": watch_m,
+            "mid_m": mid_m,
+            "high_m": high_m,
             "critical_m": critical_m,
             "bank_source": bank_source,
             "remaining_to_bank_m": round(bank - lvl, 3) if (bank is not None and lvl is not None) else None,
@@ -1457,7 +1828,7 @@ def build_amphoe_summaries(
             gov_station = worst["oldcode"]
         else:
             # Amphoe with 0 water gauges (e.g., อ.กาบัง) — evaluated via real-time rain + API_7d + Open-Meteo forecast!
-            assessment = compute_alert_v3(
+            assessment = compute_alert_v4(
                 level_msl=None,
                 previous_msl=None,
                 bank_m=None,

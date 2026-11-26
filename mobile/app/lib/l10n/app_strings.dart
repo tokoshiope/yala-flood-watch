@@ -1063,6 +1063,18 @@ class AppStrings {
       'zh': '警戒',
       'ms': 'Waspada',
     },
+    'mid_level_label': {
+      'th': 'กึ่งกลาง',
+      'en': 'Mid',
+      'zh': '中线',
+      'ms': 'Tengah',
+    },
+    'early_warning_rain_dam_badge': {
+      'th': 'เตือนภัยล่วงหน้าจากฝน/เขื่อน',
+      'en': 'Rain / Dam Early Warning',
+      'zh': '降雨/水坝提前预警',
+      'ms': 'Amaran Awal Hujan / Empangan',
+    },
     'min_label': {'th': 'ต่ำสุด', 'en': 'Min', 'zh': '最低', 'ms': 'Min'},
     'max_label': {'th': 'สูงสุด', 'en': 'Max', 'zh': '最高', 'ms': 'Maks'},
     'rain_bar_tap_hint': {
@@ -1213,15 +1225,15 @@ class AppStrings {
     },
   };
 
-  // ── 5 Alert Levels: Labels, Criteria & Actions (All 4 Languages) ───────
+  // ── 5 Alert Levels: Labels, Criteria & Actions (All 4 Languages · formula_version = 4) ──
   static const Map<int, Map<String, Map<String, String>>> _alertLevels = {
     1: {
       'label': {'th': 'ปกติ', 'en': 'Normal', 'zh': '正常', 'ms': 'Normal'},
       'desc': {
-        'th': 'ระดับน้ำต่ำกว่าเกณฑ์เฝ้าระวัง ปริมาณฝนและการระบายเขื่อนบางลางอยู่ในเกณฑ์ปกติ',
-        'en': 'River levels are below watch thresholds; rainfall and Bang Lang Dam operations are normal.',
-        'zh': '河流水位低于警戒线，降雨量与邦朗水坝调度均处于正常水平。',
-        'ms': 'Paras sungai di bawah paras berjaga-jaga; hujan dan operasi Empangan Bang Lang adalah normal.',
+        'th': 'ระดับน้ำต่ำกว่าเส้นเฝ้าระวัง ปริมาณฝนและการระบายเขื่อนบางลางอยู่ในเกณฑ์ปกติ',
+        'en': 'Water level is below the watch line; rainfall and Bang Lang Dam operations are normal.',
+        'zh': '水位低于警戒线，降雨与邦朗水坝调度正常。',
+        'ms': 'Paras air di bawah garis waspada; hujan dan operasi Empangan Bang Lang normal.',
       },
       'action': {
         'th': 'ติดตามสถานการณ์ได้ตามปกติ',
@@ -1233,10 +1245,10 @@ class AppStrings {
     2: {
       'label': {'th': 'เฝ้าระวัง', 'en': 'Watch', 'zh': '关注警戒', 'ms': 'Waspada'},
       'desc': {
-        'th': 'ระดับน้ำเริ่มสูงขึ้นเข้าใกล้จุดเฝ้าระวัง หรือมีฝนตกสะสม/พยากรณ์ฝนหนักในลุ่มน้ำ',
-        'en': 'Water levels are rising toward watch thresholds or heavy cumulative/forecast rain is detected.',
-        'zh': '河流水位开始上升接近警戒线，或流域出现强累积降雨/强降雨预报。',
-        'ms': 'Paras air mula meningkat menghampiri tahap waspada atau hujan lebat/ramalan hujan dikesan.',
+        'th': 'ระดับน้ำแตะเส้นเฝ้าระวังและมีแนวโน้มทรงตัว (side way) หรือมีสัญญาณฝน/เขื่อนบางลางให้เฝ้าระวัง',
+        'en': 'Water level has reached the watch line with a sideways/steady trend, or early rain/dam watch is active.',
+        'zh': '水位触及警戒线且呈横盘平稳走势，或触发降雨/水坝关注信号。',
+        'ms': 'Paras air mencecah garis waspada dengan aliran mendatar (side way), atau isyarat awal hujan/empangan aktif.',
       },
       'action': {
         'th': 'ติดตามข่าวใกล้ชิด เตรียมถุงยังชีพและชาร์จแบตเตอรี่โทรศัพท์',
@@ -1248,10 +1260,10 @@ class AppStrings {
     3: {
       'label': {'th': 'เตือนภัย', 'en': 'Warning', 'zh': '洪水预警', 'ms': 'Amaran'},
       'desc': {
-        'th': 'ระดับน้ำใกล้ตลิ่งและขึ้นเร็ว ฝนตกหนักเสี่ยงท่วมขังเขตเมือง/น้ำป่า หรือเขื่อนบางลางเปิดระบายน้ำล้น',
-        'en': 'Water is near bank and rising fast, heavy urban/flash flood rain is underway, or Bang Lang spillway is active.',
-        'zh': '水位接近堤岸且快速上涨、城区强降雨易致内涝/山洪，或邦朗水坝已开启溢洪道泄洪。',
-        'ms': 'Air hampir tebing dan naik cepat, hujan lebat risiko banjir kilat/bandar, atau limpahan Empangan Bang Lang aktif.',
+        'th': 'ระดับน้ำมีแนวโน้มสูงขึ้นอยู่ที่เส้นกึ่งกลางระหว่างเฝ้าระวังกับตลิ่ง (หรือเตือนภัยล่วงหน้าจากฝนหนัก/เขื่อนบางลาง สูงสุดระดับ 3)',
+        'en': 'Water is rising at the midpoint between watch and bank lines (or non-water early warning from heavy rain/dam spillway, capped at Level 3).',
+        'zh': '水位呈上涨趋势并达警戒线与堤岸线中点（或强降雨/邦朗水坝泄洪提前预警，最高3级）。',
+        'ms': 'Paras air meningkat di paras pertengahan antara garis waspada dan tebing (atau amaran awal hujan lebat/empangan, had Tahap 3).',
       },
       'action': {
         'th': 'ยกของขึ้นที่สูง เตรียมเส้นทางและแผนอพยพผู้สูงอายุ/ผู้ป่วย',
@@ -1263,10 +1275,10 @@ class AppStrings {
     4: {
       'label': {'th': 'เตือนภัยสูง', 'en': 'High Alert', 'zh': '高度警报', 'ms': 'Amaran Tinggi'},
       'desc': {
-        'th': 'ระดับน้ำแตะหรือเริ่มล้นตลิ่ง พื้นที่ลุ่มต่ำและถนนริมน้ำเริ่มได้รับผลกระทบ',
-        'en': 'River water has reached or begun overflowing banks; low-lying areas and riverside roads are impacted.',
-        'zh': '河水已达或开始漫过堤岸，低洼社区及沿河道路开始受淹。',
-        'ms': 'Paras sungai telah mencecah atau melimpahi tebing; kawasan rendah dan jalan tepi sungai mula terjejas.',
+        'th': 'ระดับน้ำสูงกว่าเส้นกึ่งกลางเข้าใกล้เส้นตลิ่ง (75%–99% ของช่วงเฝ้าระวังถึงตลิ่ง) เสี่ยงล้นตลิ่งในไม่ช้า',
+        'en': 'Water level is above the midpoint and nearly reaching the bank line (75%–99% of watch-to-bank range); overflow imminent.',
+        'zh': '水位高于中点并逼近堤岸线（警戒至堤岸区间的 75%–99%），即将漫堤。',
+        'ms': 'Paras air melebihi garisan tengah dan hampir mencecah tebing (75%–99% julat waspada ke tebing).',
       },
       'action': {
         'th': 'พร้อมอพยพทันที ติดตามประกาศ ปภ.ยะลา (073-203559) และตัดไฟชั้นล่างหากน้ำเข้า',
@@ -1278,10 +1290,10 @@ class AppStrings {
     5: {
       'label': {'th': 'อันตราย', 'en': 'Danger / Evacuate', 'zh': '极度危险 / 撤离', 'ms': 'Bahaya / Pindah'},
       'desc': {
-        'th': 'น้ำล้นตลิ่งรุนแรง (≥ +0.5 ม.) หรือน้ำป่าไหลหลากเข้าท่วมพื้นที่ชุมชน',
-        'en': 'Severe bank overflow (≥ +0.5 m) or violent flash flooding inundating residential areas.',
-        'zh': '严重漫堤洪水（超堤岸 ≥ 0.5 米）或猛烈山洪已淹没居民区。',
-        'ms': 'Limpahan tebing serius (≥ +0.5 m) atau banjir kilat deras melanda kawasan penempatan.',
+        'th': 'ระดับน้ำเลยเส้นตลิ่งแล้ว พื้นที่ลุ่มต่ำและชุมชนริมน้ำกำลังถูกน้ำท่วม',
+        'en': 'Water level has exceeded the bank line; low-lying and riverside communities are flooding.',
+        'zh': '水位已漫过堤岸线，低洼地区及沿河社区正在受淹。',
+        'ms': 'Paras air telah melepasi garis tebing; kawasan rendah dan komuniti tepi sungai sedang dilanda banjir.',
       },
       'action': {
         'th': 'อพยพทันทีไปยังศูนย์พักพิงปลอดภัย หากติดค้างโทร 1784 / 073-203559 / 1669',
@@ -1567,6 +1579,7 @@ class AppStrings {
       RiskLevel.normal => alertLevelLabel(1),
       RiskLevel.watch => alertLevelLabel(2),
       RiskLevel.warning => alertLevelLabel(3),
+      RiskLevel.high => alertLevelLabel(4),
       RiskLevel.danger => alertLevelLabel(5),
       RiskLevel.unknown => get('unknown'),
     };
@@ -1683,6 +1696,7 @@ class AppStrings {
   String stationGuidance(RiskLevel level, String amphoeTh) {
     final int lv = switch (level) {
       RiskLevel.danger => 5,
+      RiskLevel.high => 4,
       RiskLevel.warning => 3,
       RiskLevel.watch => 2,
       RiskLevel.normal => 1,

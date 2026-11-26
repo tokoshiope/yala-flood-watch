@@ -7,7 +7,60 @@ import 'package:yala_flood_app/models/rain_forecast.dart';
 import 'package:yala_flood_app/models/risk_level.dart';
 import 'package:yala_flood_app/models/station.dart';
 
-/// ผลลัพธ์การคำนวณ Alert Score formula_version = 3 (100% Parity กับ backend/pipeline.py compute_alert_v3)
+/// ผลลัพธ์การคำนวณ Alert Score formula_version = 4 (100% Parity กับ backend/pipeline.py compute_alert_v4)
+class AssessmentV4 {
+  const AssessmentV4({
+    required this.score,
+    required this.scoreLevel,
+    required this.waterStageLevel,
+    required this.earlyWarningLevel,
+    required this.floorLevel,
+    required this.flashBonus,
+    required this.level,
+    required this.alertBasis,
+    required this.waterTrend,
+    required this.shouldPush,
+    required this.hasPrimarySignal,
+    required this.floodMechanism,
+    required this.confidence,
+    required this.w,
+    required this.r,
+    required this.a,
+    required this.f,
+    required this.d,
+    required this.c,
+    required this.dH,
+    this.leadTimeHours,
+    this.reasonCodes = const <String>[],
+    this.flags = const <String>[],
+  });
+
+  final double score;
+  final AlertLevel scoreLevel;
+  final AlertLevel waterStageLevel;
+  final AlertLevel earlyWarningLevel;
+  final AlertLevel floorLevel;
+  final int flashBonus;
+  final AlertLevel level;
+  final String alertBasis;
+  final String waterTrend;
+  final bool shouldPush;
+  final bool hasPrimarySignal;
+  final String floodMechanism;
+  final String confidence;
+  final double w;
+  final double r;
+  final double a;
+  final double f;
+  final double d;
+  final double c;
+  final double dH;
+  final String? leadTimeHours;
+  final List<String> reasonCodes;
+  final List<String> flags;
+}
+
+/// ผลลัพธ์การคำนวณ Alert Score formula_version = 3 (คงไว้เพื่อชุดทดสอบย้อนหลัง)
 class AssessmentV3 {
   const AssessmentV3({
     required this.score,
@@ -105,7 +158,7 @@ class StationAlertMemory {
 /// ตรรกะหลักในการประเมินความเสี่ยงและสร้างแจ้งเตือนภัยน้ำท่วมล่วงหน้า
 ///
 /// รองรับทั้ง:
-/// 1) [assessV3] — สูตร `formula_version = 3` (W+dH/dt, R1/24/72, A API_7d, F+GloFAS, D เขื่อนบางลาง, C) ตรงกับ Python 100%
+/// 1) [assessV4] — สูตร `formula_version = 4` (เกณฑ์ระดับน้ำ 5 ขั้น + แนวโน้ม side way/สูงขึ้น + เตือนฝน/เขื่อนสูงสุด Lv 3) ตรงกับ Python 100%
 /// 2) [effectiveRisk] และ [evaluate] — แปลงระดับ + กรองอำเภอ + Hysteresis 3 ชม. + Cooldown 30 นาที
 class AlertEngine {
   const AlertEngine();
@@ -113,6 +166,331 @@ class AlertEngine {
   /// ปัดเศษแบบ half-up ทศนิยม 1 ตำแหน่งให้ตรงกับ Python 100% (กัน NaN/Infinity แบบ Fail-Closed)
   static double _roundHalfUp1(double value) =>
       value.isFinite ? (value * 10.0 + 0.5 + 1e-9).floor() / 10.0 : 0.0;
+
+  /// สูตรแจ้งเตือนหลัก `formula_version = 4` (ตรงกับ backend/pipeline.py compute_alert_v4 100%)
+  AssessmentV4 assessV4({
+    double? levelMsl,
+    double? previousMsl,
+    double? bankM,
+    double? watchM,
+    double? criticalM,
+    int? situationLevel,
+    bool stale = false,
+    double rain1hMm = 0.0,
+    double rain24hMm = 0.0,
+    double rain72hMm = 0.0,
+    double api7dMm = 0.0,
+    double forecast6hMm = 0.0,
+    double forecast24hMm = 0.0,
+    double forecast72hMm = 0.0,
+    double? glofasPeakRatio,
+    double damSignal = 0.0,
+    bool damSpillwayActive = false,
+    int communityReports60m = 0,
+    bool isFlashFlood = false,
+    bool isUrbanBasin = false,
+    bool hasWaterGauge = true,
+    bool rainSensorGap = false,
+    double? hNormal30d,
+    String? leadTimeHours,
+  }) {
+    final flags = <String>[];
+    final reasonCodes = <String>[];
+
+    if (rainSensorGap) {
+      flags.add('rain_sensor_gap');
+    }
+
+    // 1. Physical Water-Stage Thresholds (watch, mid, high, crit) & Trend (dH)
+    var dH = 0.0;
+    if (levelMsl != null && previousMsl != null && !stale) {
+      dH = ((levelMsl - previousMsl) * 10000).round() / 10000.0;
+    }
+
+    final String waterTrend;
+    if (stale || levelMsl == null) {
+      waterTrend = 'unknown';
+    } else if (previousMsl == null) {
+      waterTrend = 'sideway';
+    } else if (dH > AppConfig.steadyBandMeters) {
+      waterTrend = 'rising';
+    } else if (dH < -AppConfig.steadyBandMeters) {
+      waterTrend = 'falling';
+    } else {
+      waterTrend = 'sideway';
+    }
+
+    final crit = (criticalM != null && criticalM > 0)
+        ? criticalM
+        : ((bankM != null && bankM > 0) ? bankM : null);
+    final watch = crit != null
+        ? ((watchM != null && watchM > 0 && watchM < crit) ? watchM : (crit - 1.5))
+        : null;
+    final midM = (crit != null && watch != null) ? (watch + crit) / 2.0 : null;
+    final highM = (crit != null && midM != null) ? (midM + crit) / 2.0 : null;
+
+    var waterStageLevel = AlertLevel.normal;
+    var wVal = 0.0;
+    if (stale) {
+      flags.add('water_stale');
+    } else if (crit != null &&
+        watch != null &&
+        midM != null &&
+        highM != null &&
+        levelMsl != null) {
+      double wBase;
+      if (levelMsl >= crit) {
+        waterStageLevel = AlertLevel.danger;
+        wBase = 1.0;
+        flags.add('bank_overflow');
+        reasonCodes.add('bank_overflow');
+      } else if (levelMsl >= highM) {
+        waterStageLevel = AlertLevel.high;
+        wBase = 0.80 + 0.20 * (levelMsl - highM) / (crit - highM);
+        flags.add('near_bank_high');
+        reasonCodes.add('near_bank_high');
+      } else if (levelMsl >= midM) {
+        wBase = 0.60 + 0.20 * (levelMsl - midM) / (highM - midM);
+        if (dH >= 0.30) {
+          waterStageLevel = AlertLevel.high;
+          flags.add('mid_rapid_surge');
+          reasonCodes.add('rapid_rise');
+          reasonCodes.add('mid_bank_level');
+        } else {
+          waterStageLevel = AlertLevel.warning;
+          flags.add('mid_bank_warning');
+          reasonCodes.add('mid_bank_level');
+          if (dH > AppConfig.steadyBandMeters) {
+            reasonCodes.add('rising_water');
+          }
+        }
+      } else if (levelMsl >= watch) {
+        wBase = 0.35 + 0.25 * (levelMsl - watch) / (midM - watch);
+        if (dH >= 0.15) {
+          waterStageLevel = AlertLevel.warning;
+          flags.add('watch_rapid_rise');
+          reasonCodes.add('rising_water');
+          reasonCodes.add('near_watch');
+        } else {
+          waterStageLevel = AlertLevel.watch;
+          flags.add(dH.abs() <= AppConfig.steadyBandMeters ? 'watch_sideway' : 'watch_level');
+          reasonCodes.add('near_watch');
+        }
+      } else {
+        waterStageLevel = AlertLevel.normal;
+        wBase = 0.0;
+      }
+
+      var riseBonus = 0.0;
+      if (levelMsl >= watch) {
+        if (dH >= 0.30) {
+          riseBonus = 0.10;
+          if (!flags.contains('rapid_rise')) flags.add('rapid_rise');
+          if (!reasonCodes.contains('rapid_rise')) reasonCodes.add('rapid_rise');
+        } else if (dH >= 0.15) {
+          riseBonus = 0.05;
+          if (!flags.contains('rising_watch')) flags.add('rising_watch');
+          if (!reasonCodes.contains('rising_water')) reasonCodes.add('rising_water');
+        }
+      }
+      wVal = (wBase + riseBonus).clamp(0.0, 1.0);
+    } else {
+      flags.add('no_water_signal');
+    }
+
+    // 2. ThaiWater situation_level (1-5 capacity scale; ONLY >=5 = overflow, 4 = fallback when unbanked)
+    var agencyOverflowLevel = AlertLevel.normal;
+    if (situationLevel != null && situationLevel >= 5) {
+      agencyOverflowLevel = AlertLevel.danger;
+      flags.add('thaiwater_overflow_sit5');
+      reasonCodes.add('bank_overflow');
+      if (crit == null || stale || levelMsl == null) {
+        wVal = 1.0;
+      }
+    } else if (situationLevel == 4 && (crit == null || levelMsl == null) && !stale) {
+      waterStageLevel = waterStageLevel.maxWith(AlertLevel.watch);
+      wVal = math.max(wVal, 0.35);
+      flags.add('w_from_situation_high_fallback');
+    }
+
+    // 3. R (Multi-Window Observed Rain: 1h / 24h / 72h)
+    final rVal = math
+        .max(
+          math.max(math.max(0.0, rain1hMm) / 60.0, math.max(0.0, rain24hMm) / 150.0),
+          math.max(0.0, rain72hMm) / 260.0,
+        )
+        .clamp(0.0, 1.0);
+    if (rVal >= 0.65) reasonCodes.add('heavy_rain');
+
+    // 4. A (Antecedent Wetness API 7-day)
+    final aVal = (math.max(0.0, api7dMm) / 180.0).clamp(0.0, 1.0);
+    if (aVal >= 0.65) reasonCodes.add('saturated_soil');
+
+    // 5. F (Multi-Window Forecast Rain + GloFAS Ratio)
+    final fRain = math.max(
+      math.max(math.max(0.0, forecast6hMm) / 50.0, math.max(0.0, forecast24hMm) / 110.0),
+      math.max(0.0, forecast72hMm) / 200.0,
+    );
+    var glofasBonus = 0.0;
+    if (glofasPeakRatio != null) {
+      if (glofasPeakRatio >= 3.0) {
+        glofasBonus = 0.25;
+        flags.add('glofas_high_surge');
+        reasonCodes.add('river_surge_forecast');
+      } else if (glofasPeakRatio >= 2.0) {
+        glofasBonus = 0.15;
+        flags.add('glofas_elevated');
+        reasonCodes.add('river_surge_forecast');
+      }
+    }
+    final fVal = (fRain + glofasBonus).clamp(0.0, 1.0);
+    if (fRain >= 0.60) reasonCodes.add('heavy_forecast');
+
+    // 6. D (Bang Lang Dam downstream risk)
+    final dVal = damSignal.clamp(0.0, 1.0);
+    if (damSpillwayActive) {
+      flags.add('dam_spillway_active');
+      reasonCodes.add('dam_spillway');
+    } else if (dVal >= 0.45) {
+      reasonCodes.add('dam_high_flow');
+    }
+
+    // 7. C (Verified community reports, trust >= 3)
+    final cVal = (math.max(0, communityReports60m) / 5.0).clamp(0.0, 1.0);
+    if (cVal >= 0.60) reasonCodes.add('community_reports');
+
+    // 8. Diagnostic Multi-Signal Score (0..100, half-up 1 decimal)
+    final raw =
+        0.50 * wVal + 0.18 * rVal + 0.08 * aVal + 0.10 * fVal + 0.08 * dVal + 0.06 * cVal;
+    final score = _roundHalfUp1(100.0 * raw).clamp(0.0, 100.0);
+    final scoreLevel = AlertLevel.fromScore(score);
+
+    // 9. Option 1 Non-Water Early Warning (Urban Pluvial / Flash Flood / Bang Lang Dam — CAPPED at Lv 3)
+    var earlyWarningLevel = AlertLevel.normal;
+    var urbanPluvialTriggered = false;
+    var flashEarlyTriggered = false;
+    var damEarlyTriggered = false;
+
+    if (damSpillwayActive) {
+      earlyWarningLevel = earlyWarningLevel.maxWith(AlertLevel.warning);
+      damEarlyTriggered = true;
+      flags.add('dam_spillway_floor_lv3');
+    } else if (dVal >= 0.75) {
+      earlyWarningLevel = earlyWarningLevel.maxWith(AlertLevel.watch);
+      damEarlyTriggered = true;
+      flags.add('dam_high_flow_watch');
+    }
+
+    if (isUrbanBasin) {
+      final urbanRain = (rain1hMm >= 45.0) || (rain24hMm >= 140.0) || (rain72hMm >= 240.0);
+      final urbanConfirm = (aVal >= 0.50) || (forecast6hMm >= 30.0) || (rain1hMm >= 55.0);
+      if (urbanRain && urbanConfirm) {
+        urbanPluvialTriggered = true;
+        earlyWarningLevel = earlyWarningLevel.maxWith(AlertLevel.warning);
+        flags.add('urban_pluvial_override');
+        reasonCodes.add('urban_flood_risk');
+      }
+    }
+
+    if (isFlashFlood) {
+      if ((rVal >= 0.65 && (aVal >= 0.50 || fVal >= 0.50 || cVal >= 0.60)) || rVal >= 0.85) {
+        flashEarlyTriggered = true;
+        earlyWarningLevel = earlyWarningLevel.maxWith(AlertLevel.warning);
+        flags.add('flash_flood_early_warning');
+        reasonCodes.add('flash_flood_risk');
+      } else if (rVal >= 0.65 || cVal >= 0.60 || (aVal >= 0.70 && rVal >= 0.45)) {
+        flashEarlyTriggered = true;
+        earlyWarningLevel = earlyWarningLevel.maxWith(AlertLevel.watch);
+        flags.add('flash_flood_watch');
+        reasonCodes.add('flash_flood_risk');
+      }
+    }
+
+    if (earlyWarningLevel.value > 3) {
+      earlyWarningLevel = AlertLevel.warning;
+    }
+
+    // 10. Final Level & Transparent Alert Basis
+    final level = waterStageLevel.maxWith(agencyOverflowLevel).maxWith(earlyWarningLevel);
+
+    final String alertBasis;
+    if (agencyOverflowLevel.value >= 5 && waterStageLevel.value < 5) {
+      alertBasis = 'agency_overflow';
+    } else if (level.value > waterStageLevel.value && level == earlyWarningLevel) {
+      alertBasis = 'rain_dam_early_warning';
+      flags.add('early_warning_non_water');
+    } else if (waterStageLevel.value >= 2) {
+      alertBasis = 'water_stage';
+    } else {
+      alertBasis = 'monitoring';
+    }
+
+    // 11. Mechanism & Confidence
+    final String floodMechanism;
+    if (damSpillwayActive || damEarlyTriggered) {
+      floodMechanism = 'dam_release';
+    } else if (urbanPluvialTriggered && waterStageLevel.value < 3) {
+      floodMechanism = 'urban_pluvial';
+    } else if (flashEarlyTriggered && waterStageLevel.value < 3) {
+      floodMechanism = 'flash_flood';
+    } else if (waterStageLevel.value >= 2 || agencyOverflowLevel.value >= 5) {
+      floodMechanism = 'riverine_overflow';
+    } else {
+      floodMechanism = 'monitoring';
+    }
+
+    final String confidence;
+    if (stale || (!hasWaterGauge && rainSensorGap)) {
+      confidence = 'low';
+    } else if (rainSensorGap || !hasWaterGauge || (crit == null && situationLevel == null)) {
+      confidence = 'medium';
+    } else {
+      confidence = 'high';
+    }
+
+    // 12. Push eligibility
+    final hasPrimarySignal = waterStageLevel.value >= 2 ||
+        agencyOverflowLevel.value >= 5 ||
+        damSpillwayActive ||
+        dVal >= 0.75 ||
+        urbanPluvialTriggered ||
+        cVal >= 0.60 ||
+        (flashEarlyTriggered &&
+            ((!hasWaterGauge && rVal >= 0.65 && (aVal >= 0.50 || fVal >= 0.50)) ||
+                rVal >= 0.85));
+    final shouldPush = level.value >= 2 && hasPrimarySignal;
+
+    final uniqueReasons = <String>[];
+    for (final rc in reasonCodes) {
+      if (!uniqueReasons.contains(rc)) uniqueReasons.add(rc);
+    }
+
+    return AssessmentV4(
+      score: score,
+      scoreLevel: scoreLevel,
+      waterStageLevel: waterStageLevel,
+      earlyWarningLevel: earlyWarningLevel,
+      floorLevel: agencyOverflowLevel,
+      flashBonus: flashEarlyTriggered ? 1 : 0,
+      level: level,
+      alertBasis: alertBasis,
+      waterTrend: waterTrend,
+      shouldPush: shouldPush,
+      hasPrimarySignal: hasPrimarySignal,
+      floodMechanism: floodMechanism,
+      confidence: confidence,
+      w: wVal,
+      r: rVal,
+      a: aVal,
+      f: fVal,
+      d: dVal,
+      c: cVal,
+      dH: dH,
+      leadTimeHours: (damSpillwayActive || dVal >= 0.45) ? leadTimeHours : null,
+      reasonCodes: uniqueReasons,
+      flags: flags,
+    );
+  }
 
   /// สูตรแจ้งเตือนล่วงหน้า `formula_version = 3` (ตรงกับ backend/pipeline.py compute_alert_v3 100%)
   AssessmentV3 assessV3({
@@ -252,10 +630,11 @@ class AlertEngine {
         0.38 * wVal + 0.22 * rVal + 0.10 * aVal + 0.12 * fVal + 0.10 * dVal + 0.08 * cVal;
     final score = _roundHalfUp1(100.0 * raw).clamp(0.0, 100.0);
 
-    // 8. Base level + Agency Floor
+    // 8. Base level + Agency Floor (legacy v3)
     final scoreLevel = AlertLevel.fromScore(score);
-    final floorLevel =
-        situationLevel != null ? AlertLevel.fromSituation(situationLevel) : AlertLevel.normal;
+    final floorLevel = situationLevel != null
+        ? AlertLevel.fromValue(situationLevel.clamp(1, 4))
+        : AlertLevel.normal;
     if (situationLevel != null && situationLevel >= 3 && scoreLevel.value <= 2) {
       flags.add('situation_score_mismatch');
     }
@@ -455,9 +834,10 @@ class AlertEngine {
     // 7. ระดับจากคะแนน (1..5)
     final scoreLevel = AlertLevel.fromScore(score);
 
-    // 8. Agency Floor (ห้ามลดระดับต่ำกว่า situation_level)
-    final floorLevel =
-        situationLevel != null ? AlertLevel.fromSituation(situationLevel) : AlertLevel.normal;
+    // 8. Agency Floor (legacy v2: ห้ามลดระดับต่ำกว่า situation_level)
+    final floorLevel = situationLevel != null
+        ? AlertLevel.fromValue(situationLevel.clamp(1, 4))
+        : AlertLevel.normal;
     if (situationLevel != null && situationLevel >= 3 && scoreLevel.value <= 2) {
       flags.add('situation_score_mismatch');
     }
@@ -536,42 +916,25 @@ class AlertEngine {
     return now.difference(memory.lastNotifiedAt) >= AppConfig.alertCooldownWindow;
   }
 
-  /// ประเมินระดับสุทธิของสถานีตาม settings ของผู้ใช้ + ฝน (รักษาความเข้ากันกับ UI และ tests เดิม)
+  /// ประเมินระดับสุทธิของสถานีตามเกณฑ์ระดับน้ำ 5 ขั้น (`formula_version = 4`) + ฝน (Option 1 สูงสุดระดับ 3)
   RiskLevel effectiveRisk(
     Station station,
     AlertSettings settings, {
     RainForecast? rain,
   }) {
-    final sit = station.situationLevel;
-    RiskLevel base;
-    if (sit != null) {
-      if (sit >= settings.dangerLevel) {
-        base = RiskLevel.danger;
-      } else if (sit >= settings.warningLevel) {
-        base = RiskLevel.warning;
-      } else if (sit >= 2) {
-        base = RiskLevel.watch;
-      } else {
-        base = RiskLevel.normal;
-      }
-    } else {
-      base = station.riskLevel;
-    }
+    var base = station.riskLevel;
 
     if (settings.rainScoreEnabled && rain != null && rain.hasData) {
-      final hasWaterEvidence =
-          (sit != null && sit >= 2) ||
+      final hasWaterEvidence = base.severity >= RiskLevel.watch.severity ||
           (station.hasBank &&
               station.displayLevel != null &&
-              station.remainingToBank != null &&
-              station.remainingToBank! <= 2.0);
-      if (hasWaterEvidence) {
-        if (rain.score >= AppConfig.rainScoreDanger) {
-          base = base.escalate();
-        } else if (rain.score >= AppConfig.rainScoreWarn &&
-            base.severity < RiskLevel.warning.severity) {
-          base = RiskLevel.warning;
-        }
+              station.watchLevel != null &&
+              station.displayLevel! >= station.watchLevel!);
+      // Option 1: non-water rain escalation is strictly capped at RiskLevel.warning (Lv 3)
+      if (hasWaterEvidence &&
+          rain.score >= AppConfig.rainScoreWarn &&
+          base.severity < RiskLevel.warning.severity) {
+        base = RiskLevel.warning;
       }
     }
     return base;
@@ -602,7 +965,7 @@ class AlertEngine {
     for (final station in stations) {
       if (!_matchesLocationFilter(station, settings)) continue;
 
-      final assessment = assessV3(
+      final assessment = assessV4(
         levelMsl: station.displayLevel,
         previousMsl: station.waterLevelMslPrev,
         bankM: station.hasBank ? station.bankLevel : null,
@@ -617,24 +980,23 @@ class AlertEngine {
         leadTimeHours: AppConfig.bangLangDownstreamLeadTime[station.amphoeTh ?? ''],
       );
 
-      // MEDIUM-2 fix: ประเมิน assessV3 ก่อนกรอง เพื่อไม่พลาดเกณฑ์ สทภ.8 (เช่น X.77 39.70 ม.)
-      // และ watch + rapid rise override เมื่อ station.situationLevel == null
-      final baseRisk = effectiveRisk(station, settings, rain: rain);
-      final v3Escalated =
-          assessment.shouldPush && assessment.level.value >= settings.warningLevel;
-      final RiskLevel risk;
-      if (v3Escalated && assessment.level.risk.severity > baseRisk.severity) {
-        risk = assessment.level.risk;
-      } else {
-        risk = baseRisk;
-      }
-      if (!risk.isAtLeastWarning) continue;
-
       final effectiveAlertLevel = applyHysteresis(
         current: assessment.level,
         memory: memoryByStation?[station.code],
         now: timestamp,
       );
+
+      final baseRisk = effectiveRisk(station, settings, rain: rain);
+      final heldByHysteresis = effectiveAlertLevel.value > assessment.level.value;
+      final v4Triggered = (assessment.shouldPush || heldByHysteresis) &&
+          effectiveAlertLevel.value >= settings.warningLevel;
+      final RiskLevel risk;
+      if (v4Triggered && effectiveAlertLevel.risk.severity >= baseRisk.severity) {
+        risk = effectiveAlertLevel.risk;
+      } else {
+        risk = baseRisk;
+      }
+      if (risk.severity < settings.warningLevel) continue;
 
       final prevItem = lastByStation[station.code];
       if (prevItem != null) {
@@ -697,6 +1059,7 @@ class AlertEngine {
   String _buildTitle(Station station, RiskLevel level) {
     final prefix = switch (level) {
       RiskLevel.danger => 'อันตราย',
+      RiskLevel.high => 'เตือนภัยสูง',
       RiskLevel.warning => 'เตือนภัย',
       RiskLevel.watch => 'เฝ้าระวัง',
       _ => 'สถานะน้ำ',
@@ -732,13 +1095,15 @@ class AlertEngine {
     final leadSuffix = lead != null ? ' (พื้นที่ท้ายเขื่อนบางลาง ระยะเวลาน้ำเดินทาง $lead)' : '';
     switch (level) {
       case RiskLevel.danger:
-        return 'เตรียมอพยพทันทีไปยังศูนย์พักพิงปลอดภัย หากต้องการความช่วยเหลือโทร 1784 (ปภ.), 073-203559 (ปภ.ยะลา) หรือ 1669$leadSuffix';
+        return 'ระดับน้ำเลยเส้นตลิ่ง อพยพทันทีไปยังศูนย์พักพิงปลอดภัย หากต้องการความช่วยเหลือโทร 1784 (ปภ.), 073-203559 (ปภ.ยะลา) หรือ 1669$leadSuffix';
+      case RiskLevel.high:
+        return 'ระดับน้ำสูงกว่าเส้นกึ่งกลางเกือบถึงเส้นตลิ่ง พร้อมอพยพทันที ติดตามประกาศ ปภ.ยะลา (073-203559) และตัดไฟชั้นล่างหากน้ำเข้า$leadSuffix';
       case RiskLevel.warning:
-        return 'ยกของมีค่าขึ้นที่สูง เตรียมถุงยังชีพและแผนอพยพ ติดตามประกาศ ปภ.ยะลาอย่างใกล้ชิด$leadSuffix';
+        return 'ระดับน้ำมีแนวโน้มสูงขึ้นถึงเส้นกึ่งกลาง ยกของมีค่าขึ้นที่สูง เตรียมถุงยังชีพและแผนอพยพ$leadSuffix';
       case RiskLevel.watch:
-        return 'ติดตามค่าระดับน้ำและฝนสะสมเป็นระยะ หลีกเลี่ยงพื้นที่ลุ่มต่ำและริมลำน้ำ$leadSuffix';
+        return 'ระดับน้ำแตะเส้นเฝ้าระวังและทรงตัว (side way) ติดตามค่าระดับน้ำและฝนสะสมเป็นระยะ$leadSuffix';
       case RiskLevel.normal:
-        return 'สถานการณ์ระดับน้ำปกติ ยังควรติดตามข่าวพยากรณ์อากาศในช่วงฤดูมรสุม$leadSuffix';
+        return 'ระดับน้ำต่ำกว่าเส้นเฝ้าระวัง (ปกติ) ยังควรติดตามพยากรณ์อากาศในช่วงฤดูมรสุม$leadSuffix';
       case RiskLevel.unknown:
         return 'ยังไม่มีเกณฑ์ระดับน้ำของสถานีนี้ โปรดตรวจสอบควบคู่กับฝนสะสมและประกาศ ปภ.ยะลา (073-203559)';
     }

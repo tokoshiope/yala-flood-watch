@@ -10,7 +10,7 @@ class AppConfig {
   static const String appNameEn = 'Yala Flood Watch';
   static const String packageName = 'net.yala.floodapp';
   static const String appVersion = '1.0.1';
-  static const int formulaVersion = 3;
+  static const int formulaVersion = 4;
 
   // ── จังหวัดยะลา ────────────────────────────────────────────────────────
   static const String provinceCode = '95';
@@ -128,10 +128,10 @@ class AppConfig {
   static const String cacheStationHistoryPrefix = 'yala_flood_hist7d_v1_';
   static const Duration cacheTtl = Duration(minutes: 10);
 
-  // ── เกณฑ์แจ้งเตือน (formula_version = 3 · วิจัยน้ำท่วมยะลา) ──────────────
+  // ── เกณฑ์แจ้งเตือน (formula_version = 4 · ระดับน้ำ 5 ขั้น + เตือนฝน/เขื่อนสูงสุด Lv 3) ──
   static const int defaultWarningLevel = 3;
-  static const int defaultDangerLevel = 4;
-  static const int maxSituationLevel = 4;
+  static const int defaultDangerLevel = 5;
+  static const int maxSituationLevel = 5;
   static const int rainScoreWarn = 60;
   static const int rainScoreDanger = 85;
   static const double steadyBandMeters = 0.05;

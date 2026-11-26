@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
-import 'package:yala_flood_app/config/app_config.dart';
 import 'package:yala_flood_app/l10n/app_strings.dart';
 import 'package:yala_flood_app/models/alert.dart';
 import 'package:yala_flood_app/models/flood_snapshot.dart';
@@ -357,7 +356,7 @@ class _BankCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bank = station.bankLevel;
+    final bank = station.criticalLevel ?? station.bankLevel;
     final wl = station.displayLevel;
     final remaining = station.remainingToBank;
 
@@ -536,8 +535,8 @@ class _ChartCardState extends State<_ChartCard> {
         ? _inspectedIndex
         : null;
     final inspectedPt = safeInspect != null ? series[safeInspect] : null;
-    final bank = widget.station.bankLevel;
-    final watch = AppConfig.stationWatchMsl[widget.station.code];
+    final bank = widget.station.criticalLevel ?? widget.station.bankLevel;
+    final watch = widget.station.watchLevel;
 
     double? minV;
     double? maxV;
@@ -752,7 +751,7 @@ class _LevelTrendPainter extends CustomPainter {
       return;
     }
 
-    final bank = station.bankLevel;
+    final bank = station.criticalLevel ?? station.bankLevel;
     final values = hasHistory
         ? series.map((p) => p.valueMsl).toList()
         : <double>[prev ?? wl!, wl!];
@@ -837,6 +836,35 @@ class _LevelTrendPainter extends CustomPainter {
         Offset(size.width - rightPad, y - 13),
         '${strings.get('watch_level_label')} ${watchLevel!.toStringAsFixed(1)}',
         color: watchColor,
+        alignRight: true,
+        fontSize: 9.5,
+      );
+    }
+
+    // เส้นประระดับกึ่งกลางระหว่างเฝ้าระวังกับตลิ่ง (Mid = (watch + bank) / 2)
+    final midLevel = station.midLevel;
+    final showMidOnScale = showWatchOnScale &&
+        showBankOnScale &&
+        midLevel != null &&
+        midLevel > watchLevel! &&
+        midLevel < bank;
+    if (showMidOnScale) {
+      final midColor =
+          isDark ? const Color(0xFFFFB74D) : const Color(0xFFEF6C00);
+      final y = yOf(midLevel);
+      _dashedLine(
+        canvas,
+        Offset(leftPad, y),
+        Offset(size.width - rightPad, y),
+        Paint()
+          ..color = midColor
+          ..strokeWidth = 1.2,
+      );
+      _text(
+        canvas,
+        Offset(size.width - rightPad, y - 13),
+        '${strings.get('mid_level_label')} ${midLevel.toStringAsFixed(2)}',
+        color: midColor,
         alignRight: true,
         fontSize: 9.5,
       );

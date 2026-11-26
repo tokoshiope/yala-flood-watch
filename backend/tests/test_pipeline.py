@@ -296,7 +296,7 @@ def test_main_graceful_degradation_when_secondary_sources_fail(tmp_path, monkeyp
     assert len(payload["amphoes"]) == 8
     man = json.loads((tmp_path / "manifest.json").read_text(encoding="utf-8"))
     assert man["content_hash"] == payload["content_hash"]
-    assert man["formula_version"] == 3
+    assert man["formula_version"] == 4
 
 
 def test_contacts_registry_has_verified_1784_and_yala_ddpm():
@@ -556,6 +556,191 @@ def test_formula_v3_vectors(
     assert res["should_push"] is expected_push
     assert res["flood_mechanism"] == expected_mech
     assert res["confidence"] == expected_conf
+
+
+@pytest.mark.parametrize(
+    "case_id,kwargs,expected_score,expected_water_lv,expected_level,expected_basis,expected_trend,expected_push",
+    [
+        (
+            "TV4-1_below_watch_sit3_normal_water",
+            dict(
+                level_msl=12.59, previous_msl=12.64, bank_m=17.29, watch_m=15.80, critical_m=17.29,
+                situation_level=3, stale=False, rain_24h_mm=15.0,
+            ),
+            1.8, 1, 1, "monitoring", "sideway", False,
+        ),
+        (
+            "TV4-2_below_watch_sit4_no_false_alarm",
+            dict(
+                level_msl=36.01, previous_msl=36.00, bank_m=38.678, watch_m=36.80, critical_m=38.678,
+                situation_level=4, stale=False, rain_24h_mm=20.0,
+            ),
+            2.4, 1, 1, "monitoring", "sideway", False,
+        ),
+        (
+            "TV4-3_at_watch_sideway_pat002_live",
+            dict(
+                level_msl=12.43, previous_msl=12.43, bank_m=13.85, watch_m=12.35, critical_m=13.85,
+                situation_level=4, stale=False,
+            ),
+            18.8, 2, 2, "water_stage", "sideway", True,
+        ),
+        (
+            "TV4-4_at_watch_rapid_rise_escalates_lv3",
+            dict(
+                level_msl=15.70, previous_msl=15.50, bank_m=16.50, watch_m=15.50, critical_m=16.50,
+                situation_level=None, stale=False,
+            ),
+            25.0, 3, 3, "water_stage", "rising", True,
+        ),
+        (
+            "TV4-5_at_mid_rising_lv3",
+            dict(
+                level_msl=16.05, previous_msl=15.95, bank_m=16.50, watch_m=15.50, critical_m=16.50,
+                situation_level=None, stale=False,
+            ),
+            32.0, 3, 3, "water_stage", "rising", True,
+        ),
+        (
+            "TV4-6_above_mid_near_bank_lv4",
+            dict(
+                level_msl=16.35, previous_msl=16.30, bank_m=16.50, watch_m=15.50, critical_m=16.50,
+                situation_level=None, stale=False,
+            ),
+            44.0, 4, 4, "water_stage", "sideway", True,
+        ),
+        (
+            "TV4-7_over_bank_lv5_null_situation",
+            dict(
+                level_msl=16.52, previous_msl=16.40, bank_m=16.50, watch_m=15.50, critical_m=16.50,
+                situation_level=None, stale=False,
+            ),
+            50.0, 5, 5, "water_stage", "rising", True,
+        ),
+        (
+            "TV4-8_x77_rid8_critical_lv5",
+            dict(
+                level_msl=39.75, previous_msl=39.60, bank_m=40.30, watch_m=38.00, critical_m=39.70,
+                situation_level=None, stale=False,
+            ),
+            50.0, 5, 5, "water_stage", "rising", True,
+        ),
+        (
+            "TV4-9_urban_pluvial_early_warning_capped_lv3",
+            dict(
+                level_msl=14.20, previous_msl=14.15, bank_m=16.50, watch_m=15.50, critical_m=16.50,
+                situation_level=None, stale=False, rain_24h_mm=155.0, rain_72h_mm=333.8,
+                api_7d_mm=120.0, is_urban_basin=True,
+            ),
+            23.3, 1, 3, "rain_dam_early_warning", "sideway", True,
+        ),
+        (
+            "TV4-10_banglang_spillway_early_warning_capped_lv3",
+            dict(
+                level_msl=13.50, previous_msl=13.50, bank_m=16.50, watch_m=15.50, critical_m=16.50,
+                situation_level=3, stale=False, dam_signal=1.0, dam_spillway_active=True,
+                lead_time_hours="6–12 ชม.",
+            ),
+            8.0, 1, 3, "rain_dam_early_warning", "sideway", True,
+        ),
+        (
+            "TV4-11_kabang_zero_gauge_flash_early_warning_capped_lv3",
+            dict(
+                level_msl=None, previous_msl=None, bank_m=None, situation_level=None, stale=False,
+                rain_1h_mm=51.0, api_7d_mm=110.0, forecast_24h_mm=72.0,
+                is_flash_flood=True, has_water_gauge=False,
+            ),
+            26.7, 1, 3, "rain_dam_early_warning", "unknown", True,
+        ),
+        (
+            "TV4-12_thaiwater_sit5_overflow_confirmed_lv5",
+            dict(
+                level_msl=None, previous_msl=None, bank_m=None, situation_level=5, stale=False,
+            ),
+            50.0, 1, 5, "agency_overflow", "unknown", True,
+        ),
+        (
+            "TV4-13_mid_rapid_surge_escalates_lv4",
+            dict(
+                level_msl=16.10, previous_msl=15.75, bank_m=16.50, watch_m=15.50, critical_m=16.50,
+                situation_level=None, stale=False,
+            ),
+            39.0, 4, 4, "water_stage", "rising", True,
+        ),
+        (
+            "TV4-14_unbanked_sit4_watch_fallback_lv2",
+            dict(
+                level_msl=101.0, previous_msl=101.0, bank_m=None, situation_level=4, stale=False,
+            ),
+            17.5, 2, 2, "water_stage", "sideway", True,
+        ),
+    ],
+)
+def test_formula_v4_vectors(
+    case_id, kwargs, expected_score, expected_water_lv, expected_level, expected_basis, expected_trend, expected_push
+):
+    res = P.compute_alert_v4(**kwargs)
+    assert res["formula_version"] == 4
+    assert res["score"] == expected_score, f"{case_id}: expected score {expected_score}, got {res['score']}"
+    assert res["water_stage_level"] == expected_water_lv, f"{case_id}: water_stage_level={res['water_stage_level']}"
+    assert res["level"] == expected_level, f"{case_id}: level={res['level']}"
+    assert res["alert_basis"] == expected_basis, f"{case_id}: alert_basis={res['alert_basis']}"
+    assert res["water_trend"] == expected_trend, f"{case_id}: water_trend={res['water_trend']}"
+    assert res["should_push"] is expected_push, f"{case_id}: should_push={res['should_push']}"
+
+
+def test_normalize_preserves_thaiwater_situation_level_5_and_4_correctly():
+    """QA BLOCKER-1 regression: normalize() MUST preserve ThaiWater situation_level=5 (overflow)."""
+    fixed = datetime(2026, 11, 27, 8, 0, tzinfo=P.ICT)
+    rows = _rows_sample(2, at=fixed)
+    # Row 0: unbanked BLGTU05 with ThaiWater situation_level=5 -> MUST reach Lv 5 agency_overflow
+    rows[0]["station"]["tele_station_oldcode"] = "BLGTU05"
+    rows[0]["station"]["left_bank"] = 0
+    rows[0]["station"]["right_bank"] = 0
+    rows[0]["station"]["min_bank"] = 0
+    rows[0]["situation_level"] = 5
+    # Row 1: banked PAT001 below watch with situation_level=4 -> MUST stay Lv 1 normal
+    rows[1]["station"]["tele_station_oldcode"] = "PAT001"
+    rows[1]["waterlevel_msl"] = "36.01"
+    rows[1]["waterlevel_msl_previous"] = "36.00"
+    rows[1]["station"]["left_bank"] = 38.678
+    rows[1]["situation_level"] = 4
+
+    stations, _ = P.normalize(rows, _registry(), now=fixed)
+    by_code = {s["oldcode"]: s for s in stations}
+    assert by_code["BLGTU05"]["situation_level"] == 5
+    assert by_code["BLGTU05"]["assessment"]["level"] == 5
+    assert by_code["BLGTU05"]["assessment"]["alert_basis"] == "agency_overflow"
+    assert by_code["PAT001"]["situation_level"] == 4
+    assert by_code["PAT001"]["assessment"]["level"] == 1
+    assert by_code["PAT001"]["assessment"]["alert_basis"] == "monitoring"
+
+
+def test_notify_fcm_tags_rain_dam_early_warning_on_amphoe_and_provincial_topics():
+    """QA MEDIUM-3 regression: both amphoe and yala_flood_all topics carry basis tag and lead time."""
+    import notify_fcm
+
+    snap = {
+        "amphoes": [
+            {
+                "amphoe": "เมืองยะลา",
+                "assessment": {
+                    "level": 3,
+                    "should_push": True,
+                    "alert_basis": "rain_dam_early_warning",
+                    "action_th": "ยกของขึ้นที่สูง",
+                    "lead_time_hours": "6–12 ชม.",
+                },
+            }
+        ]
+    }
+    msgs = notify_fcm.build_fcm_messages(snap, state={}, now_ts=1_700_000_000.0)
+    by_topic = {m["message"]["topic"]: m["message"]["notification"] for m in msgs}
+    assert "yala_flood_mueang_yala" in by_topic
+    assert "yala_flood_all" in by_topic
+    for topic in ("yala_flood_mueang_yala", "yala_flood_all"):
+        assert "(เตือนภัยล่วงหน้าจากฝน/เขื่อน)" in by_topic[topic]["title"]
+        assert "6–12 ชม." in by_topic[topic]["body"]
 
 
 def test_banglang_high_inflow_surge_triggers_early_dam_signal():

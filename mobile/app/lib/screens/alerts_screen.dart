@@ -773,15 +773,41 @@ class _AmphoeStatusCardState extends State<_AmphoeStatusCard> {
               '${widget.strings.get('forecast_24h_label')} ${widget.amphoe.forecast24hMm.toStringAsFixed(1)} ${widget.strings.get('unit_mm')}',
               style: Theme.of(context).textTheme.bodySmall,
             ),
-            if (widget.amphoe.floodMechanism != 'monitoring') ...[
-              const SizedBox(height: 3),
-              Text(
-                widget.strings.mechanismLabel(widget.amphoe.floodMechanism),
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  color: lv.colorFor(Theme.of(context).brightness),
-                ),
+            if (widget.amphoe.alertBasis == 'rain_dam_early_warning' ||
+                widget.amphoe.floodMechanism != 'monitoring') ...[
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  if (widget.amphoe.alertBasis == 'rain_dam_early_warning')
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: lv.color.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: lv.color.withValues(alpha: 0.45)),
+                      ),
+                      child: Text(
+                        widget.strings.get('early_warning_rain_dam_badge'),
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          color: lv.colorFor(Theme.of(context).brightness),
+                        ),
+                      ),
+                    ),
+                  if (widget.amphoe.floodMechanism != 'monitoring')
+                    Text(
+                      widget.strings.mechanismLabel(widget.amphoe.floodMechanism),
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: lv.colorFor(Theme.of(context).brightness),
+                      ),
+                    ),
+                ],
               ),
             ],
             const SizedBox(height: 4),

@@ -36,7 +36,8 @@ void main() {
       expect(station.waterLevelMsl, 13.00);
       expect(station.leftBank, 13.85);
       expect(station.situationLevel, 4);
-      expect(station.riskLevel, RiskLevel.danger);
+      // formula_version = 4: PAT002 watch=12.35, mid=13.10, bank=13.85; 13.00 side way -> เฝ้าระวัง (Lv 2)
+      expect(station.riskLevel, RiskLevel.watch);
       expect(station.remainingToBank, closeTo(0.85, 0.001));
       expect(station.hasBank, isTrue);
       expect(station.trend, WaterTrend.steady);
@@ -80,20 +81,22 @@ void main() {
   });
 
   group('RiskLevel', () {
-    test('fromSituation ตามเกณฑ์ ThaiWater', () {
-      expect(RiskLevel.fromSituation(4), RiskLevel.danger);
-      expect(RiskLevel.fromSituation(3), RiskLevel.warning);
-      expect(RiskLevel.fromSituation(2), RiskLevel.watch);
+    test('fromSituation ตามเกณฑ์จริง ThaiWater 1–5 (1-3=ปกติ, 4=มาก/เฝ้าระวัง, 5=ล้นตลิ่ง/อันตราย)', () {
+      expect(RiskLevel.fromSituation(5), RiskLevel.danger);
+      expect(RiskLevel.fromSituation(4), RiskLevel.watch);
+      expect(RiskLevel.fromSituation(3), RiskLevel.normal);
+      expect(RiskLevel.fromSituation(2), RiskLevel.normal);
       expect(RiskLevel.fromSituation(1), RiskLevel.normal);
       expect(RiskLevel.fromSituation(0), RiskLevel.normal);
       expect(RiskLevel.fromSituation(null), RiskLevel.unknown);
       expect(RiskLevel.fromSituation(99), RiskLevel.unknown);
     });
 
-    test('escalate เพิ่มไม่เกินอันตราย', () {
+    test('escalate เพิ่มครบ 5 ระดับไม่เกินอันตราย', () {
       expect(RiskLevel.normal.escalate(), RiskLevel.watch);
       expect(RiskLevel.watch.escalate(), RiskLevel.warning);
-      expect(RiskLevel.warning.escalate(), RiskLevel.danger);
+      expect(RiskLevel.warning.escalate(), RiskLevel.high);
+      expect(RiskLevel.high.escalate(), RiskLevel.danger);
       expect(RiskLevel.danger.escalate(), RiskLevel.danger);
     });
   });

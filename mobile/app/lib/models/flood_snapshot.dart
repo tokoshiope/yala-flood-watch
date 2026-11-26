@@ -74,6 +74,7 @@ class AmphoeForecastSummary {
     this.api7dMm = 0.0,
     this.forecast6hMm = 0.0,
     this.floodMechanism = 'monitoring',
+    this.alertBasis = 'monitoring',
     this.confidence = 'high',
     this.leadTimeHours,
     this.watchAreas = const <WatchAreaInfo>[],
@@ -93,6 +94,7 @@ class AmphoeForecastSummary {
   final double forecast24hMm;
   final double forecast72hMm;
   final String floodMechanism;
+  final String alertBasis;
   final String confidence;
   final List<HourlyRainPoint> hourlyNext24h;
   final String? leadTimeHours;
@@ -119,6 +121,7 @@ class AmphoeForecastSummary {
       forecast24hMm: (wx['forecast_24h_mm'] as num?)?.toDouble() ?? 0.0,
       forecast72hMm: (wx['forecast_72h_mm'] as num?)?.toDouble() ?? 0.0,
       floodMechanism: ass['flood_mechanism']?.toString() ?? 'monitoring',
+      alertBasis: ass['alert_basis']?.toString() ?? 'monitoring',
       confidence: ass['confidence']?.toString() ?? 'high',
       hourlyNext24h: rawHourly
           .whereType<Map<dynamic, dynamic>>()

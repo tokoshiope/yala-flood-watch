@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'package:yala_flood_app/config/app_config.dart';
 import 'package:yala_flood_app/models/risk_level.dart';
 
 /// สถานีวัดระดับน้ำของจังหวัดยะลา ที่แปลงมาจาก ThaiWater API v3
@@ -187,27 +188,79 @@ class Station {
     );
   }
 
-  /// ระดับความเสี่ยงหลัก จาก situation_level ของกระทรวง
-  RiskLevel get riskLevel {
-    final level = RiskLevel.fromSituation(situationLevel);
+  /// เกณฑ์วิกฤต/เส้นตลิ่งอ้างอิง (ใช้ค่า สทภ.8 หากกำหนดไว้ เช่น X.77 = 39.70 ม., มิฉะนั้นใช้ bankLevel)
+  double? get criticalLevel {
+    final configured = AppConfig.stationCriticalMsl[code];
+    if (configured != null && configured > 0) return configured;
+    return bankLevel;
+  }
 
-    // กรณีสถานีไม่ได้ตั้ง situation_level ให้ประเมินจากระดับน้ำเทียบตลิ่ง
-    // เฉพาะเมื่อมีตลิ่งจริง (มากกว่า 0) — สถานีอย่างเขื่อนที่ไม่มีตลิ่งจะไม่ถูกตีความผิด
-    if (level == RiskLevel.unknown) {
-      final bank = bankLevel;
-      final wl = waterLevelMsl;
-      final diff = diffWlBank;
-      if (bank != null && bank > 0 && wl != null) {
-        if (wl >= bank) return RiskLevel.danger;
-        final remaining = bank - wl;
-        if (remaining <= 0.5) return RiskLevel.warning;
-        if (remaining <= 2.0) return RiskLevel.watch;
-        return RiskLevel.normal;
-      }
-      // มี diff_wl_bank แต่ไม่มีตลิ่ง (เช่น เขื่อน) — ใช้ค่าลบระบุว่าล้น
-      if (diff != null && diff < 0 && (bank ?? 0) > 0) return RiskLevel.danger;
+  /// เส้นเฝ้าระวังอ้างอิงรายสถานี (watch_m จาก stations.yaml / AppConfig หรือ crit - 1.5 ม.)
+  double? get watchLevel {
+    final crit = criticalLevel;
+    if (crit == null || crit <= 0) return null;
+    final configured = AppConfig.stationWatchMsl[code];
+    if (configured != null && configured > 0 && configured < crit) {
+      return configured;
     }
-    return level;
+    return crit - 1.5;
+  }
+
+  /// เส้นความเฉลี่ยกึ่งกลางระหว่างเส้นเฝ้าระวังและเส้นตลิ่ง (mid = (watch + crit) / 2)
+  double? get midLevel {
+    final w = watchLevel;
+    final c = criticalLevel;
+    if (w == null || c == null) return null;
+    return (w + c) / 2.0;
+  }
+
+  /// เส้นเตือนภัยสูง (เหนือเส้นกึ่งกลางเกือบถึงเส้นตลิ่ง: 75% ของช่วง watch → crit)
+  double? get highLevel {
+    final m = midLevel;
+    final c = criticalLevel;
+    if (m == null || c == null) return null;
+    return (m + c) / 2.0;
+  }
+
+  /// ระดับความเสี่ยงหลักตามเกณฑ์น้ำ 5 ขั้น (`formula_version = 4`):
+  /// 1 ปกติ (< watch) · 2 เฝ้าระวัง (watch..mid side way) · 3 เตือนภัย (mid..high หรือ watch+ขึ้นเร็ว)
+  /// 4 เตือนภัยสูง (high..bank เกือบถึงตลิ่ง) · 5 อันตราย (>= bank / sit==5)
+  RiskLevel get riskLevel {
+    // ThaiWater situation_level == 5 ยืนยันล้นตลิ่ง (>100%) เสมอ
+    if (situationLevel != null && situationLevel! >= 5) {
+      return RiskLevel.danger;
+    }
+
+    final crit = criticalLevel;
+    final watch = watchLevel;
+    final mid = midLevel;
+    final high = highLevel;
+    final wl = displayLevel;
+
+    if (crit != null && watch != null && mid != null && high != null && wl != null) {
+      final dH = (waterLevelMsl != null && waterLevelMslPrev != null)
+          ? ((waterLevelMsl! - waterLevelMslPrev!) * 10000).round() / 10000.0
+          : 0.0;
+      if (wl >= crit) return RiskLevel.danger;
+      if (wl >= high) return RiskLevel.high;
+      if (wl >= mid) {
+        return dH >= AppConfig.risingFastMetersPerHour
+            ? RiskLevel.high
+            : RiskLevel.warning;
+      }
+      if (wl >= watch) {
+        return dH >= 0.15 ? RiskLevel.warning : RiskLevel.watch;
+      }
+      return RiskLevel.normal;
+    }
+
+    // กรณีสถานีไม่มีเกณฑ์ตลิ่ง (เช่น เขื่อนบางลาง/ฝายละแอ) ใช้ ThaiWater situation_level ที่แก้สเกลแล้ว
+    final sitLevel = RiskLevel.fromSituation(situationLevel);
+    if (sitLevel != RiskLevel.unknown) return sitLevel;
+
+    final diff = diffWlBank;
+    if (diff != null && diff < 0 && (bankLevel ?? 0) > 0) return RiskLevel.danger;
+    return RiskLevel.unknown;
   }
 
   /// ตลิ่งอ้างอิง: ซ้าย → ขวา → ต่ำสุด (ข้ามค่า <= 0 ให้ตรงกับ backend/pipeline.py)
@@ -246,13 +299,13 @@ class Station {
   /// ระดับน้ำที่ใช้แสดง เรียงความสำคัญ MSL ก่อน
   double? get displayLevel => waterLevelMsl ?? waterLevelM;
 
-  /// ทิศทางการเปลี่ยนแปลงของระดับน้ำ
+  /// ทิศทางการเปลี่ยนแปลงของระดับน้ำ (ใช้เกณฑ์ steadyBandMeters = 0.05 ม. ตรงกับ formula_version = 4)
   WaterTrend get trend {
     final cur = waterLevelMsl;
     final prev = waterLevelMslPrev;
     if (cur == null || prev == null) return WaterTrend.unknown;
-    final diff = cur - prev;
-    if (diff.abs() < 0.05) return WaterTrend.steady;
+    final diff = ((cur - prev) * 10000).round() / 10000.0;
+    if (diff.abs() <= AppConfig.steadyBandMeters) return WaterTrend.steady;
     return diff > 0 ? WaterTrend.rising : WaterTrend.falling;
   }
 

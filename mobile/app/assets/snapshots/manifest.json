@@ -1,12 +1,12 @@
 {
   "schema_version": 2,
-  "formula_version": 3,
+  "formula_version": 4,
   "generated_at": "2026-11-27T00:04:25+07:00",
   "count": 14,
   "amphoe_count": 8,
   "rain_gauge_count": 88,
-  "content_hash": "ac9df4214892788edd6970047f66b2b0174b200c10d5e4e501abdb9db5c86634",
-  "snapshot": "snapshot-20261127-000425-ac9df421.json",
+  "content_hash": "f18137154998d11a66c956a869b31472cd164b0ba69b2a512cfc2a06a2801ff4",
+  "snapshot": "snapshot-20261127-063500-f1813715.json",
   "degraded_sources": [],
   "source_health": {
     "thaiwater_waterlevel": {
@@ -56,5 +56,6 @@
     "bank_from_registry": 0,
     "storage_anomaly": 1,
     "duplicates_skipped": 0
-  }
+  },
+  "max_alert_level": 2
 }

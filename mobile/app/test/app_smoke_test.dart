@@ -40,8 +40,9 @@ void main() {
     expect(provider.subdistricts.length, 58);
     expect(provider.villages.length, 449);
     expect(provider.snapshot, isNotNull);
-    expect(provider.warningStationCount, greaterThan(0));
-    expect(provider.activeAlerts, isNotEmpty);
+    // ใน fixture สถานการณ์ปกติ PAT002 อยู่ระดับเฝ้าระวัง (side way) และไม่มี false alarm ระดับเตือนภัย
+    expect(provider.warningStationCount, 0);
+    expect(provider.stations.any((s) => s.riskLevel.severity >= 2), isTrue);
 
     await tester.pumpWidget(
       ChangeNotifierProvider<AlertProvider>.value(
