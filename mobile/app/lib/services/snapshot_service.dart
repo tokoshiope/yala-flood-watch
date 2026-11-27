@@ -263,6 +263,7 @@ class SnapshotService {
           elevMax: (props['elev_max'] as num?)?.toDouble() ?? 0.0,
           elevMid: (props['elev_mid'] as num?)?.toDouble() ?? 0.0,
           ring: ring,
+          exposureZone: (props['exposure_zone']?.toString() ?? 'C').toUpperCase(),
         ),
       );
     }
@@ -281,9 +282,20 @@ class SnapshotService {
       final props = (f['properties'] as Map?)?.cast<String, dynamic>() ?? const {};
       final geom = (f['geometry'] as Map?)?.cast<String, dynamic>() ?? const {};
       final coords = geom['coordinates'];
-      if (geom['type'] != 'Polygon' || coords is! List || coords.isEmpty) continue;
-      final ring = _parseRing(coords.first);
-      if (ring.length < 3) continue;
+      final gType = geom['type']?.toString() ?? '';
+      final rings = <List<LatLng>>[];
+      if (gType == 'Polygon' && coords is List && coords.isNotEmpty) {
+        final r = _parseRing(coords.first);
+        if (r.length >= 3) rings.add(r);
+      } else if (gType == 'MultiPolygon' && coords is List) {
+        for (final poly in coords) {
+          if (poly is List && poly.isNotEmpty) {
+            final r = _parseRing(poly.first);
+            if (r.length >= 3) rings.add(r);
+          }
+        }
+      }
+      if (rings.isEmpty) continue;
       out.add(
         VillageZoneBoundary(
           code: props['code']?.toString() ?? '',
@@ -292,8 +304,10 @@ class SnapshotService {
           nameEn: props['name_en']?.toString() ?? '',
           amphoeTh: props['amphoe_th']?.toString() ?? '',
           tumbonTh: props['tumbon_th']?.toString() ?? '',
-          ring: ring,
+          rings: rings,
           elevationMsl: (props['elevation_msl'] as num?)?.toDouble(),
+          exposureZone: (props['exposure_zone']?.toString() ?? 'A').toUpperCase(),
+          relHeightM: (props['rel_height_m'] as num?)?.toDouble(),
         ),
       );
     }

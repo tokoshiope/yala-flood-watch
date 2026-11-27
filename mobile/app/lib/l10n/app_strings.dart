@@ -1,5 +1,4 @@
 import 'package:yala_flood_app/models/risk_level.dart';
-import 'package:yala_flood_app/models/sos_request.dart';
 import 'package:yala_flood_app/models/station.dart';
 
 /// ระบบแปลภาษาสมบูรณ์ 4 ภาษา (ไทย / อังกฤษ / จีน / มาเลเซีย) ครอบคลุมทุกหน้าจอและข้อมูล
@@ -397,59 +396,11 @@ class AppStrings {
       'zh': '紧急求助渠道（电话 · LINE · Facebook）',
       'ms': 'Saluran Kecemasan (Telefon · LINE · Facebook)',
     },
-    'sos_save_btn': {
-      'th': 'ส่งคำขอ SOS พร้อมพิกัดจริง',
-      'en': 'Send Real SOS with GPS',
-      'zh': '发送带 GPS 坐标的真实 SOS 求助',
-      'ms': 'Hantar SOS Sebenar dengan GPS',
-    },
-    'sos_save_sub': {
-      'th': 'ส่งผ่าน SMS (ใช้ได้แม้ไม่มีเน็ต) · LINE · คัดลอก หรือโทร 1784 / 073-203559',
-      'en': 'Dispatch via SMS (works offline) · LINE · Copy or Call 1784 / 073-203559',
-      'zh': '通过短信（离线可用）· LINE · 复制或直接拨打 1784 / 073-203559',
-      'ms': 'Hantar melalui SMS (berfungsi luar talian) · LINE · Salin atau Hubungi 1784 / 073-203559',
-    },
-    'sos_help_type': {
-      'th': 'ประเภทความช่วยเหลือ',
-      'en': 'Type of Assistance',
-      'zh': '求助类型',
-      'ms': 'Jenis Bantuan',
-    },
-    'gps_card_title': {
-      'th': 'พิกัด GPS ของคุณ (ขอสิทธิ์เมื่อกดเท่านั้น)',
-      'en': 'Your GPS Coordinates (On-Demand Only)',
-      'zh': '您的 GPS 坐标（仅在点击时获取）',
-      'ms': 'Koordinat GPS Anda (Atas Permintaan Sahaja)',
-    },
-    'gps_locate_btn': {
-      'th': 'ค้นหาพิกัด GPS',
-      'en': 'Find GPS',
-      'zh': '获取 GPS',
-      'ms': 'Cari GPS',
-    },
-    'gps_searching': {
-      'th': 'กำลังค้นหาสัญญาณ GPS…',
-      'en': 'Acquiring GPS signal…',
-      'zh': '正在获取 GPS 信号…',
-      'ms': 'Sedang mencari isyarat GPS…',
-    },
-    'gps_idle_hint': {
-      'th': 'กดปุ่ม "ค้นหาพิกัด GPS" เพื่อให้แสดงพิกัดสำหรับแจ้งเจ้าหน้าที่กู้ภัย (ไม่เก็บพิกัดพื้นหลัง)',
-      'en': 'Tap "Find GPS" to view your coordinates to read to rescue dispatchers (no background tracking).',
-      'zh': '点击“获取 GPS”以显示坐标并告知救援人员（不进行后台位置追踪）。',
-      'ms': 'Tekan "Cari GPS" untuk melihat koordinat bagi dimaklumkan kepada penyelamat (tiada penjejakan latar).',
-    },
-    'gps_open_settings': {
-      'th': 'เปิดการตั้งค่าตำแหน่ง',
-      'en': 'Open Location Settings',
-      'zh': '打开位置设置',
-      'ms': 'Buka Tetapan Lokasi',
-    },
     'gps_permission_denied': {
-      'th': 'ยังไม่ได้รับสิทธิ์ตำแหน่ง กด "เปิดการตั้งค่าตำแหน่ง" เพื่ออนุญาตเฉพาะขณะใช้งาน (When In Use)',
-      'en': 'Location permission not granted. Tap "Open Location Settings" to allow "While Using the App".',
-      'zh': '未获得位置权限。请点击“打开位置设置”以允许“使用应用期间”访问位置。',
-      'ms': 'Kebenaran lokasi tidak diberikan. Tekan "Buka Tetapan Lokasi" untuk membenarkan semasa digunakan.',
+      'th': 'ยังไม่ได้รับสิทธิ์ตำแหน่ง กรุณาอนุญาตเฉพาะขณะใช้งาน (When In Use) ในการตั้งค่าเครื่อง',
+      'en': 'Location permission not granted. Allow "While Using the App" in device settings.',
+      'zh': '未获得位置权限，请在系统设置中允许“使用应用期间”访问位置。',
+      'ms': 'Kebenaran lokasi belum diberikan. Benarkan "Semasa Menggunakan Aplikasi" dalam tetapan peranti.',
     },
     'gps_service_disabled': {
       'th': 'GPS ของเครื่องยังปิดอยู่ กรุณาเปิดบริการตำแหน่ง',
@@ -464,7 +415,7 @@ class AppStrings {
       'ms': 'Persetujuan Lokasi GPS (PDPA)',
     },
     'gps_consent_body': {
-      'th': 'แอปจะอ่านพิกัดของคุณเฉพาะขณะใช้งานหน้าแผนที่นี้เท่านั้น เพื่อเทียบความสูงพื้นที่กับระดับน้ำแม่น้ำในเครื่อง โดยไม่มีการส่งออกหรือติดตามตำแหน่งพื้นหลัง คุณสามารถลบข้อมูลได้ทุกเมื่อในหน้าตั้งค่า',
+      'th': 'แอปจะอ่านพิกัดของท่านเฉพาะขณะใช้งานหน้าแผนที่นี้เท่านั้น เพื่อเทียบความสูงพื้นที่กับระดับน้ำแม่น้ำในเครื่อง โดยไม่มีการส่งออกหรือติดตามตำแหน่งพื้นหลัง ท่านสามารถลบข้อมูลได้ทุกเมื่อในหน้าตั้งค่า',
       'en': 'The app reads your GPS only while using the map to compare your ground elevation against river levels on-device. Coordinates are never tracked in the background or uploaded, and can be deleted anytime in Settings.',
       'zh': '本应用仅在您使用地图时在本地读取 GPS，用于对比地面海拔与河流水位。绝不后台追踪或上传位置，您可随时在设置中删除。',
       'ms': 'Aplikasi hanya membaca GPS semasa peta digunakan bagi membandingkan ketinggian tanah dengan paras air secara setempat. Tiada penjejakan latar belakang dan data boleh dipadam bila-bila masa di Tetapan.',
@@ -476,294 +427,75 @@ class AppStrings {
       'zh': '同意并定位',
       'ms': 'Setuju & Cari',
     },
-    'phone_input_label': {
-      'th': 'เบอร์โทรที่ติดต่อได้ (เก็บในเครื่องเท่านั้น)',
-      'en': 'Contact Phone Number (Stored Locally Only)',
-      'zh': '联系电话（仅存储在本地设备）',
-      'ms': 'Nombor Telefon (Disimpan Dalam Peranti Sahaja)',
+
+    // ── Zone C High-Ground Advisory Notes (Layer 2 Option ก) ──────────────
+    'zone_c_advisory_lv3': {
+      'th': 'พื้นที่ของท่านอยู่สูงพ้นระดับน้ำแม่น้ำ แต่พื้นที่ลุ่มต่ำในอำเภออยู่ระดับเตือนภัย โปรดตรวจสอบเส้นทางสัญจรก่อนเดินทาง',
+      'en': 'Your area is above river flood level, but lowlands in this district are under Flood Warning. Check road conditions before traveling.',
+      'zh': '您所在位置高于河流水位，但本县低洼地区处于洪水预警状态，出行前请确认路况。',
+      'ms': 'Kawasan anda tinggi daripada paras sungai, tetapi kawasan rendah di daerah ini berada pada tahap Amaran. Semak laluan sebelum perjalanan.',
     },
-    'phone_input_hint': {
-      'th': 'เช่น 0812345678',
-      'en': 'e.g. 0812345678',
-      'zh': '例如 0812345678',
-      'ms': 'cth. 0812345678',
+    'zone_c_advisory_lv4': {
+      'th': 'พื้นที่ของท่านอยู่สูงพ้นระดับน้ำแม่น้ำ แต่พื้นที่ลุ่มต่ำในอำเภออยู่ระดับเตือนภัยสูง โปรดระวังเส้นทางสัญจรถูกตัดขาดและเตรียมสำรองน้ำ-ไฟฟ้า',
+      'en': 'Your area is above river level, but district lowlands are at High Alert. Watch for flooded access roads and utility disruptions.',
+      'zh': '您所在位置高于河流水位，但本县低洼地区处于高度警报状态，请留意道路中断及水电供应。',
+      'ms': 'Kawasan anda tinggi daripada paras sungai, tetapi kawasan rendah berada pada Amaran Tinggi. Berwaspada terhadap jalan terputus dan gangguan utiliti.',
     },
-    'phone_invalid': {
-      'th': 'กรุณากรอกเบอร์โทรที่ติดต่อได้ให้ถูกต้อง',
-      'en': 'Please enter a valid contact phone number',
-      'zh': '请输入有效的联系电话',
-      'ms': 'Sila masukkan nombor telefon yang sah',
+    'zone_c_advisory_flash_lv4': {
+      'th': 'พื้นที่อยู่สูงพ้นน้ำแม่น้ำ แต่เป็นเขตพื้นที่ลาดเชิงเขา โปรดระมัดระวังน้ำป่าไหลหลากและดินโคลนถล่ม รวมถึงเส้นทางสัญจร',
+      'en': 'Above river level, but within a sloped foothill zone. Stay alert for mountain flash floods, landslides, and blocked roads.',
+      'zh': '虽高于河流水位，但处于山麓坡地区域，请高度警惕山洪、泥石流及道路受阻。',
+      'ms': 'Tinggi daripada paras sungai tetapi berhampiran lereng bukit. Berwaspada terhadap kepala air, tanah runtuh dan laluan terputus.',
     },
-    'sos_need_gps': {
-      'th': 'กรุณากด "ค้นหาพิกัด GPS" เพื่อยืนยันตำแหน่งก่อนส่งคำขอ SOS',
-      'en': 'Please tap "Find GPS" first to confirm your location before sending SOS.',
-      'zh': '发送 SOS 前请先点击“获取 GPS”确认您的位置。',
-      'ms': 'Sila tekan "Cari GPS" dahulu untuk mengesahkan lokasi sebelum menghantar SOS.',
+    'zone_c_advisory_lv5': {
+      'th': 'พื้นที่ของท่านอยู่สูงพ้นระดับน้ำแม่น้ำ แต่พื้นที่ลุ่มต่ำในอำเภออยู่ในระดับอันตราย โปรดระมัดระวังเส้นทางสัญจรที่อาจถูกน้ำท่วมตัดขาด รวมถึงระบบไฟฟ้าและน้ำประปา',
+      'en': 'Your area is above river level, but district lowlands are at Danger (flooding). Avoid flooded roads and prepare for power/water disruptions.',
+      'zh': '您所在位置高于河流水位，但本县低洼地区处于极度危险（受淹）状态，请避开积水路段并防范停水停电。',
+      'ms': 'Kawasan anda tinggi daripada paras sungai, tetapi kawasan rendah di daerah ini pada tahap Bahaya. Elakkan jalan dinaiki air dan bersedia gangguan elektrik/air.',
     },
-    'sos_saved_snack': {
-      'th': 'เตรียมข้อความ SOS พร้อมพิกัดแล้ว เลือกส่งผ่าน SMS / LINE หรือโทร 1784 ได้ทันที',
-      'en': 'SOS message & GPS ready. Dispatch via SMS / LINE or call 1784 immediately.',
-      'zh': 'SOS 求助信息与坐标已准备就绪，可立即通过短信 / LINE 发送或拨打 1784。',
-      'ms': 'Mesej SOS & GPS sedia. Hantar melalui SMS / LINE atau hubungi 1784 segera.',
+
+    // ── App User Guide & Evacuation Guide (Offline-First) ─────────────────
+    'guide_title': {
+      'th': 'คู่มือใช้งานและคู่มืออพยพ',
+      'en': 'App & Evacuation Guide',
+      'zh': '使用指南与撤离手册',
+      'ms': 'Panduan Aplikasi & Pemindahan',
     },
-    'sos_local_history': {
-      'th': 'ประวัติคำขอ SOS ในเครื่อง',
-      'en': 'Local SOS History',
-      'zh': '本机 SOS 求助记录',
-      'ms': 'Sejarah SOS Dalam Peranti',
+    'guide_tab_app': {
+      'th': 'คู่มือใช้แอป',
+      'en': 'App Guide',
+      'zh': '应用指南',
+      'ms': 'Panduan Aplikasi',
     },
-    'sos_note_label': {
-      'th': 'รายละเอียดเพิ่มเติม (เก็บในเครื่องเท่านั้น)',
-      'en': 'Additional Details (Stored Locally Only)',
-      'zh': '补充说明（仅保存在本机）',
-      'ms': 'Maklumat Tambahan (Disimpan Dalam Peranti Sahaja)',
+    'guide_tab_evac': {
+      'th': 'คู่มืออพยพ',
+      'en': 'Evacuation',
+      'zh': '撤离指南',
+      'ms': 'Panduan Pindah',
     },
-    'sos_note_hint': {
-      'th': 'เช่น มีผู้สูงอายุ 2 คน น้ำท่วมชั้น 1 สูง 80 ซม.',
-      'en': 'e.g. 2 elderly residents, water 80 cm indoors',
-      'zh': '例如：有 2 位老人，室内积水 80 厘米',
-      'ms': 'cth. 2 warga emas, air setinggi 80 cm di dalam rumah',
+    'guide_card_sub': {
+      'th': 'อ่านได้แม้ออฟไลน์ · วิธีใช้แผนที่ กราฟ และการปฏิบัติตนเมื่อเกิดอุทกภัย (อ้างอิง ปภ.)',
+      'en': 'Works offline · How to use the map, charts & official DDPM flood evacuation steps',
+      'zh': '支持离线阅读 · 地图与图表用法及防灾减灾厅官方撤离步骤',
+      'ms': 'Boleh dibaca luar talian · Cara guna peta, graf & langkah pemindahan rasmi DDPM',
     },
-    'sos_dispatch_title': {
-      'th': 'เลือกช่องทางส่งข้อความ SOS จริง',
-      'en': 'Choose Real SOS Dispatch Channel',
-      'zh': '选择真实 SOS 发送渠道',
-      'ms': 'Pilih Saluran Penghantaran SOS Sebenar',
+    'guide_open_web': {
+      'th': 'เปิดคู่มือฉบับเว็บ (สำหรับแชร์/พิมพ์)',
+      'en': 'Open Web Version (Share / Print)',
+      'zh': '打开网页版手册（便于分享/打印）',
+      'ms': 'Buka Versi Web (Kongsi / Cetak)',
     },
-    'sos_dispatch_sub': {
-      'th': 'ข้อความถูกจัดเตรียมพร้อมพิกัด GPS และลิงก์แผนที่แล้ว (ไม่เก็บเบอร์โทรบนเซิร์ฟเวอร์)',
-      'en': 'Message prepared with exact GPS & Google Maps link (phone number stays strictly on device).',
-      'zh': '已生成包含精确 GPS 与地图链接的求助信息（电话号码仅保留在本机）。',
-      'ms': 'Mesej sedia dengan GPS tepat & pautan Google Maps (nombor telefon kekal dalam peranti).',
+    'guide_offline_badge': {
+      'th': 'ใช้งานได้ 100% แม้ไม่มีสัญญาณอินเทอร์เน็ต',
+      'en': '100% available offline without internet signal',
+      'zh': '无网络信号时亦可 100% 离线阅读',
+      'ms': '100% tersedia secara luar talian tanpa internet',
     },
-    'sos_dispatch_sms': {
-      'th': 'ส่ง SMS ฉุกเฉิน (ใช้ได้แม้เน็ตล่ม)',
-      'en': 'Send Emergency SMS (Works Offline)',
-      'zh': '发送紧急短信（断网可用）',
-      'ms': 'Hantar SMS Kecemasan (Berfungsi Tanpa Internet)',
-    },
-    'sos_dispatch_line': {
-      'th': 'ส่งต่อผ่าน LINE (ญาติ / กู้ภัย / กลุ่ม)',
-      'en': 'Share via LINE (Family / Rescue / Group)',
-      'zh': '通过 LINE 分享（家人 / 救援队 / 群组）',
-      'ms': 'Kongsi melalui LINE (Keluarga / Penyelamat)',
-    },
-    'sos_dispatch_copy': {
-      'th': 'คัดลอกข้อความ + พิกัด',
-      'en': 'Copy Message & GPS',
-      'zh': '复制求助信息与坐标',
-      'ms': 'Salin Mesej & GPS',
-    },
-    'sos_dispatch_copied': {
-      'th': 'คัดลอกข้อความ SOS พร้อมพิกัดแล้ว สามารถวางส่งใน LINE หรือแชทได้ทันที',
-      'en': 'SOS message & GPS copied. You can paste and send immediately.',
-      'zh': '已复制 SOS 信息与坐标，可立即粘贴发送。',
-      'ms': 'Mesej SOS & GPS disalin. Anda boleh tampal dan hantar segera.',
-    },
-    'sos_dispatch_copy_ddpm': {
-      'th': 'คัดลอกแล้วเปิด LINE @1784DDPM',
-      'en': 'Copy & Open LINE @1784DDPM',
-      'zh': '复制并打开 LINE @1784DDPM',
-      'ms': 'Salin & Buka LINE @1784DDPM',
-    },
-    'sos_dispatch_copy_city': {
-      'th': 'คัดลอกแล้วเปิด LINE @yalacity',
-      'en': 'Copy & Open LINE @yalacity',
-      'zh': '复制并打开 LINE @yalacity',
-      'ms': 'Salin & Buka LINE @yalacity',
-    },
-    'sos_dispatch_call_section': {
-      'th': 'หรือกดโทรด่วนทันที (อ่านพิกัดด้านบนให้เจ้าหน้าที่)',
-      'en': 'Or call immediately (read coordinates above to dispatcher)',
-      'zh': '或立即拨打急救电话（向接线员读出上方坐标）',
-      'ms': 'Atau hubungi segera (baca koordinat di atas kepada petugas)',
-    },
-    'sos_dispatch_resend': {
-      'th': 'ส่งซ้ำ / แชร์',
-      'en': 'Resend / Share',
-      'zh': '重新发送 / 分享',
-      'ms': 'Hantar Semula / Kongsi',
-    },
-    'sos_cannot_open_sms': {
-      'th': 'ไม่สามารถเปิดแอปส่ง SMS ได้ (คัดลอกข้อความให้แล้ว)',
-      'en': 'Unable to open SMS app (message copied to clipboard)',
-      'zh': '无法打开短信应用（信息已复制到剪贴板）',
-      'ms': 'Tidak dapat membuka aplikasi SMS (mesej telah disalin)',
-    },
-    'sos_msg_header': {
-      'th': '🆘 แจ้งเหตุฉุกเฉินน้ำท่วมยะลา (SOS)',
-      'en': '🆘 YALA FLOOD EMERGENCY (SOS)',
-      'zh': '🆘 也拉府洪水紧急求助 (SOS)',
-      'ms': '🆘 KECEMASAN BANJIR YALA (SOS)',
-    },
-    'sos_msg_type': {
-      'th': 'ประเภท',
-      'en': 'Type',
-      'zh': '类型',
-      'ms': 'Jenis',
-    },
-    'sos_msg_area': {
-      'th': 'พื้นที่',
-      'en': 'Area',
-      'zh': '区域',
-      'ms': 'Kawasan',
-    },
-    'sos_msg_elevation': {
-      'th': 'ความสูงพื้นที่',
-      'en': 'Ground Elevation',
-      'zh': '地面海拔',
-      'ms': 'Ketinggian Tanah',
-    },
-    'sos_msg_gps': {
-      'th': 'พิกัด GPS',
-      'en': 'GPS',
-      'zh': 'GPS 坐标',
-      'ms': 'GPS',
-    },
-    'sos_msg_map': {
-      'th': 'แผนที่นำทาง',
-      'en': 'Google Maps',
-      'zh': '导航地图',
-      'ms': 'Peta Google',
-    },
-    'sos_msg_phone': {
-      'th': 'เบอร์ติดต่อกลับ',
-      'en': 'Callback Phone',
-      'zh': '联系电话',
-      'ms': 'No. Telefon',
-    },
-    'sos_msg_note': {
-      'th': 'รายละเอียด',
-      'en': 'Details',
-      'zh': '详情',
-      'ms': 'Butiran',
-    },
-    'sos_msg_time': {
-      'th': 'เวลาแจ้ง',
-      'en': 'Time',
-      'zh': '时间',
-      'ms': 'Masa',
-    },
-    // ── Tier C Community Flood Reports (Anonymous · PDPA 90-day) ──────────
-    'community_report_title': {
-      'th': 'รายงานจุดน้ำท่วมชุมชน (ไม่ระบุตัวตน)',
-      'en': 'Community Flood Report (Anonymous)',
-      'zh': '社区灾情上报（匿名）',
-      'ms': 'Laporan Banjir Komuniti (Tanpa Nama)',
-    },
-    'community_report_sub': {
-      'th': 'ช่วยแจ้งสถานการณ์จริงในพื้นที่เพื่อเตือนภัยเพื่อนบ้านและเสริมข้อมูลระบบ',
-      'en': 'Share live ground conditions to alert neighbors and strengthen flood warnings.',
-      'zh': '分享实时灾情，提醒周边居民并辅助预警判断。',
-      'ms': 'Kongsi keadaan sebenar di lapangan untuk membantu amaran banjir.',
-    },
-    'community_report_pdpa_note': {
-      'th': 'PDPA: ส่งเฉพาะอำเภอ ประเภทเหตุ ระดับน้ำ และพิกัดหยาบ (~110 ม.) ไม่เก็บชื่อหรือเบอร์โทร · ลบอัตโนมัติใน 90 วัน (จำกัด 1 ครั้ง/ชม.)',
-      'en': 'PDPA: Sends only district, event type, depth & ~110m rounded coordinates. No name or phone stored; auto-deleted after 90 days (max 1/hr).',
-      'zh': 'PDPA 隐私保护：仅上传县区、事件类型、水深及约 110 米模糊坐标，不收集姓名电话，90 天自动删除（每小时限 1 次）。',
-      'ms': 'PDPA: Hanya menghantar daerah, jenis kejadian, kedalaman & koordinat dibundarkan ~110m. Tiada nama/telefon; dipadam automatik selepas 90 hari (had 1/jam).',
-    },
-    'community_report_amphoe': {
-      'th': 'อำเภอที่เกิดเหตุ',
-      'en': 'District',
-      'zh': '所在县区',
-      'ms': 'Daerah',
-    },
-    'community_report_type': {
-      'th': 'สถานการณ์ที่พบ',
-      'en': 'Observed Situation',
-      'zh': '现场情况',
-      'ms': 'Keadaan Ditemui',
-    },
-    'community_report_depth_label': {
-      'th': 'ความลึกน้ำโดยประมาณ (ซม. · ไม่บังคับ)',
-      'en': 'Estimated Water Depth (cm · optional)',
-      'zh': '估算水深（厘米 · 可选）',
-      'ms': 'Anggaran Kedalaman Air (cm · pilihan)',
-    },
-    'community_report_depth_hint': {
-      'th': 'เช่น 40',
-      'en': 'e.g. 40',
-      'zh': '例如 40',
-      'ms': 'cth. 40',
-    },
-    'community_report_note_label': {
-      'th': 'หมายเหตุสั้น ๆ (ห้ามระบุชื่อ/เบอร์โทรส่วนตัว)',
-      'en': 'Short Note (do not include personal name or phone)',
-      'zh': '简短备注（请勿填写个人姓名或电话）',
-      'ms': 'Nota Ringkas (jangan masukkan nama/telefon peribadi)',
-    },
-    'community_report_note_hint': {
-      'th': 'เช่น ถนนหน้าตลาดรถเล็กผ่านไม่ได้',
-      'en': 'e.g. Market road impassable for small cars',
-      'zh': '例如：市场前道路小型车无法通行',
-      'ms': 'cth. Jalan hadapan pasar tidak boleh dilalui kereta kecil',
-    },
-    'community_report_submit_btn': {
-      'th': 'ส่งรายงานสถานการณ์ชุมชน',
-      'en': 'Submit Community Report',
-      'zh': '提交社区灾情报告',
-      'ms': 'Hantar Laporan Komuniti',
-    },
-    'community_report_submitting': {
-      'th': 'กำลังส่งรายงาน…',
-      'en': 'Submitting report…',
-      'zh': '正在提交报告…',
-      'ms': 'Sedang menghantar laporan…',
-    },
-    'community_report_success': {
-      'th': 'ส่งรายงานสถานการณ์ชุมชนสำเร็จ ขอบคุณที่ช่วยแจ้งเตือนคนยะลา',
-      'en': 'Community flood report submitted. Thank you for helping Yala residents.',
-      'zh': '社区灾情报告已提交，感谢您协助守护也拉居民。',
-      'ms': 'Laporan banjir komuniti berjaya dihantar. Terima kasih kerana membantu warga Yala.',
-    },
-    'community_report_rate_limited': {
-      'th': 'คุณส่งรายงานไปแล้วภายใน 60 นาทีที่ผ่านมา (ระบบจำกัด 1 ครั้ง/ชั่วโมง เพื่อป้องกันสแปม)',
-      'en': 'You already submitted a report within the past 60 minutes (limit: 1 report/hour).',
-      'zh': '您在过去 60 分钟内已提交过报告（防刷限制：每小时 1 次）。',
-      'ms': 'Anda telah menghantar laporan dalam tempoh 60 minit lalu (had: 1 laporan/jam).',
-    },
-    'community_report_outside_yala': {
-      'th': 'พิกัดอยู่นอกเขตจังหวัดยะลา ไม่สามารถส่งรายงานชุมชนได้',
-      'en': 'Coordinates are outside Yala Province; community report rejected.',
-      'zh': '当前坐标位于也拉府范围之外，无法提交。',
-      'ms': 'Koordinat berada di luar Wilayah Yala; laporan tidak dapat dihantar.',
-    },
-    'community_report_not_configured': {
-      'th': 'บิลด์นี้ยังไม่ได้ตั้งค่าคีย์เซิร์ฟเวอร์รายงานชุมชน (ยังใช้ปุ่มส่ง SOS ผ่าน SMS / LINE ด้านบนได้ตามปกติ)',
-      'en': 'Community report server key is not configured in this build (SMS / LINE SOS above works normally).',
-      'zh': '当前版本未配置社区上报服务密钥（上方短信 / LINE SOS 功能可正常使用）。',
-      'ms': 'Kunci pelayan laporan komuniti belum dikonfigurasi dalam binaan ini (SOS SMS / LINE di atas berfungsi seperti biasa).',
-    },
-    'community_report_error': {
-      'th': 'ไม่สามารถส่งรายงานได้ในขณะนี้ โปรดตรวจสอบอินเทอร์เน็ตแล้วลองใหม่',
-      'en': 'Unable to submit report right now. Please check your connection and try again.',
-      'zh': '暂时无法提交报告，请检查网络后重试。',
-      'ms': 'Tidak dapat menghantar laporan sekarang. Sila semak sambungan internet anda.',
-    },
-    'community_report_invalid_depth': {
-      'th': 'กรุณาระบุความลึกน้ำระหว่าง 0–1,000 ซม.',
-      'en': 'Please enter water depth between 0 and 1,000 cm.',
-      'zh': '请输入 0 至 1,000 厘米之间的水深。',
-      'ms': 'Sila masukkan kedalaman air antara 0 hingga 1,000 cm.',
-    },
-    'community_recent_title': {
-      'th': 'รายงานล่าสุดจากชุมชนในพื้นที่',
-      'en': 'Recent Community Reports',
-      'zh': '最新社区灾情动态',
-      'ms': 'Laporan Komuniti Terkini',
-    },
-    'community_recent_empty': {
-      'th': 'ยังไม่มีรายงานชุมชนล่าสุดในขณะนี้',
-      'en': 'No recent community reports yet.',
-      'zh': '目前暂无最新社区上报记录。',
-      'ms': 'Tiada laporan komuniti terkini buat masa ini.',
-    },
-    'unit_cm': {
-      'th': 'ซม.',
-      'en': 'cm',
-      'zh': '厘米',
-      'ms': 'cm',
+    'rain_chart_axis_legend': {
+      'th': 'แสดงปริมาณฝน (มม.) และโอกาสฝนตก (%) ครบทุกชั่วโมง',
+      'en': 'Shows rainfall (mm) and rain probability (%) for every hour',
+      'zh': '逐小时完整显示降雨量 (毫米) 与降雨概率 (%)',
+      'ms': 'Memaparkan jumlah hujan (mm) dan peluang hujan (%) setiap jam',
     },
 
     // ── Settings Screen & Alert Level Guide ───────────────────────────────
@@ -1225,81 +957,81 @@ class AppStrings {
     },
   };
 
-  // ── 5 Alert Levels: Labels, Criteria & Actions (All 4 Languages · formula_version = 4) ──
+  // ── 5 Alert Levels: Official Formal & Concise Copy (All 4 Languages · formula_version = 5) ──
   static const Map<int, Map<String, Map<String, String>>> _alertLevels = {
     1: {
       'label': {'th': 'ปกติ', 'en': 'Normal', 'zh': '正常', 'ms': 'Normal'},
       'desc': {
-        'th': 'ระดับน้ำต่ำกว่าเส้นเฝ้าระวัง ปริมาณฝนและการระบายเขื่อนบางลางอยู่ในเกณฑ์ปกติ',
-        'en': 'Water level is below the watch line; rainfall and Bang Lang Dam operations are normal.',
-        'zh': '水位低于警戒线，降雨与邦朗水坝调度正常。',
-        'ms': 'Paras air di bawah garis waspada; hujan dan operasi Empangan Bang Lang normal.',
+        'th': 'ระดับน้ำต่ำกว่าเกณฑ์เฝ้าระวัง สถานการณ์อยู่ในภาวะปกติ',
+        'en': 'Water levels are below watch thresholds; conditions are normal.',
+        'zh': '水位低于警戒标准，当前水情处于正常状态。',
+        'ms': 'Paras air di bawah tahap waspada; keadaan berada dalam paras normal.',
       },
       'action': {
-        'th': 'ติดตามสถานการณ์ได้ตามปกติ',
-        'en': 'Monitor conditions as usual.',
-        'zh': '按日常情况关注天气与水情即可。',
-        'ms': 'Pantau keadaan seperti biasa.',
+        'th': 'ติดตามข่าวสารพยากรณ์อากาศและสถานการณ์น้ำตามปกติ',
+        'en': 'Monitor weather forecasts and water updates as usual.',
+        'zh': '按常规关注天气预报与水情信息即可。',
+        'ms': 'Pantau ramalan cuaca dan paras air seperti biasa.',
       },
     },
     2: {
       'label': {'th': 'เฝ้าระวัง', 'en': 'Watch', 'zh': '关注警戒', 'ms': 'Waspada'},
       'desc': {
-        'th': 'ระดับน้ำแตะเส้นเฝ้าระวังและมีแนวโน้มทรงตัว (side way) หรือมีสัญญาณฝน/เขื่อนบางลางให้เฝ้าระวัง',
-        'en': 'Water level has reached the watch line with a sideways/steady trend, or early rain/dam watch is active.',
-        'zh': '水位触及警戒线且呈横盘平稳走势，或触发降雨/水坝关注信号。',
-        'ms': 'Paras air mencecah garis waspada dengan aliran mendatar (side way), atau isyarat awal hujan/empangan aktif.',
+        'th': 'ระดับน้ำเริ่มสูงขึ้นเข้าใกล้เกณฑ์เฝ้าระวัง หรือมีฝนตกหนักในพื้นที่ลุ่มน้ำ',
+        'en': 'Water levels are approaching watch thresholds, or heavy rainfall is developing in the basin.',
+        'zh': '水位逐步接近警戒标准，或流域内出现强降雨。',
+        'ms': 'Paras air menghampiri tahap waspada atau hujan lebat berlaku di lembangan sungai.',
       },
       'action': {
-        'th': 'ติดตามข่าวใกล้ชิด เตรียมถุงยังชีพและชาร์จแบตเตอรี่โทรศัพท์',
-        'en': 'Follow updates closely, prepare an emergency kit and charge phones.',
-        'zh': '密切关注预警更新，准备应急包并保持手机电量充足。',
-        'ms': 'Ikuti perkembangan rapat, sediakan beg kecemasan dan cas telefon.',
+        'th': 'ติดตามประกาศอย่างใกล้ชิด เตรียมสิ่งของจำเป็น ยาประจำตัว และสำรองพลังงานอุปกรณ์สื่อสาร',
+        'en': 'Follow official updates closely; prepare essential supplies, medications, and backup power.',
+        'zh': '密切关注官方通告，备好应急物资、常用药品并保持通信设备电量充足。',
+        'ms': 'Ikuti pengumuman rasmi dengan rapat; sediakan barang keperluan, ubat-ubatan dan bekalan kuasa.',
       },
     },
     3: {
       'label': {'th': 'เตือนภัย', 'en': 'Warning', 'zh': '洪水预警', 'ms': 'Amaran'},
       'desc': {
-        'th': 'ระดับน้ำมีแนวโน้มสูงขึ้นอยู่ที่เส้นกึ่งกลางระหว่างเฝ้าระวังกับตลิ่ง (หรือเตือนภัยล่วงหน้าจากฝนหนัก/เขื่อนบางลาง สูงสุดระดับ 3)',
-        'en': 'Water is rising at the midpoint between watch and bank lines (or non-water early warning from heavy rain/dam spillway, capped at Level 3).',
-        'zh': '水位呈上涨趋势并达警戒线与堤岸线中点（或强降雨/邦朗水坝泄洪提前预警，最高3级）。',
-        'ms': 'Paras air meningkat di paras pertengahan antara garis waspada dan tebing (atau amaran awal hujan lebat/empangan, had Tahap 3).',
+        'th': 'มีแนวโน้มเกิดอุทกภัยภายใน 24 ชั่วโมง หรืออาจเกิดน้ำป่าไหลหลากฉับพลัน',
+        'en': 'Flooding is likely within 24 hours, or sudden flash flooding may occur.',
+        'zh': '未来 24 小时内可能发生洪涝，或有突发山洪风险。',
+        'ms': 'Banjir berkemungkinan berlaku dalam tempoh 24 jam atau risiko banjir kilat mengejut.',
       },
       'action': {
-        'th': 'ยกของขึ้นที่สูง เตรียมเส้นทางและแผนอพยพผู้สูงอายุ/ผู้ป่วย',
-        'en': 'Move valuables to higher ground and prepare evacuation routes for vulnerable family members.',
-        'zh': '立即将贵重物品移至高处，提前规划老人与病患的撤离路线。',
-        'ms': 'Alihkan barang ke tempat tinggi dan sediakan laluan pemindahan untuk warga emas/pesakit.',
+        'th': 'ขนย้ายทรัพย์สินขึ้นที่สูง ตรวจสอบเส้นทางปลอดภัย และเตรียมแผนอพยพกลุ่มเปราะบาง',
+        'en': 'Move valuables to higher ground, verify safe routes, and prepare evacuation for vulnerable members.',
+        'zh': '将贵重物品移至高处，确认安全转移路线，做好老人与病患撤离准备。',
+        'ms': 'Alihkan harta benda ke tempat tinggi, semak laluan selamat dan rancang pemindahan golongan rentan.',
       },
     },
     4: {
       'label': {'th': 'เตือนภัยสูง', 'en': 'High Alert', 'zh': '高度警报', 'ms': 'Amaran Tinggi'},
       'desc': {
-        'th': 'ระดับน้ำสูงกว่าเส้นกึ่งกลางเข้าใกล้เส้นตลิ่ง (75%–99% ของช่วงเฝ้าระวังถึงตลิ่ง) เสี่ยงล้นตลิ่งในไม่ช้า',
-        'en': 'Water level is above the midpoint and nearly reaching the bank line (75%–99% of watch-to-bank range); overflow imminent.',
-        'zh': '水位高于中点并逼近堤岸线（警戒至堤岸区间的 75%–99%），即将漫堤。',
-        'ms': 'Paras air melebihi garisan tengah dan hampir mencecah tebing (75%–99% julat waspada ke tebing).',
+        'th': 'ระดับน้ำเข้าใกล้ระดับวิกฤตหรือพื้นที่ใกล้เคียงประสบอุทกภัย มีความเสี่ยงสูงที่ระดับน้ำจะท่วมถึงพื้นที่',
+        'en': 'Water is near critical overflow or adjacent areas are flooding; high risk of imminent inundation.',
+        'zh': '水位逼近临界线或周边区域已受淹，本区面临极高浸水风险。',
+        'ms': 'Paras air menghampiri tahap kritikal atau kawasan berdekatan sedang dinaiki air; risiko tinggi banjir.',
       },
       'action': {
-        'th': 'พร้อมอพยพทันที ติดตามประกาศ ปภ.ยะลา (073-203559) และตัดไฟชั้นล่างหากน้ำเข้า',
-        'en': 'Be ready to evacuate immediately, follow Yala DDPM (073-203559), and turn off ground-floor power if flooded.',
-        'zh': '随时准备立即撤离，紧跟也拉防灾办 (073-203559) 通告，如进水立即切断底层电源。',
-        'ms': 'Bersedia berpindah segera, ikuti arahan DDPM Yala (073-203559) dan matikan bekalan elektrik tingkat bawah jika dimasuki air.',
+        'th': 'เตรียมพร้อมอพยพทันที ตัดกระแสไฟฟ้าชั้นล่างหากน้ำเริ่มเข้าพื้นที่ และติดตามประกาศ ปภ.ยะลา (073-203559)',
+        'en': 'Prepare to evacuate immediately, shut off ground-floor power if water enters, and follow Yala DDPM (073-203559).',
+        'zh': '随时准备立即撤离，如进水先切断底层电源，并关注也拉防灾办 (073-203559) 通告。',
+        'ms': 'Bersedia berpindah segera, matikan bekalan elektrik tingkat bawah jika air masuk dan ikuti arahan DDPM Yala (073-203559).',
       },
     },
     5: {
       'label': {'th': 'อันตราย', 'en': 'Danger / Evacuate', 'zh': '极度危险 / 撤离', 'ms': 'Bahaya / Pindah'},
       'desc': {
-        'th': 'ระดับน้ำเลยเส้นตลิ่งแล้ว พื้นที่ลุ่มต่ำและชุมชนริมน้ำกำลังถูกน้ำท่วม',
-        'en': 'Water level has exceeded the bank line; low-lying and riverside communities are flooding.',
-        'zh': '水位已漫过堤岸线，低洼地区及沿河社区正在受淹。',
-        'ms': 'Paras air telah melepasi garis tebing; kawasan rendah dan komuniti tepi sungai sedang dilanda banjir.',
+        'th': 'เกิดอุทกภัยในพื้นที่แล้ว ระดับน้ำล้นตลิ่งและเป็นอันตรายต่อชีวิตและทรัพย์สิน',
+        'en': 'Flooding is occurring in the area; river levels have exceeded banks with danger to life and property.',
+        'zh': '区域已发生洪涝，水位漫堤并危及生命与财产安全。',
+        'ms': 'Banjir sedang melanda kawasan; paras air melepasi tebing dan mengancam keselamatan nyawa serta harta benda.',
       },
       'action': {
-        'th': 'อพยพทันทีไปยังศูนย์พักพิงปลอดภัย หากติดค้างโทร 1784 / 073-203559 / 1669',
-        'en': 'Evacuate immediately to a safe shelter. If stranded, call 1784 / 073-203559 / 1669.',
-        'zh': '立即撤离至安全避难中心！如被困请立即拨打 1784 / 073-203559 / 1669。',
-        'ms': 'Berpindah segera ke pusat pemindahan selamat. Jika terkandas hubungi 1784 / 073-203559 / 1669.',
+        'th': 'อพยพทันทีไปยังศูนย์พักพิงชั่วคราวที่ปลอดภัย หากต้องการความช่วยเหลือเร่งด่วน โทร. 1784, 073-203559 หรือ 1669',
+        'en': 'Evacuate immediately to a safe shelter. For urgent rescue, call 1784, 073-203559, or 1669.',
+        'zh': '请立即撤离至安全避难中心。如需紧急救援，请拨打 1784、073-203559 或 1669。',
+        'ms': 'Berpindah segera ke pusat pemindahan selamat. Untuk bantuan kecemasan, hubungi 1784, 073-203559 atau 1669.',
       },
     },
   };
@@ -1424,41 +1156,6 @@ class AppStrings {
       'zh': ['民间志愿救援热线 (1677)', '24小时志愿者网络（非官方防灾办）'],
       'ms': ['Rangkaian Sukarelawan 1677', 'Sukarelawan 24 jam (bukan DDPM)'],
     },
-  };
-
-  // ── SOS Types & Statuses ───────────────────────────────────────────────
-  static const Map<String, Map<String, String>> _sosTypes = {
-    'น้ำท่วมบ้าน/ชุมชน': {
-      'th': 'น้ำท่วมบ้าน/ชุมชน',
-      'en': 'Home / Community Flooded',
-      'zh': '房屋/社区进水',
-      'ms': 'Rumah / Komuniti Dinaiki Air',
-    },
-    'ต้องการพาตัวอพยพ': {
-      'th': 'ต้องการพาตัวอพยพ',
-      'en': 'Evacuation Needed',
-      'zh': '需要协助撤离',
-      'ms': 'Perlukan Bantuan Pemindahan',
-    },
-    'ต้องการอาหาร/น้ำดื่ม': {
-      'th': 'ต้องการอาหาร/น้ำดื่ม',
-      'en': 'Food / Drinking Water',
-      'zh': '需要食物/饮用水',
-      'ms': 'Perlukan Makanan / Air Minuman',
-    },
-    'ป่วย/ต้องการยา': {
-      'th': 'ป่วย/ต้องการยา',
-      'en': 'Medical / Medicine Needed',
-      'zh': '生病/急需药品',
-      'ms': 'Sakit / Perlukan Ubat',
-    },
-    'อุบัติเหตุบนน้ำ': {
-      'th': 'อุบัติเหตุบนน้ำ',
-      'en': 'Water / Boat Accident',
-      'zh': '水上事故',
-      'ms': 'Kemalangan Di Air',
-    },
-    'อื่น ๆ': {'th': 'อื่น ๆ', 'en': 'Other', 'zh': '其他', 'ms': 'Lain-lain'},
   };
 
   // ── Flood Mechanism & Confidence Labels ────────────────────────────────
@@ -1626,37 +1323,6 @@ class AppStrings {
   String contactSubtitle(String number, String fallbackTh) =>
       _contacts[number]?[lang]?[1] ?? fallbackTh;
 
-  String sosTypeLabel(String thType) => _sosTypes[thType]?[lang] ?? thType;
-
-  String sosStatusLabel(SosStatus status) {
-    return switch (status) {
-      SosStatus.pending => switch (lang) {
-          'en' => 'Pending',
-          'zh' => '待处理',
-          'ms' => 'Menunggu',
-          _ => 'รอตอบรับ',
-        },
-      SosStatus.accepted => switch (lang) {
-          'en' => 'Received',
-          'zh' => '已受理',
-          'ms' => 'Diterima',
-          _ => 'รับเรื่องแล้ว',
-        },
-      SosStatus.inProgress => switch (lang) {
-          'en' => 'Dispatched',
-          'zh' => '救援途中',
-          'ms' => 'Bantuan Dihantar',
-          _ => 'กำลังส่งช่วยเหลือ',
-        },
-      SosStatus.resolved => switch (lang) {
-          'en' => 'Resolved',
-          'zh' => '已获救',
-          'ms' => 'Selesai',
-          _ => 'ช่วยเหลือแล้ว',
-        },
-    };
-  }
-
   String remainingToBankText(double remaining) {
     final absVal = remaining.abs().toStringAsFixed(2);
     if (remaining >= 0) {
@@ -1766,72 +1432,6 @@ class AppStrings {
       'zh' => '${diff.inDays} 天前',
       'ms' => '${diff.inDays} hari lalu',
       _ => '${diff.inDays} วันที่แล้ว',
-    };
-  }
-
-  String communityReportTypeLabel(String type) {
-    return switch (type) {
-      'water_rising' => switch (lang) {
-          'en' => 'Water Rising',
-          'zh' => '水位上涨',
-          'ms' => 'Air Naik',
-          _ => 'น้ำกำลังขึ้น',
-        },
-      'road_flooded' => switch (lang) {
-          'en' => 'Road Flooded',
-          'zh' => '道路积水',
-          'ms' => 'Jalan Dinaiki Air',
-          _ => 'ถนนถูกน้ำท่วม',
-        },
-      'flash_flood' => switch (lang) {
-          'en' => 'Flash Flood / Runoff',
-          'zh' => '山洪 / 暴涨',
-          'ms' => 'Banjir Kilat',
-          _ => 'น้ำป่าไหลหลาก',
-        },
-      'landslide' => switch (lang) {
-          'en' => 'Landslide',
-          'zh' => '山体滑坡',
-          'ms' => 'Tanah Runtuh',
-          _ => 'ดินโคลนถล่ม',
-        },
-      'shelter_full' => switch (lang) {
-          'en' => 'Shelter Full',
-          'zh' => '避难所已满',
-          'ms' => 'Pusat Pemindahan Penuh',
-          _ => 'ศูนย์พักพิงเต็ม',
-        },
-      _ => type,
-    };
-  }
-
-  String sosDispatchedViaLabel(String channel) {
-    return switch (channel) {
-      'sms' => switch (lang) {
-          'en' => 'Sent via SMS',
-          'zh' => '已通过短信发送',
-          'ms' => 'Dihantar melalui SMS',
-          _ => 'ส่งผ่าน SMS แล้ว',
-        },
-      'line' => switch (lang) {
-          'en' => 'Shared via LINE',
-          'zh' => '已通过 LINE 分享',
-          'ms' => 'Dikongsi melalui LINE',
-          _ => 'ส่งผ่าน LINE แล้ว',
-        },
-      'clipboard' => switch (lang) {
-          'en' => 'Copied SOS',
-          'zh' => '已复制 SOS 信息',
-          'ms' => 'SOS Disalin',
-          _ => 'คัดลอกข้อความแล้ว',
-        },
-      'call' => switch (lang) {
-          'en' => 'Emergency Called',
-          'zh' => '已拨打急救电话',
-          'ms' => 'Panggilan Kecemasan',
-          _ => 'โทรแจ้งเหตุแล้ว',
-        },
-      _ => channel,
     };
   }
 

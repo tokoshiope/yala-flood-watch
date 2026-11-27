@@ -109,7 +109,7 @@ class Station {
   /// ระดับพื้นดิน (ม. MSL) ใช้คำนวณ % ความจุ
   final double? groundLevel;
 
-  /// ระดับสถานการณ์ 1-4 จากกระทรวง/สสน. (อาจเป็น null)
+  /// ระดับสถานการณ์ 1-5 จาก สสน. (1=น้อยวิกฤต, 2=น้อย, 3=ปกติ, 4=มาก, 5=ล้นตลิ่ง; อาจเป็น null)
   final int? situationLevel;
 
   /// % ความจุ (เขื่อน) — สถานีระดับน้ำธรรมดามักเป็น null
@@ -188,8 +188,9 @@ class Station {
     );
   }
 
-  /// เกณฑ์วิกฤต/เส้นตลิ่งอ้างอิง (ใช้ค่า สทภ.8 หากกำหนดไว้ เช่น X.77 = 39.70 ม., มิฉะนั้นใช้ bankLevel)
+  /// เกณฑ์วิกฤต/เส้นตลิ่งอ้างอิง (คืน null หากฐานตลิ่งยังไม่ยืนยัน เช่น FOP045 เพื่อป้องกันแสดงค่าหลอกบน UI)
   double? get criticalLevel {
+    if (isDatumUnverified) return null;
     final configured = AppConfig.stationCriticalMsl[code];
     if (configured != null && configured > 0) return configured;
     return bankLevel;
@@ -197,6 +198,7 @@ class Station {
 
   /// เส้นเฝ้าระวังอ้างอิงรายสถานี (watch_m จาก stations.yaml / AppConfig หรือ crit - 1.5 ม.)
   double? get watchLevel {
+    if (isDatumUnverified) return null;
     final crit = criticalLevel;
     if (crit == null || crit <= 0) return null;
     final configured = AppConfig.stationWatchMsl[code];
@@ -222,13 +224,32 @@ class Station {
     return (m + c) / 2.0;
   }
 
-  /// ระดับความเสี่ยงหลักตามเกณฑ์น้ำ 5 ขั้น (`formula_version = 4`):
-  /// 1 ปกติ (< watch) · 2 เฝ้าระวัง (watch..mid side way) · 3 เตือนภัย (mid..high หรือ watch+ขึ้นเร็ว)
-  /// 4 เตือนภัยสูง (high..bank เกือบถึงตลิ่ง) · 5 อันตราย (>= bank / sit==5)
+  /// สถานีที่ฐานค่าระดับตลิ่งยังไม่ยืนยัน (เช่น FOP045 กรงปินัง) — ไม่ใช้ bank - level กดเตือนภัย
+  bool get isDatumUnverified => AppConfig.unverifiedDatumStations.contains(code);
+
+  /// ระดับความเสี่ยงหลักตามเกณฑ์น้ำ 5 ขั้น (`formula_version = 5`):
+  /// 1 ปกติ (< watch) · 2 เฝ้าระวัง (watch..mid) · 3 เตือนภัย (mid..high หรือขึ้นเร็ว/คาดล้น <=24 ชม.)
+  /// 4 เตือนภัยสูง (high..bank เกือบถึงตลิ่ง หรือคาดล้น <=6 ชม.) · 5 อันตราย (>= bank / sit==5)
   RiskLevel get riskLevel {
     // ThaiWater situation_level == 5 ยืนยันล้นตลิ่ง (>100%) เสมอ
     if (situationLevel != null && situationLevel! >= 5) {
       return RiskLevel.danger;
+    }
+
+    final dH = (waterLevelMsl != null && waterLevelMslPrev != null)
+        ? ((waterLevelMsl! - waterLevelMslPrev!) * 10000).round() / 10000.0
+        : 0.0;
+
+    // กรณีสถานีฐานตลิ่งยังไม่ยืนยัน (FOP045): ประเมินจาก dH/dt และ situation_level แทน bank-level
+    if (isDatumUnverified) {
+      if (waterLevelMsl != null && dH >= AppConfig.risingFastMetersPerHour) {
+        return RiskLevel.warning;
+      }
+      if (waterLevelMsl != null && dH >= 0.15) {
+        return RiskLevel.watch;
+      }
+      final sitLevel = RiskLevel.fromSituation(situationLevel);
+      return sitLevel != RiskLevel.unknown ? sitLevel : RiskLevel.normal;
     }
 
     final crit = criticalLevel;
@@ -238,18 +259,23 @@ class Station {
     final wl = displayLevel;
 
     if (crit != null && watch != null && mid != null && high != null && wl != null) {
-      final dH = (waterLevelMsl != null && waterLevelMslPrev != null)
-          ? ((waterLevelMsl! - waterLevelMslPrev!) * 10000).round() / 10000.0
-          : 0.0;
+      final double? timeToBankH = (wl < crit && dH >= 0.05)
+          ? (((crit - wl) / dH) * 100.0).round() / 100.0
+          : null;
       if (wl >= crit) return RiskLevel.danger;
       if (wl >= high) return RiskLevel.high;
       if (wl >= mid) {
-        return dH >= AppConfig.risingFastMetersPerHour
+        return (dH >= AppConfig.risingFastMetersPerHour ||
+                (timeToBankH != null && timeToBankH <= 6.0))
             ? RiskLevel.high
             : RiskLevel.warning;
       }
       if (wl >= watch) {
-        return dH >= 0.15 ? RiskLevel.warning : RiskLevel.watch;
+        if (timeToBankH != null && timeToBankH <= 6.0) return RiskLevel.high;
+        if (dH >= 0.15 || (timeToBankH != null && timeToBankH <= 24.0)) {
+          return RiskLevel.warning;
+        }
+        return RiskLevel.watch;
       }
       return RiskLevel.normal;
     }
@@ -271,35 +297,22 @@ class Station {
     return null;
   }
 
-  /// ตลิ่งที่ใช้ได้จริง (มากกว่า 0)
-  bool get hasBank => (bankLevel ?? 0) > 0;
+  /// ตลิ่งที่ใช้ได้จริง (มากกว่า 0 และยืนยันฐานระดับแล้ว)
+  bool get hasBank => !isDatumUnverified && (bankLevel ?? 0) > 0;
 
-  /// ระยะจากระดับน้ำถึงตลิ่ง (ม.) — ค่าลบแปลว่าล้นตลิ่งแล้ว
+  /// ระยะจากระดับน้ำถึงตลิ่ง (ม.) — ค่าลบแปลว่าล้นตลิ่งแล้ว (คืน null หากฐานตลิ่งยังไม่ยืนยัน)
   double? get remainingToBank {
+    if (isDatumUnverified) return null;
     final bank = bankLevel;
     final wl = waterLevelMsl;
     if (bank == null || wl == null) return null;
     return bank - wl;
   }
 
-  /// สัดส่วนความจุจาก ground ถึงตลิ่ง 0.0 - 1.0 (null ถ้าประเมินไม่ได้)
-  double? get fillRatio {
-    final ground = groundLevel;
-    final bank = bankLevel;
-    final wl = waterLevelMsl;
-    if (ground == null || bank == null || wl == null) return null;
-    final span = bank - ground;
-    if (span <= 0) return null;
-    final ratio = (wl - ground) / span;
-    if (ratio < 0) return 0;
-    if (ratio > 1) return 1;
-    return ratio;
-  }
-
   /// ระดับน้ำที่ใช้แสดง เรียงความสำคัญ MSL ก่อน
   double? get displayLevel => waterLevelMsl ?? waterLevelM;
 
-  /// ทิศทางการเปลี่ยนแปลงของระดับน้ำ (ใช้เกณฑ์ steadyBandMeters = 0.05 ม. ตรงกับ formula_version = 4)
+  /// ทิศทางการเปลี่ยนแปลงของระดับน้ำ (ใช้เกณฑ์ steadyBandMeters = 0.05 ม. ตรงกับ formula_version = 5)
   WaterTrend get trend {
     final cur = waterLevelMsl;
     final prev = waterLevelMslPrev;

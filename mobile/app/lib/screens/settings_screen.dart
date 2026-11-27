@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:yala_flood_app/config/app_config.dart';
 import 'package:yala_flood_app/l10n/app_strings.dart';
 import 'package:yala_flood_app/models/risk_level.dart';
+import 'package:yala_flood_app/screens/guide_screen.dart';
 import 'package:yala_flood_app/state/alert_provider.dart';
 
 /// หน้าตั้งค่า: เลือกภาษา 4 ภาษา (ไทย/อังกฤษ/จีน/มาเลเซีย), คำอธิบายระดับการแจ้งเตือน 1–5,
@@ -82,6 +83,49 @@ class SettingsScreen extends StatelessWidget {
                 provider.updateSettings(settings.copyWith(languageCode: value));
               }
             },
+          ),
+          const SizedBox(height: 20),
+
+          // คู่มือการใช้งานแอปและคู่มืออพยพหนีน้ำท่วม (ออฟไลน์ 100%)
+          _SectionTitle(strings.get('guide_title')),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    strings.get('guide_card_sub'),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.4),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      FilledButton.icon(
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const GuideScreen(initialTab: 0),
+                          ),
+                        ),
+                        icon: const Icon(Icons.menu_book_outlined, size: 17),
+                        label: Text(strings.get('guide_tab_app')),
+                      ),
+                      FilledButton.tonalIcon(
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const GuideScreen(initialTab: 1),
+                          ),
+                        ),
+                        icon: const Icon(Icons.directions_run_rounded, size: 17),
+                        label: Text(strings.get('guide_tab_evac')),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 20),
 

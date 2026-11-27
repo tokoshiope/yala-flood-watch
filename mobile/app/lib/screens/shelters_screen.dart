@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:yala_flood_app/config/app_config.dart';
 import 'package:yala_flood_app/l10n/app_strings.dart';
 import 'package:yala_flood_app/models/shelter.dart';
+import 'package:yala_flood_app/screens/guide_screen.dart';
 import 'package:yala_flood_app/state/alert_provider.dart';
 
 /// ศูนย์พักพิงชั่วคราว จ.ยะลา ตรงกับ backend/registry/shelters.yaml (v3)
@@ -184,7 +185,20 @@ class _SheltersScreenState extends State<SheltersScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: Text(strings.get('shelters_title'))),
+      appBar: AppBar(
+        title: Text(strings.get('shelters_title')),
+        actions: [
+          IconButton(
+            tooltip: strings.get('guide_tab_evac'),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const GuideScreen(initialTab: 1),
+              ),
+            ),
+            icon: const Icon(Icons.menu_book_outlined),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Container(

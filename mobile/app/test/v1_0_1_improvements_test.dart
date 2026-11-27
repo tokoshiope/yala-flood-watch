@@ -126,8 +126,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // 1. กราฟแท่งพยากรณ์ฝนแนว iOS Weather
-      expect(find.textContaining('โอกาสฝนตก'), findsOneWidget);
+      // 1. กราฟแท่งพยากรณ์ฝนแนว iOS Weather — ต้องแสดง % โอกาสฝนตกครบทุกชั่วโมง (LL-007 regression)
+      expect(find.textContaining('โอกาสฝนตก'), findsWidgets);
+      expect(find.textContaining('%'), findsWidgets);
+      expect(find.text('แสดงปริมาณฝน (มม.) และโอกาสฝนตก (%) ครบทุกชั่วโมง'), findsOneWidget);
 
       // 2. รายการสถานีวัดระดับน้ำ เน้นแสดงระยะเหลือถึงตลิ่ง + ความถี่อัปเดตจริง
       final listScroll = find.byWidgetPredicate(
@@ -239,6 +241,37 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('MEDIUM-3 regression: สถานี datum_unverified (FOP045) ซ่อนระดับตลิ่งที่ยังไม่ยืนยัน (25.13 ม.) ในหน้าละเอียดสถานี', (tester) async {
+      final provider = await tester.runAsync(() => _buildLoadedProvider());
+      final fop = provider!.stations.firstWhere((s) => s.code == 'FOP045');
+      expect(fop.isDatumUnverified, isTrue);
+      expect(fop.hasBank, isFalse);
+      expect(fop.criticalLevel, isNull);
+      expect(fop.watchLevel, isNull);
+      expect(fop.remainingToBank, isNull);
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider<AlertProvider>.value(
+          value: provider,
+          child: const MaterialApp(home: StationDetailScreen(stationCode: 'FOP045')),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('25.13'), findsNothing);
+    });
+
+    testWidgets('MEDIUM-1 regression: elevationFloodLevel ใช้ exposureZone (A/B/C) อย่างถูกต้อง', (tester) async {
+      final provider = await tester.runAsync(() => _buildLoadedProvider());
+      // On calm live snapshot (Basin Lv 1), all zones A/B/C stay RiskLevel.normal and preserve zone tag
+      final resA = provider!.elevationFloodLevel(15.0, 'เมืองยะลา', exposureZone: 'A', relHeightM: -1.5);
+      final resC = provider.elevationFloodLevel(30.0, 'เมืองยะลา', exposureZone: 'C', relHeightM: 13.5);
+      expect(resA.level, 1);
+      expect(resA.exposureZone, 'A');
+      expect(resC.level, 1);
+      expect(resC.exposureZone, 'C');
     });
   });
 }

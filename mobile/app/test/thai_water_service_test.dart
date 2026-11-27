@@ -36,8 +36,8 @@ void main() {
 
       expect(result.source, WaterSource.network);
       expect(result.stations.length, 14);
-      // ใน fixture น้ำปกติ PAT002 แตะเส้นเฝ้าระวังแบบ side way (13.00 vs watch 12.35 / mid 13.10) -> RiskLevel.watch
-      expect(result.stations.first.riskLevel, RiskLevel.watch);
+      // ใน fixture วันแดดออกปกติ PAT002 (13.00 vs watch 13.30) อยู่ในเกณฑ์ปกติ ปลอด false alarm -> RiskLevel.normal
+      expect(result.stations.first.riskLevel, RiskLevel.normal);
       // ต้องเก็บแคชไว้ด้วย
       expect(prefs.getString(AppConfig.cacheStationsKey), isNotNull);
       expect(prefs.getInt(AppConfig.cacheUpdatedAtKey), isNotNull);
@@ -177,7 +177,8 @@ void main() {
 
       expect(store.loadAlerts(), isEmpty);
       expect(store.loadSettings().quietMode, isFalse);
-      expect(store.loadSosRequests(), isEmpty);
+      expect(store.loadGpsConsent(), isFalse);
+      expect(store.loadPinnedLocation(), isNull);
     });
 
     test('บันทึก/อ่าน แจ้งเตือน', () async {

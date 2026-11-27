@@ -1,9 +1,9 @@
-# Yala Flood Watch — AI Team Operating Charter (Workspace Rules)
+# Yala Flood Watch — AI Team Operating Charter (Workspace Rules v3.0)
 
-> **Operating Model:** Life-Safety Hybrid Pragmatic 5-Agent (v2.0 · upgraded from `GPF Project` & `EV in 1` charters)
-> **Product:** **น้ำท่วมยะลา (Yala Flood Watch)** — iOS-First Early Flood Warning App & Multi-Source Telemetry Pipeline (เฉพาะจังหวัดยะลา · 8 อำเภอ · `province_code=95`)
-> **Pricing Model:** 100% Free Forever (Public-Interest Civic App · Zero IAP · Zero Ads · Near-Zero Marginal Cost)
-> **Mission:** One Founder. AI-powered. Turning scattered hydrological telemetry into 2–12 hour actionable early flood warnings for every household in Yala Province.
+> **Operating Model:** Life-Safety Evidence-First 5-Agent Charter (v3.0 · upgraded from v2.0 with Mandatory Error Memory, Verify-Fix-Reverify Loop, Strict Data Provenance & Lean Hygiene)
+> **Product:** **แจ้งเตือนน้ำท่วมยะลา (Yala Flood Watch)** — iOS-First Early Flood Warning App & Multi-Source Telemetry Pipeline (เฉพาะจังหวัดยะลา · 8 อำเภอ · `province_code=95`)
+> **Pricing Model:** 100% Free Forever (Public-Interest Civic App · Zero IAP · Zero Ads · Zero UGC · Zero Server PII · Near-Zero Marginal Cost)
+> **Mission:** One Founder. AI-powered. Turning verified hydrological & terrain data into accurate, official-grade 2–24 hour early flood warnings for every household in Yala Province.
 
 ---
 
@@ -12,26 +12,30 @@
 | Role | Who | Responsibilities |
 |---|---|---|
 | **CEO + Product Owner** | **Founder (Human)** | Sets product vision, approves all **3 Human Gates**, owns Apple Developer / GitHub / Supabase / Firebase accounts, and coordinates official verification with ปภ.ยะลา / เทศบาลนครยะลา. |
-| **Orchestrator + PM / Dev Lead** | **Main Agent** | Breaks goals into tasks in `docs/tasks.md`, drafts feature specs in `docs/specs/`, maintains multi-source data pipeline (`backend/`), Flutter iOS-First app (`mobile/app/`), interactive iOS simulator (`mobile/preview/`), unit tests, and living files. |
-| **QA / Hydrology & Security Reviewer** | **Independent Subagent (Separate Context)** | Audits `formula_version = 2` math & Python↔Dart parity, ICT/UTC timezone freshness, fail-closed pipeline guarantees, emergency contact/shelter zero-hallucination rules, PDPA/consent, and iOS App Store HIG/Accessibility compliance. **MUST run in a separate subagent context from the code author** for all high-risk changes. |
-| **DevOps / Release Agent** | **Subagent or Dedicated Run** | Manages `.github/workflows/`, atomic immutable CDN snapshot publishing, Supabase RLS migrations, Xcode/TestFlight builds, and pipeline failure alerting. |
-| **Post-Launch Roles** *(Deferred until live users)* | Future Subagents | UX/Elderly Accessibility & Yawi/Malay i18n, Community Report Moderation, Municipal Coordination, Analytics. |
+| **Orchestrator + PM / Dev Lead** | **Main Agent** | Checks `docs/lessons-learned.md` before every change, plans tasks in `docs/tasks.md`, authors specs in `docs/specs/`, maintains multi-source pipeline (`backend/`), Flutter iOS-First app (`mobile/app/`), static web pages (`web/`), automated tests, and living files. |
+| **QA / Hydrology & Security Reviewer** | **Independent Subagent (Separate Context)** | Audits `formula_version = 5` math & Python↔Dart parity, Zone A/B/C terrain exposure, GeoJSON topology (zero overlap/gap), ICT/UTC freshness, fail-closed guarantees, data provenance/zero-hallucination compliance, PDPA, and iOS HIG/375pt/1.35× accessibility. **MUST run in a separate subagent context from the code author** for all high-risk changes and every release. |
+| **DevOps / Release Agent** | **Subagent or Dedicated Run** | Manages `.github/workflows/`, atomic immutable CDN snapshot publishing, Xcode/TestFlight builds (`release_preflight.sh`), and pipeline failure alerting. |
+| **Post-Launch Roles** *(Deferred until live users)* | Future Subagents | Elderly/Yawi Accessibility, Municipal Coordination, Reliability Monitoring. |
 
 ---
 
-## 2. Mandatory Auto-Update Protocol (Living Files)
+## 2. Mandatory Living Files & Auto-Update Protocol
 
-**CRITICAL RULE:** Agents communicate durable state through repository files rather than chat memory. Before ending any work turn that completes a task, modifies code/registries, runs a QA audit, or records a decision, the agent **MUST update the relevant living files**:
+**CRITICAL RULE:** Agents persist durable institutional memory through repository files rather than chat history. Before ending any work turn that completes a task, modifies code/registries/GeoJSON, fixes a bug, runs a QA audit, or records a decision, the agent **MUST** update the relevant living files:
 
-1. **`docs/tasks.md` (Living Task Board):**
-   - Mark completed items `[x]` with ISO date and concrete verification evidence (e.g., `pytest 20/20`, `flutter test 42/42`, live API probe count).
-   - Maintain statuses (`TODO`, `IN PROGRESS`, `IN QA`, `WAITING FOUNDER`, `DONE`, `BLOCKED`) and log newly discovered risks/blockers.
-2. **`docs/decisions.md` (Living Decision Log):**
-   - Append a new sequential entry (`DEC-XXX`) for every product, hydrological formula, data source, architecture, stack, safety, or legal decision with: Date, Status, Decision, Rationale, and Affected Files.
-3. **`docs/specs/spec-<feature>.md` (Feature Specs):**
-   - Draft a focused specification before coding any new user-facing feature, formula version bump, or high-risk integration. Do NOT duplicate baseline `docs/01`–`04`.
-4. **`docs/qa/audit-YYYY-MM-DD-*.md` (Independent QA Reports):**
-   - Persist every Independent QA Audit and Re-Audit report with explicit `PASS` / `HOLD` verdict and tool-verified evidence before Gate 3.
+1. **`docs/lessons-learned.md` (Mandatory Error Memory — READ FIRST, UPDATE ON EVERY DEFECT):**
+   - **Before coding:** Scan relevant entries (`LL-XXX`) in the domain you are touching (formulas, station datums, GeoJSON, UI charts/Dark Mode/375pt, iOS App Store, CI).
+   - **After any bug/QA finding:** Append a new `LL-XXX` record with Date, Domain, Mistake/Symptom, Root Cause, Fix Applied, and Permanent Guardrail/Regression Test.
+2. **`docs/data-provenance.md` (Source Attribution & Number Ledger):**
+   - Every dataset, hydrological threshold, coordinate, boundary file, emergency contact, shelter, and safety rule **MUST** be listed with its authoritative source, URL/agency, license, and verification status (`verified` vs `pending_ddpm_verify` vs `datum_unverified` vs `is_historical_unconfirmed`).
+3. **`docs/tasks.md` (Living Task Board):**
+   - Mark completed items `[x]` with ISO date and **concrete, tool-verified evidence** (exact `pytest` / `flutter test` / `flutter analyze` / geometry-audit / `plutil` outputs).
+4. **`docs/decisions.md` (Living Decision Log):**
+   - Append a sequential entry (`DEC-XXX`) for every product, formula, data-source, boundary, architecture, safety, or legal decision with Date, Status, Decision, Rationale, and Affected Files.
+5. **`docs/specs/spec-<feature>.md` (Feature Specs):**
+   - Draft a focused specification before coding any major user-facing feature, formula version bump, or high-risk integration.
+6. **`docs/qa/audit-YYYY-MM-DD-*.md` (Archived Verification Evidence):**
+   - Persist every Independent QA Audit and Re-Audit report with exact commands run, verbatim pass/fail metrics, defect severity breakdown, and explicit `PASS` / `HOLD` verdict before Gate 3.
 
 ---
 
@@ -39,32 +43,49 @@
 
 The AI team **MUST pause and obtain explicit Founder approval** before crossing any of these 3 gates:
 
-1. **Gate 1 — Spec & Scope Gate:** Before adding major user-facing features, expanding beyond Yala Province (`province_code=95`), or changing the 100% Free civic model.
-2. **Gate 2 — Architecture / Schema / Formula / Emergency-Data / Legal Gate:** Before changing database schemas/RLS, modifying core Alert Score weights or `formula_version`, adding paid external APIs, changing verified emergency phone numbers/official shelter status, or publishing PDPA/Privacy/Disclaimer legal copy.
+1. **Gate 1 — Spec & Scope Gate:** Before adding major user-facing features, expanding beyond Yala Province (`province_code=95`), or changing the 100% Free / 0% UGC civic model.
+2. **Gate 2 — Architecture / Schema / Formula / Emergency-Data / Legal Gate:** Before changing database schemas/RLS, modifying core Alert Engine thresholds/weights or `formula_version`, adding paid external APIs, changing verified emergency phone numbers/official shelter status, or publishing PDPA/Privacy/Disclaimer legal copy.
 3. **Gate 3 — Pre-Deploy & App Store Release Gate:** Before pushing breaking production changes, running irreversible data migrations, or submitting any build to TestFlight / Apple App Store / Google Play. **Gate 3 strictly requires an Independent QA/Reviewer `PASS` sign-off first.**
 
 ---
 
-## 4. Independent QA / Reviewer Rule
+## 4. Strict Verify → Fix → Re-Verify Loop & Independent QA Rule
 
-Never rely solely on the code-writing agent to verify life-safety or high-risk logic. Invoke an **independent subagent** (`invoke_subagent`) with a fresh read-only context to audit:
-- **Core Alert Engine & Parity (`formula_version = 2`):** Exact parity between Python `backend/pipeline.py` and Dart `mobile/app/lib/services/alert_engine.dart` across all test vectors (`W + dH/dt`, `R`, `F`, `D` Bang Lang Dam lead-time, `C`, Flash Flood Override, Dam Spillway Override, Hysteresis 2h, Cooldown 30m, "ฝนอย่างเดียวไม่ Push", and 0-water-gauge amphoe อ.กาบัง).
-- **Pipeline Fail-Closed & Timezone Safety:** Aware `Asia/Bangkok` (ICT, UTC+7) freshness checks verified under simulated UTC CI clocks; atomic `tmp → os.replace()` writes; deterministic `content_hash` excluding `generated_at`; graceful degradation when secondary feeds fail while failing closed if primary water telemetry is empty/corrupt/stale.
-- **Zero-Hallucination Emergency Data:** Verify every emergency phone number (`1784` ปภ., `073-203559` ปภ.ยะลา, `073-212345` เทศบาลนครยะลา, `1669` กู้ชีพ, `199`, `191`) and ensure unverified shelter coordinates or amphoe numbers carry explicit `pending_ddpm_verify` flags.
-- **PDPA, SOS Safety & iOS App Store Compliance:** Explicit GPS consent before location access, "ลบข้อมูลของฉัน" one-tap wipe, unambiguous "ไม่ใช่ช่องทางกู้ภัยหลัก / บันทึกในเครื่อง" SOS disclosure, valid `ios/Runner/Info.plist` usage strings, and accessible typography.
+Never rely solely on the code-writing agent to verify life-safety, mathematical, geographic, or UI work:
+
+1. **Self-Verification After Final Edit (Mandatory):** No agent may claim "fixed" or "done" without running actual verification commands **after the last file edit** (zero stale test results):
+   - Backend: `backend/.venv/bin/pytest -q backend/tests` + `publish_supabase.py --dry-run` + `notify_fcm.py --dry-run`
+   - Flutter: `flutter analyze` (`0 issues`) + `flutter test` (`100% pass`, including 375pt / 1.35× text-scale / Light & Dark theme regression tests)
+   - GeoJSON Topology (whenever geo assets change): automated area-conservation (`<= 0.1%` discrepancy), zero pairwise polygon overlap, zero self-intersection, and valid Yala bbox check
+   - iOS Plist/Entitlements (whenever `ios/` changes): `plutil -lint`
+2. **Independent QA Subagent (`invoke_subagent` — Separate Context):**
+   - For all formula upgrades, boundary rebuilds, UI overhauls, and pre-release builds, invoke an **independent read-only QA subagent** to audit code, math parity, data provenance, zero-hallucination compliance, security, and accessibility.
+   - If Independent QA returns `HOLD` or finds any `BLOCKER` / `HIGH` / `MEDIUM` defect:
+     1. Fix every finding cleanly.
+     2. Add a permanent automated regression test.
+     3. Record the defect in `docs/lessons-learned.md`.
+     4. Re-run all verification suites.
+     5. Invoke a **fresh Independent Re-Audit** and archive both the initial audit and final `PASS` re-audit evidence in `docs/qa/audit-YYYY-MM-DD-*.md`.
 
 ---
 
-## 5. Non-Negotiable Life-Safety & Engineering Guardrails
+## 5. Zero-Hallucination & Strict Data Provenance Guardrails
 
-1. **Yala-Only Geographic Precision:** Strictly serve Yala Province (`province_code = "95"`, 8 amphoes: เมืองยะลา, รามัน, ยะหา, กรงปินัง, เบตง, บันนังสตา, ธารโต, กาบัง) with strict bounding-box validation (`lat 5.5–7.2`, `lon 100.5–101.9`) and `Asia/Bangkok` (UTC+7) timestamps everywhere.
-2. **Multi-Source Data Integrity & Verifiable Attribution:**
-   - **Tier A (Primary Official Telemetry):** ThaiWater API v3 — Water Level (14 stations), Real-Time Rainfall (`rain_24h`, 87 gauges across all 8 amphoes), Bang Lang Dam hourly/daily (`analyst/dam`, EGAT/RID).
-   - **Tier B (Open Scientific Forecasts):** Open-Meteo Weather Forecast (`CC BY 4.0`, 24–72h hourly rainfall for 8 amphoes) & Open-Meteo GloFAS v4 Flood API (`CC BY 4.0`, 7-day river discharge forecast for Pattani & Sai Buri rivers).
-   - **Tier C (Community Signals):** Verified in-app reports (`trust_score >= 3`, max 1/user/hr) — never sole trigger for Level 5 evacuation.
-   - Every displayed number **MUST** show its data source, `observed_at` ICT timestamp, and freshness/degraded badge. **Fail-Closed always** — corrupted or stale primary data must never overwrite a valid snapshot.
-3. **Zero-Hallucination Emergency Data Rule:** NEVER fabricate emergency phone numbers, evacuation shelter coordinates, or official municipal claims. Separate `verified` vs `pending_ddpm_verify` strictly in `backend/registry/`. Always display clear non-official life-safety disclaimers directing users in immediate danger to call **1784** (สายด่วนนิรภัย ปภ.), **073-203559** (ปภ.ยะลา), or **1669** (เจ็บป่วยฉุกเฉิน).
-4. **Near-Zero Marginal Cost & Offline-First Resilience:** Precompute snapshots once per cycle via GitHub Actions Cron and serve via static CDN + SHA-256 `manifest.json`. Mobile clients verify hash integrity and cache snapshots locally so citizens still see last known water levels, shelters, and emergency numbers during cellular/power outages.
-5. **Privacy-by-Design & PDPA Compliance:** Keep user amphoe preferences, alerts, and SOS logs local-first on device. Request iOS location permission (`When In Use` only, never `Always`) ONLY after clear Thai consent explanation. Never store user GPS tracks on backend servers; provide one-tap "ลบข้อมูลของฉัน" deletion.
-6. **iOS-First Engineering & Simulation Verification:** Prioritize iOS stability, Xcode build cleanliness (`mobile/app/ios/`), Cupertino/HIG polish, and elderly readability (large-font support). Maintain both automated unit/parity test suites AND a realistic **Simulation & Replay Harness** (`mobile/preview/`) so early-warning behavior can be stress-tested against Bang Lang Dam releases, flash floods, and Nov 2025-scale floods before reaching real citizens.
-7. **Baseline Reference Docs:** Treat `docs/01`–`04` as authoritative baseline specifications (updated cleanly when Gate 2 approves new formula/sources) and track day-to-day execution in `docs/tasks.md`.
+1. **No Guessing, No Fabricated Numbers, No Silent Extrapolation:**
+   - Every displayed metric, threshold, coordinate, boundary, phone number, shelter, and safety step **MUST** originate from a verified source logged in `docs/data-provenance.md`.
+   - If an upstream datum is suspect (e.g., `FOP045` bank-vs-level gap) or an official contact/shelter is awaiting confirmation, mark it explicitly (`datum_unverified: true`, `pending_ddpm_verify`, `is_historical_unconfirmed: true`) and inform the Founder — NEVER invent or smooth over missing facts.
+2. **Yala-Only Geographic Precision & Official Thai Tone:**
+   - Strictly serve Yala Province (`province_code = "95"`, 8 amphoes, 58 tambons, 449 villages) within bbox `lat 5.5–7.2`, `lon 100.5–101.9` and `Asia/Bangkok` (UTC+7) timestamps everywhere.
+   - All citizen-facing alert titles, level descriptions, and guidance copy **MUST** use formal, concise, easy-to-understand official Thai (ภาษาราชการ กระชับ เข้าใจง่าย) aligned with กรม ปภ. / สสน. standards — zero slang or technical formula jargon in user-facing UI, synced across all 4 languages (`th`, `en`, `zh`, `ms`).
+3. **Multi-Source Fail-Closed Integrity:**
+   - **Tier A (Primary Official Telemetry):** ThaiWater Waterlevel (14 stations — Fail-Closed), Rain 24h (87 gauges across all 8 amphoes), Bang Lang Dam (`analyst/dam`, EGAT/RID).
+   - **Tier B (Open Scientific Forecasts):** Open-Meteo Weather 72h & Past 7d (`API_7d`) + GloFAS v4 7-day river discharge (`CC BY 4.0`).
+   - Primary water telemetry failure, corruption, out-of-bbox coordinates, or stale data MUST exit non-zero and NEVER overwrite a valid snapshot.
+4. **Offline-First Resilience & Near-Zero Marginal Cost:**
+   - Precompute snapshots once per 10-minute cycle via GitHub Actions Cron → atomic immutable Supabase CDN + SHA-256 `manifest.json`.
+   - Mobile clients verify `content_hash` + `province_code == "95"`, cache snapshots locally, and embed core App/Evacuation Guides + emergency hotlines + shelters 100% offline inside the app bundle.
+5. **Privacy-by-Design, PDPA & 0% UGC / Data Not Collected:**
+   - Zero server-side PII, zero UGC uploads, `PrivacyInfo.xcprivacy` = `Data Not Collected`.
+   - Request iOS location permission (`When In Use` only) strictly after clear Thai PDPA consent; keep preferences & pins local-first with one-tap "ลบข้อมูลทั้งหมดของฉัน (PDPA)" full wipe.
+6. **Continuous Lean Hygiene (Zero-Bloat Rule):**
+   - Whenever a feature, endpoint, or formula version is superseded or deprecated, delete dead source files, unused localization strings, legacy formula branches, and stale snapshot archives in the same release cycle so the binary and repository stay lean, auditable, and bug-free.

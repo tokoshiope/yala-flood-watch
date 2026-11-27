@@ -449,241 +449,325 @@ class _RainForecastCardState extends State<_RainForecastCard> {
                 ),
               ),
             const SizedBox(height: 8),
-            // กราฟแท่งแนวตั้งแบบแอป Weather ของ iOS (จำกัด textScaler เฉพาะป้ายแกนกราฟเพื่อคงสัดส่วนแท่งบน Dynamic Type สูง)
+            // กราฟแท่งแนวตั้งแบบแอป Weather ของ iOS — แสดงครบทั้งปริมาณฝน (มม.) และโอกาสฝนตก (%) ทุกชั่วโมง
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-              child: MediaQuery(
-                data: MediaQuery.of(context).copyWith(
-                  textScaler: MediaQuery.textScalerOf(context).clamp(
-                    minScaleFactor: 0.9,
-                    maxScaleFactor: 1.15,
-                  ),
-                ),
-                child: Container(
-                  height: 184,
-                  padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
-                  decoration: BoxDecoration(
-                    color: chartBg,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: chartBorder),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // แกน Y (มม.)
-                      SizedBox(
-                        width: 44,
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 18, bottom: 24),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  scaleMax.toStringAsFixed(0),
-                                  maxLines: 1,
-                                  softWrap: false,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    color: cs.onSurfaceVariant,
-                                  ),
-                                ),
-                              ),
-                              FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  (scaleMax / 2)
-                                      .toStringAsFixed(scaleMax >= 10 ? 0 : 1),
-                                  maxLines: 1,
-                                  softWrap: false,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: cs.onSurfaceVariant,
-                                  ),
-                                ),
-                              ),
-                              FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  '0 ${widget.strings.get('unit_mm')}',
-                                  maxLines: 1,
-                                  softWrap: false,
-                                  style: TextStyle(
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: cs.onSurfaceVariant,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  MediaQuery(
+                    data: MediaQuery.of(context).copyWith(
+                      textScaler: MediaQuery.textScalerOf(context).clamp(
+                        minScaleFactor: 0.9,
+                        maxScaleFactor: 1.15,
                       ),
-                      const SizedBox(width: 6),
-                      // พื้นที่แท่งกราฟเลื่อนซ้าย-ขวาได้ 24 ชั่วโมง
-                      Expanded(
-                        child: Stack(
-                          children: [
-                            // เส้นกริดแนวนอน 3 ระดับ
-                            Positioned.fill(
-                              top: 20,
-                              bottom: 24,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  for (var i = 0; i < 3; i++)
-                                    Container(height: 1, color: gridColor),
-                                ],
-                              ),
-                            ),
-                            ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: points.length,
-                              itemBuilder: (context, idx) {
-                                final pt = points[idx];
-                                final ratio = (pt.mm / scaleMax).clamp(0.0, 1.0);
-                                final isSelected = idx == focusIdx;
-                                final barColor = _barColor(pt.mm, brightness);
-                                final valTextColor =
-                                    _rainTextColor(pt.mm, brightness);
-                                const maxBarHeight = 104.0;
-                                final barHeight = pt.mm > 0
-                                    ? math.max(8.0, maxBarHeight * ratio)
-                                    : 3.0;
-
-                                return GestureDetector(
-                                  behavior: HitTestBehavior.opaque,
-                                  onTap: () =>
-                                      setState(() => _selectedBarIndex = idx),
-                                  child: Container(
-                                    width: 36,
-                                    margin: const EdgeInsets.symmetric(
-                                      horizontal: 2,
-                                    ),
-                                    decoration: isSelected
-                                        ? BoxDecoration(
-                                            color: cs.primary.withValues(
-                                              alpha: isDark ? 0.16 : 0.09,
-                                            ),
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          )
-                                        : null,
+                    ),
+                    child: Container(
+                      height: 214,
+                      padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
+                      decoration: BoxDecoration(
+                        color: chartBg,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: chartBorder),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // แกน Y (มม.) + ป้ายแถวเวลาและโอกาสฝนตก (%)
+                          SizedBox(
+                            width: 44,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(top: 18, bottom: 4),
                                     child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment: CrossAxisAlignment.end,
                                       children: [
-                                        SizedBox(
-                                          height: 20,
-                                          child: Center(
-                                            child: FittedBox(
-                                              fit: BoxFit.scaleDown,
-                                              child: Text(
-                                                pt.mm >= 0.1
-                                                    ? pt.mm.toStringAsFixed(
-                                                        pt.mm >= 10 ? 0 : 1,
-                                                      )
-                                                    : (pt.probPct >= 25
-                                                        ? '${pt.probPct}%'
-                                                        : ''),
-                                                maxLines: 1,
-                                                style: TextStyle(
-                                                  fontSize: 9.5,
-                                                  fontWeight: isSelected
-                                                      ? FontWeight.w800
-                                                      : FontWeight.w600,
-                                                  color: pt.mm >= 0.1
-                                                      ? valTextColor
-                                                      : cs.onSurfaceVariant,
-                                                ),
-                                              ),
+                                        FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Text(
+                                            scaleMax.toStringAsFixed(0),
+                                            maxLines: 1,
+                                            softWrap: false,
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w700,
+                                              color: cs.onSurfaceVariant,
                                             ),
                                           ),
                                         ),
-                                        Expanded(
-                                          child: Align(
-                                            alignment: Alignment.bottomCenter,
-                                            child: AnimatedContainer(
-                                              duration: const Duration(
-                                                milliseconds: 220,
-                                              ),
-                                              width: isSelected ? 18 : 14,
-                                              height: barHeight,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    const BorderRadius.vertical(
-                                                  top: Radius.circular(6),
-                                                  bottom: Radius.circular(2),
-                                                ),
-                                                gradient: pt.mm > 0
-                                                    ? LinearGradient(
-                                                        begin:
-                                                            Alignment.topCenter,
-                                                        end: Alignment
-                                                            .bottomCenter,
-                                                        colors: [
-                                                          barColor,
-                                                          barColor.withValues(
-                                                            alpha: 0.72,
-                                                          ),
-                                                        ],
-                                                      )
-                                                    : null,
-                                                color:
-                                                    pt.mm > 0 ? null : barColor,
-                                                border: isSelected
-                                                    ? Border.all(
-                                                        color: cs.onSurface
-                                                            .withValues(
-                                                              alpha: 0.55,
-                                                            ),
-                                                        width: 1.2,
-                                                      )
-                                                    : null,
-                                              ),
+                                        FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Text(
+                                            (scaleMax / 2)
+                                                .toStringAsFixed(scaleMax >= 10 ? 0 : 1),
+                                            maxLines: 1,
+                                            softWrap: false,
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                              color: cs.onSurfaceVariant,
                                             ),
                                           ),
                                         ),
-                                        const SizedBox(height: 4),
-                                        SizedBox(
-                                          height: 20,
-                                          child: Center(
-                                            child: FittedBox(
-                                              fit: BoxFit.scaleDown,
-                                              child: Text(
-                                                pt.hourMinute.length >= 2
-                                                    ? pt.hourMinute
-                                                        .substring(0, 2)
-                                                    : pt.hourMinute,
-                                                maxLines: 1,
-                                                style: TextStyle(
-                                                  fontSize: 10.5,
-                                                  fontWeight: isSelected
-                                                      ? FontWeight.w800
-                                                      : FontWeight.w600,
-                                                  color: isSelected
-                                                      ? cs.primary
-                                                      : cs.onSurfaceVariant,
-                                                ),
-                                              ),
+                                        FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Text(
+                                            '0 ${widget.strings.get('unit_mm')}',
+                                            maxLines: 1,
+                                            softWrap: false,
+                                            style: TextStyle(
+                                              fontSize: 9.5,
+                                              fontWeight: FontWeight.w600,
+                                              color: cs.onSurfaceVariant,
                                             ),
                                           ),
                                         ),
                                       ],
                                     ),
                                   ),
-                                );
-                              },
+                                ),
+                                SizedBox(
+                                  height: 18,
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        '%',
+                                        style: TextStyle(
+                                          fontSize: 9.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: isDark
+                                              ? const Color(0xFF7DD3FC)
+                                              : const Color(0xFF0369A1),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 18,
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        widget.strings.lang == 'th' ? 'น.' : 'hr',
+                                        style: TextStyle(
+                                          fontSize: 9.5,
+                                          fontWeight: FontWeight.w600,
+                                          color: cs.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 6),
+                          // พื้นที่แท่งกราฟเลื่อนซ้าย-ขวาได้ 24 ชั่วโมง
+                          Expanded(
+                            child: Stack(
+                              children: [
+                                // เส้นกริดแนวนอน 3 ระดับ
+                                Positioned.fill(
+                                  top: 20,
+                                  bottom: 40,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      for (var i = 0; i < 3; i++)
+                                        Container(height: 1, color: gridColor),
+                                    ],
+                                  ),
+                                ),
+                                ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: points.length,
+                                  itemBuilder: (context, idx) {
+                                    final pt = points[idx];
+                                    final ratio = (pt.mm / scaleMax).clamp(0.0, 1.0);
+                                    final isSelected = idx == focusIdx;
+                                    final barColor = _barColor(pt.mm, brightness);
+                                    final valTextColor =
+                                        _rainTextColor(pt.mm, brightness);
+                                    final probTextColor = pt.probPct >= 50
+                                        ? (isDark
+                                            ? const Color(0xFF7DD3FC)
+                                            : const Color(0xFF0369A1))
+                                        : cs.onSurfaceVariant;
+                                    const maxBarHeight = 104.0;
+                                    final barHeight = pt.mm > 0
+                                        ? math.max(8.0, maxBarHeight * ratio)
+                                        : 3.0;
+
+                                    return GestureDetector(
+                                      behavior: HitTestBehavior.opaque,
+                                      onTap: () =>
+                                          setState(() => _selectedBarIndex = idx),
+                                      child: Container(
+                                        width: 42,
+                                        margin: const EdgeInsets.symmetric(
+                                          horizontal: 2,
+                                        ),
+                                        decoration: isSelected
+                                            ? BoxDecoration(
+                                                color: cs.primary.withValues(
+                                                  alpha: isDark ? 0.16 : 0.09,
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              )
+                                            : null,
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.end,
+                                          children: [
+                                            // แถวที่ 1: ปริมาณฝน (มม.) บนยอดแท่ง
+                                            SizedBox(
+                                              height: 18,
+                                              child: Center(
+                                                child: FittedBox(
+                                                  fit: BoxFit.scaleDown,
+                                                  child: Text(
+                                                    pt.mm >= 0.1
+                                                        ? pt.mm.toStringAsFixed(
+                                                            pt.mm >= 10 ? 0 : 1,
+                                                          )
+                                                        : '0',
+                                                    maxLines: 1,
+                                                    style: TextStyle(
+                                                      fontSize: 9.5,
+                                                      fontWeight: isSelected
+                                                          ? FontWeight.w800
+                                                          : FontWeight.w600,
+                                                      color: pt.mm >= 0.1
+                                                          ? valTextColor
+                                                          : cs.onSurfaceVariant
+                                                              .withValues(alpha: 0.65),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            // แถวที่ 2: แท่งกราฟแนวตั้ง
+                                            Expanded(
+                                              child: Align(
+                                                alignment: Alignment.bottomCenter,
+                                                child: AnimatedContainer(
+                                                  duration: const Duration(
+                                                    milliseconds: 220,
+                                                  ),
+                                                  width: isSelected ? 18 : 14,
+                                                  height: barHeight,
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        const BorderRadius.vertical(
+                                                      top: Radius.circular(6),
+                                                      bottom: Radius.circular(2),
+                                                    ),
+                                                    gradient: pt.mm > 0
+                                                        ? LinearGradient(
+                                                            begin:
+                                                                Alignment.topCenter,
+                                                            end: Alignment
+                                                                .bottomCenter,
+                                                            colors: [
+                                                              barColor,
+                                                              barColor.withValues(
+                                                                alpha: 0.72,
+                                                              ),
+                                                            ],
+                                                          )
+                                                        : null,
+                                                    color:
+                                                        pt.mm > 0 ? null : barColor,
+                                                    border: isSelected
+                                                        ? Border.all(
+                                                            color: cs.onSurface
+                                                                .withValues(
+                                                                  alpha: 0.55,
+                                                                ),
+                                                            width: 1.2,
+                                                          )
+                                                        : null,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            // แถวที่ 3: โอกาสฝนตก (%) แสดงครบทุกชั่วโมง (0%–100%)
+                                            SizedBox(
+                                              height: 18,
+                                              child: Center(
+                                                child: FittedBox(
+                                                  fit: BoxFit.scaleDown,
+                                                  child: Text(
+                                                    '${pt.probPct}%',
+                                                    maxLines: 1,
+                                                    style: TextStyle(
+                                                      fontSize: 9.5,
+                                                      fontWeight: pt.probPct >= 50 ||
+                                                              isSelected
+                                                          ? FontWeight.w800
+                                                          : FontWeight.w600,
+                                                      color: probTextColor,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            // แถวที่ 4: ชั่วโมง (เวลาไทย UTC+7)
+                                            SizedBox(
+                                              height: 18,
+                                              child: Center(
+                                                child: FittedBox(
+                                                  fit: BoxFit.scaleDown,
+                                                  child: Text(
+                                                    pt.hourMinute.length >= 2
+                                                        ? pt.hourMinute
+                                                            .substring(0, 2)
+                                                        : pt.hourMinute,
+                                                    maxLines: 1,
+                                                    style: TextStyle(
+                                                      fontSize: 10.5,
+                                                      fontWeight: isSelected
+                                                          ? FontWeight.w800
+                                                          : FontWeight.w600,
+                                                      color: isSelected
+                                                          ? cs.primary
+                                                          : cs.onSurfaceVariant,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 5),
+                  Text(
+                    widget.strings.get('rain_chart_axis_legend'),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontSize: 11,
+                          color: cs.onSurfaceVariant,
+                        ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -1011,7 +1095,7 @@ class _StationRowCard extends StatelessWidget {
                         if (station.displayLevel != null)
                           Text(
                             '${strings.get('latest_water_level')} ${station.displayLevel!.toStringAsFixed(2)} ${strings.get('unit_m')}'
-                            '${station.bankLevel != null ? ' / ${strings.get('bank_label')} ${station.bankLevel!.toStringAsFixed(2)}' : ''}',
+                            '${station.hasBank && station.bankLevel != null ? ' / ${strings.get('bank_label')} ${station.bankLevel!.toStringAsFixed(2)}' : ''}',
                             style: TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w600,

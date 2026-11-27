@@ -11,6 +11,7 @@ class WatchAreaInfo {
     required this.tumbonTh,
     this.elevationMsl,
     this.marginM,
+    this.exposureZone = 'A',
   });
 
   final String nameTh;
@@ -19,6 +20,7 @@ class WatchAreaInfo {
   final String tumbonTh;
   final double? elevationMsl;
   final double? marginM;
+  final String exposureZone;
 
   factory WatchAreaInfo.fromJson(Map<String, dynamic> json) => WatchAreaInfo(
         nameTh: json['name_th']?.toString() ?? '',
@@ -27,6 +29,7 @@ class WatchAreaInfo {
         tumbonTh: json['tumbon_th']?.toString() ?? '',
         elevationMsl: (json['elevation_msl'] as num?)?.toDouble(),
         marginM: (json['margin_m'] as num?)?.toDouble(),
+        exposureZone: (json['exposure_zone']?.toString() ?? 'A').toUpperCase(),
       );
 }
 
@@ -284,7 +287,7 @@ class SubdistrictBoundary {
   final int villageCount;
 }
 
-/// หมู่บ้าน / ชุมชนจริง จ.ยะลา (ครบ 449 หมู่บ้านจาก DOPA พร้อมความสูงจริง MSL)
+/// หมู่บ้าน / ชุมชนจริง จ.ยะลา (ครบ 449 หมู่บ้านจาก DOPA พร้อมความสูงจริง MSL และโซนความเสี่ยง A/B/C)
 class VillagePoint {
   const VillagePoint({
     required this.code,
@@ -296,6 +299,10 @@ class VillagePoint {
     required this.lat,
     required this.lon,
     this.elevationMsl,
+    this.exposureZone = 'A',
+    this.tambonFloorMsl,
+    this.relHeightM,
+    this.anchorStation,
   });
 
   final String code;
@@ -307,6 +314,10 @@ class VillagePoint {
   final double lat;
   final double lon;
   final double? elevationMsl;
+  final String exposureZone;
+  final double? tambonFloorMsl;
+  final double? relHeightM;
+  final String? anchorStation;
 
   LatLng get point => LatLng(lat, lon);
 
@@ -320,25 +331,33 @@ class VillagePoint {
         lat: (json['lat'] as num?)?.toDouble() ?? 0.0,
         lon: (json['lon'] as num?)?.toDouble() ?? 0.0,
         elevationMsl: (json['elevation_msl'] as num?)?.toDouble(),
+        exposureZone: (json['exposure_zone']?.toString() ?? 'A').toUpperCase(),
+        tambonFloorMsl: (json['tambon_floor_msl'] as num?)?.toDouble(),
+        relHeightM: (json['rel_height_m'] as num?)?.toDouble(),
+        anchorStation: json['anchor_station']?.toString(),
       );
 }
 
-/// ผลประเมินระดับน้ำท่วมถึงจากความสูงพื้นที่จริง (MSL) เทียบระดับน้ำแม่น้ำ
+/// ผลประเมินระดับน้ำท่วมถึงตาม Layer 2 Unified Basin Hazard × Terrain Exposure (Zone A/B/C)
 class ElevationFloodResult {
   const ElevationFloodResult({
     required this.level,
     required this.summaryTh,
     this.marginMeters,
     this.refWaterMsl,
+    this.exposureZone = 'A',
+    this.advisoryNote,
   });
 
   final int level;
   final String summaryTh;
   final double? marginMeters;
   final double? refWaterMsl;
+  final String exposureZone;
+  final String? advisoryNote;
 }
 
-/// แถบความสูงภูมิประเทศจริงจาก Copernicus DEM สำหรับระบายสีไล่ระดับตาม ม.รทก. บนแผนที่
+/// แถบความสูงภูมิประเทศจริงจาก Copernicus DEM สำหรับระบายสีตาม Zone A/B/C × Basin Hazard บนแผนที่
 class ElevationBandZone {
   const ElevationBandZone({
     required this.amphoeTh,
@@ -347,6 +366,7 @@ class ElevationBandZone {
     required this.elevMax,
     required this.elevMid,
     required this.ring,
+    this.exposureZone = 'C',
   });
 
   final String amphoeTh;
@@ -355,9 +375,10 @@ class ElevationBandZone {
   final double elevMax;
   final double elevMid;
   final List<LatLng> ring;
+  final String exposureZone;
 }
 
-/// ขอบเขตโซนหมู่บ้านแบบเว้าโค้งตามภูมิประเทศภายในขอบเขตตำบลจริง
+/// ขอบเขตโซนหมู่บ้านแบบเว้าโค้งตามภูมิประเทศภายในขอบเขตตำบลจริง (รองรับทั้ง Polygon และ MultiPolygon)
 class VillageZoneBoundary {
   const VillageZoneBoundary({
     required this.code,
@@ -366,8 +387,10 @@ class VillageZoneBoundary {
     required this.nameEn,
     required this.amphoeTh,
     required this.tumbonTh,
-    required this.ring,
+    required this.rings,
     this.elevationMsl,
+    this.exposureZone = 'A',
+    this.relHeightM,
   });
 
   final String code;
@@ -376,8 +399,12 @@ class VillageZoneBoundary {
   final String nameEn;
   final String amphoeTh;
   final String tumbonTh;
-  final List<LatLng> ring;
+  final List<List<LatLng>> rings;
   final double? elevationMsl;
+  final String exposureZone;
+  final double? relHeightM;
+
+  List<LatLng> get ring => rings.isNotEmpty ? rings.first : const <LatLng>[];
 }
 
 /// ตารางความสูงภูมิประเทศจริง (Copernicus DEM) สำหรับคำนวณ ม.รทก. ณ พิกัด GPS หรือหมุดผู้ใช้แบบออฟไลน์ทันที
@@ -443,6 +470,8 @@ class UserPinAssessment {
     this.marginMeters,
     this.nearestStationCode,
     this.nearestStationDistKm,
+    this.exposureZone = 'A',
+    this.advisoryNote,
   });
 
   final double lat;
@@ -457,6 +486,8 @@ class UserPinAssessment {
   final double? marginMeters;
   final String? nearestStationCode;
   final double? nearestStationDistKm;
+  final String exposureZone;
+  final String? advisoryNote;
 
   LatLng get point => LatLng(lat, lng);
 }

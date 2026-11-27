@@ -54,10 +54,10 @@ AMPHOE_TOPIC_MAP: dict[str, str] = {
 }
 
 LEVEL_TITLE_PREFIX: dict[int, str] = {
-    2: "เฝ้าระวังน้ำท่วม",
-    3: "เตือนภัยน้ำท่วม",
-    4: "เตือนภัยสูง",
-    5: "อันตรายอพยพด่วน",
+    2: "ประกาศเฝ้าระวังอุทกภัย",
+    3: "ประกาศเตือนภัยอุทกภัย",
+    4: "ประกาศเตือนภัยระดับสูง",
+    5: "ประกาศภาวะอันตราย — อพยพด่วน",
 }
 
 
@@ -198,13 +198,13 @@ def build_fcm_messages(
         if not should_send_topic(topic, level, state, ts):
             continue
 
-        prefix = LEVEL_TITLE_PREFIX.get(level, "แจ้งเตือนน้ำท่วม")
+        prefix = LEVEL_TITLE_PREFIX.get(level, "ประกาศแจ้งเตือนอุทกภัย")
         basis = str(ass.get("alert_basis") or "")
         basis_tag = " (เตือนภัยล่วงหน้าจากฝน/เขื่อน)" if basis == "rain_dam_early_warning" else ""
         title = f"{prefix}: อ.{amphoe_th} จ.ยะลา{basis_tag}"
-        action = str(ass.get("action_th") or "ติดตามสถานการณ์ระดับน้ำอย่างใกล้ชิด")
+        action = str(ass.get("action_th") or "โปรดติดตามประกาศสถานการณ์น้ำอย่างใกล้ชิด")
         lead = ass.get("lead_time_hours")
-        body = f"{action} (คาดน้ำเดินทางถึงใน {lead})" if lead else action
+        body = f"{action} (คาดว่ามวลน้ำจะเดินทางถึงภายใน {lead})" if lead else action
 
         messages.append(_format_v1_payload(topic=topic, title=title, body=body, level=level, amphoe=amphoe_th))
 
@@ -214,13 +214,13 @@ def build_fcm_messages(
         top_level = int(ass.get("level") or 1)
         if top_level >= 3 and should_send_topic(TOPIC_ALL_YALA, top_level, state, ts):
             amphoe_th = str(highest_amp.get("amphoe") or "")
-            prefix = LEVEL_TITLE_PREFIX.get(top_level, "แจ้งเตือนน้ำท่วม")
+            prefix = LEVEL_TITLE_PREFIX.get(top_level, "ประกาศแจ้งเตือนอุทกภัย")
             basis = str(ass.get("alert_basis") or "")
             basis_tag = " (เตือนภัยล่วงหน้าจากฝน/เขื่อน)" if basis == "rain_dam_early_warning" else ""
             title = f"{prefix} จ.ยะลา (พื้นที่สูงสุด: อ.{amphoe_th}){basis_tag}"
             action = str(ass.get("action_th") or "โปรดตรวจสอบแผนที่และเตรียมพร้อมอพยพตามประกาศ ปภ.ยะลา")
             lead = ass.get("lead_time_hours")
-            body = f"{action} (คาดน้ำเดินทางถึงใน {lead})" if lead else action
+            body = f"{action} (คาดว่ามวลน้ำจะเดินทางถึงภายใน {lead})" if lead else action
             messages.append(
                 _format_v1_payload(
                     topic=TOPIC_ALL_YALA,

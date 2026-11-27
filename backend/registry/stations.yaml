@@ -1,5 +1,5 @@
-version: 2
-source: ThaiWater API live + สทภ.8 WaterLevelWarningCriteria 2568 (X.40A, X.77)
+version: 3
+source: ThaiWater API live + สทภ.8 WaterLevelWarningCriteria 2568 (X.40A, X.77) + Gate 2 DEC-022 (PAT002 watch=13.30, FOP045 datum_unverified)
 stations:
   PAT002:
     display_name: เมืองยะลา (ตาเซะ)
@@ -13,8 +13,9 @@ stations:
     lat: 6.67525
     lon: 101.286354
     left_bank_m: 13.85
-    watch_m: 12.35
+    watch_m: 13.30
     critical_m: 13.85
+    criteria_source: Calibrated above normal Pattani Barrage controlled pool (12.43-13.00 m MSL, Nov 2026 live 7d telemetry; DEC-022)
     agency: สสน.
     risk_zone: riverine
   PAT001:
@@ -143,6 +144,8 @@ stations:
     left_bank_m: 25.128
     watch_m: 23.20
     critical_m: 25.128
+    datum_unverified: true
+    criteria_source: ThaiWater live level ~5.79 m vs bank 25.128 m (19.3 m gap; ground 5.95 m) — bypass bank-margin suppression until พพภ./สสน. verifies datum (DEC-022)
     agency: พพภ
     risk_zone: flash
   X.40A:

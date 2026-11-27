@@ -8,48 +8,38 @@ import 'package:yala_flood_app/l10n/app_strings.dart';
 import 'package:yala_flood_app/models/alert.dart';
 import 'package:yala_flood_app/models/alert_settings.dart';
 import 'package:yala_flood_app/models/flood_snapshot.dart';
-import 'package:yala_flood_app/models/rain_forecast.dart';
 import 'package:yala_flood_app/models/risk_level.dart';
-import 'package:yala_flood_app/models/sos_request.dart';
 import 'package:yala_flood_app/models/station.dart';
 import 'package:yala_flood_app/services/alert_engine.dart';
-import 'package:yala_flood_app/services/community_report_service.dart';
 import 'package:yala_flood_app/services/local_store.dart';
 import 'package:yala_flood_app/services/notification_service.dart';
-import 'package:yala_flood_app/services/rain_forecast_service.dart';
 import 'package:yala_flood_app/services/snapshot_service.dart';
 import 'package:yala_flood_app/services/thai_water_service.dart';
 
-/// ศูนย์รวม state ของแอพ: สถานี, 5-Source Snapshot, GeoJSON 8 อำเภอ, แจ้งเตือน, ภาษา 4 ภาษา, SOS และรายงานชุมชน
+/// ศูนย์รวม state ของแอป: สถานี 14 แห่ง, 5-Source Snapshot, ขอบเขต 3 ระดับ (8 อำเภอ/58 ตำบล/449 หมู่บ้าน),
+/// แจ้งเตือน v5, Layer 2 Terrain Exposure (Zone A/B/C) และภาษา 4 ภาษา (0% UGC · 0% Server PII)
 class AlertProvider extends ChangeNotifier {
   AlertProvider({
     required ThaiWaterService waterService,
-    RainForecastService? rainService,
     AlertEngine? engine,
     LocalStore? localStorage,
     NotificationService? notificationService,
     SnapshotService? snapshotService,
-    CommunityReportService? communityReportService,
     // ignore: prefer_initializing_formals
   })  : _waterService = waterService,
-        _rainService = rainService ?? RainForecastService(),
         _engine = engine ?? const AlertEngine(),
         _store = localStorage,
         _notifications = notificationService ?? NotificationService.instance,
-        _snapshotService = snapshotService ?? SnapshotService(),
-        _communityReports = communityReportService ?? CommunityReportService();
+        _snapshotService = snapshotService ?? SnapshotService();
 
   final ThaiWaterService _waterService;
-  final RainForecastService _rainService;
   final AlertEngine _engine;
   final LocalStore? _store;
   final NotificationService _notifications;
   final SnapshotService _snapshotService;
-  final CommunityReportService _communityReports;
 
   List<Station> _stations = const <Station>[];
   List<AlertItem> _alerts = const <AlertItem>[];
-  List<SosRequest> _sosRequests = const <SosRequest>[];
   AlertSettings _settings = const AlertSettings();
   FloodSnapshot? _snapshot;
   List<AmphoeBoundary> _boundaries = const <AmphoeBoundary>[];
@@ -59,8 +49,6 @@ class AlertProvider extends ChangeNotifier {
   List<ElevationBandZone> _elevationZones = const <ElevationBandZone>[];
   DemElevationGrid? _demGrid;
   ({double lat, double lng, bool isGps})? _pinnedCoords;
-  List<CommunityReport> _recentCommunityReports = const <CommunityReport>[];
-  DateTime? _lastCommunityReportAt;
   bool _gpsConsentGranted = false;
   int _dataResetVersion = 0;
   final Map<String, List<WaterLevelPoint>> _stationHistory7d =
@@ -88,13 +76,11 @@ class AlertProvider extends ChangeNotifier {
     _disposed = true;
     _waterService.close();
     _snapshotService.close();
-    _communityReports.close();
     super.dispose();
   }
 
   List<Station> get stations => _stations;
   List<AlertItem> get alerts => _alerts;
-  List<SosRequest> get sosRequests => _sosRequests;
   AlertSettings get settings => _settings;
   AppStrings get strings => AppStrings(_settings.languageCode);
   FloodSnapshot? get snapshot => _snapshot;
@@ -104,9 +90,6 @@ class AlertProvider extends ChangeNotifier {
   List<VillageZoneBoundary> get villageZones => _villageZones;
   List<ElevationBandZone> get elevationZones => _elevationZones;
   DemElevationGrid? get demGrid => _demGrid;
-  bool get communityReportConfigured => _communityReports.isConfigured;
-  List<CommunityReport> get recentCommunityReports => _recentCommunityReports;
-  DateTime? get lastCommunityReportAt => _lastCommunityReportAt;
   bool get gpsConsentGranted => _gpsConsentGranted;
   int get dataResetVersion => _dataResetVersion;
   bool get loading => _loading;
@@ -126,7 +109,7 @@ class AlertProvider extends ChangeNotifier {
   int get dangerStationCount =>
       _stations.where((s) => s.riskLevel.isHighOrDanger).length;
 
-  /// ระดับแจ้งเตือน 1–5 ของแต่ละอำเภอ (ใช้ระบายสี Polygon บนแผนที่ Google Maps)
+  /// ระดับแจ้งเตือน 1–5 ของแต่ละอำเภอ (Layer 1 Basin Hazard)
   AlertLevel amphoeAlertLevel(String amphoeTh) {
     final fromSnap = _snapshot?.byAmphoe(amphoeTh);
     if (fromSnap != null) return AlertLevel.fromValue(fromSnap.level);
@@ -143,7 +126,7 @@ class AlertProvider extends ChangeNotifier {
   List<SubdistrictBoundary> subdistrictsOf(String amphoeTh) =>
       _subdistricts.where((s) => s.amphoeTh == amphoeTh).toList();
 
-  /// ค้นหาชื่อตำบลภาษาอังกฤษจากขอบเขต 58 ตำบลเพื่อแสดงผลครบ 4 ภาษา (MEDIUM-4)
+  /// ค้นหาชื่อตำบลภาษาอังกฤษจากขอบเขต 58 ตำบลเพื่อแสดงผลครบ 4 ภาษา
   String? tumbonEnOf(String? amphoeTh, String tumbonTh) {
     for (final s in _subdistricts) {
       if (s.tumbonTh == tumbonTh && (amphoeTh == null || s.amphoeTh == amphoeTh)) {
@@ -157,15 +140,15 @@ class AlertProvider extends ChangeNotifier {
       .where((v) => v.amphoeTh == amphoeTh && v.tumbonTh == tumbonTh)
       .toList();
 
-  /// รายชื่อหมู่บ้านและตำบลพื้นที่เฝ้าระวังสำคัญในอำเภอ (เรียงจากพื้นที่ลุ่มต่ำใกล้ระดับน้ำแม่น้ำมากที่สุดก่อน)
+  /// รายชื่อหมู่บ้านและตำบลพื้นที่เฝ้าระวังสำคัญในอำเภอ (เรียงจาก Zone A ลุ่มต่ำ/ระดับเสี่ยงสูงสุดก่อน)
   List<({VillagePoint village, ElevationFloodResult eval})> watchVillagesForAmphoe(
     String amphoeTh, {
     int limit = 12,
   }) {
     final matching = _villages.where((v) => v.amphoeTh == amphoeTh).toList();
     if (matching.isEmpty) {
-      // Fallback จาก snapshot watch_areas กรณียังไม่ได้โหลดไฟล์ villages
-      final snapWatch = _snapshot?.byAmphoe(amphoeTh)?.watchAreas ?? const <WatchAreaInfo>[];
+      final snapWatch =
+          _snapshot?.byAmphoe(amphoeTh)?.watchAreas ?? const <WatchAreaInfo>[];
       return snapWatch.take(limit).map((w) {
         final vp = VillagePoint(
           code: '',
@@ -177,20 +160,43 @@ class AlertProvider extends ChangeNotifier {
           lat: AppConfig.defaultLat,
           lon: AppConfig.defaultLng,
           elevationMsl: w.elevationMsl,
+          exposureZone: w.exposureZone,
         );
-        return (village: vp, eval: elevationFloodLevel(w.elevationMsl, amphoeTh));
+        return (
+          village: vp,
+          eval: elevationFloodLevel(
+            w.elevationMsl,
+            amphoeTh,
+            exposureZone: w.exposureZone,
+          ),
+        );
       }).toList();
     }
 
-    final scored = <({VillagePoint village, ElevationFloodResult eval, double sortKey})>[];
+    final scored = <({
+      VillagePoint village,
+      ElevationFloodResult eval,
+      int zoneOrder,
+      double sortKey,
+    })>[];
     for (final v in matching) {
-      final ev = elevationFloodLevel(v.elevationMsl, amphoeTh);
+      final ev = elevationFloodLevel(
+        v.elevationMsl,
+        amphoeTh,
+        exposureZone: v.exposureZone,
+        relHeightM: v.relHeightM,
+      );
+      final zOrder = v.exposureZone == 'A'
+          ? 0
+          : (v.exposureZone == 'B' ? 1 : 2);
       final key = ev.marginMeters ?? v.elevationMsl ?? 9999.0;
-      scored.add((village: v, eval: ev, sortKey: key));
+      scored.add((village: v, eval: ev, zoneOrder: zOrder, sortKey: key));
     }
     scored.sort((a, b) {
       final byLv = b.eval.level.compareTo(a.eval.level);
       if (byLv != 0) return byLv;
+      final byZone = a.zoneOrder.compareTo(b.zoneOrder);
+      if (byZone != 0) return byZone;
       final byMargin = a.sortKey.compareTo(b.sortKey);
       if (byMargin != 0) return byMargin;
       return a.village.nameTh.compareTo(b.village.nameTh);
@@ -201,7 +207,7 @@ class AlertProvider extends ChangeNotifier {
         .toList();
   }
 
-  /// รายชื่อหมู่บ้านและตำบลในพื้นที่รอบสถานีวัดระดับน้ำ (เน้นตำบลที่ตั้งสถานีและพื้นที่ลุ่มต่ำใกล้เคียง)
+  /// รายชื่อหมู่บ้านและตำบลในพื้นที่รอบสถานีวัดระดับน้ำ
   List<({VillagePoint village, ElevationFloodResult eval, double distKm})>
       watchVillagesNearStation(Station station, {int limit = 6}) {
     final amp = station.amphoeTh ?? '';
@@ -217,30 +223,41 @@ class AlertProvider extends ChangeNotifier {
       ElevationFloodResult eval,
       double distKm,
       bool sameTumbon,
+      int zoneOrder,
       double sortMargin,
     })>[];
     for (final v in candidates) {
       final dist = (sLat != null && sLng != null)
           ? _haversineKm(sLat, sLng, v.lat, v.lon)
           : 99.0;
-      final ev = elevationFloodLevel(v.elevationMsl, amp);
+      final ev = elevationFloodLevel(
+        v.elevationMsl,
+        amp,
+        exposureZone: v.exposureZone,
+        relHeightM: v.relHeightM,
+      );
       final margin = (v.elevationMsl != null && refWater != null)
           ? (v.elevationMsl! - refWater)
           : (ev.marginMeters ?? v.elevationMsl ?? 999.0);
+      final zOrder = v.exposureZone == 'A'
+          ? 0
+          : (v.exposureZone == 'B' ? 1 : 2);
       scored.add((
         village: v,
         eval: ev,
         distKm: dist,
         sameTumbon: station.tumbonTh != null && v.tumbonTh == station.tumbonTh,
+        zoneOrder: zOrder,
         sortMargin: margin,
       ));
     }
-    // เลือกหมู่บ้านที่ใกล้สถานี (<= 12 กม. หรืออยู่ตำบลเดียวกัน) แล้วเรียงตามความเสี่ยง/พื้นที่ลุ่มต่ำ
     final near = scored.where((e) => e.sameTumbon || e.distKm <= 12.0).toList();
     final pool = near.isNotEmpty ? near : scored;
     pool.sort((a, b) {
       final byLv = b.eval.level.compareTo(a.eval.level);
       if (byLv != 0) return byLv;
+      final byZone = a.zoneOrder.compareTo(b.zoneOrder);
+      if (byZone != 0) return byZone;
       final byMargin = a.sortMargin.compareTo(b.sortMargin);
       if (byMargin != 0) return byMargin;
       return a.distKm.compareTo(b.distKm);
@@ -300,51 +317,69 @@ class AlertProvider extends ChangeNotifier {
       ? _elevationZones
       : _elevationZones.where((z) => z.amphoeTh == amphoeTh).toList();
 
-  /// สีไล่ระดับจริงตามความสูงภูมิประเทศ (ม.รทก.) เทียบระดับน้ำแม่น้ำและระดับแจ้งเตือนของอำเภอ
-  Color elevationGradientColor(double elevMsl, String amphoeTh) {
-    final elevRes = elevationFloodLevel(elevMsl, amphoeTh);
-    final refWater = elevRes.refWaterMsl;
+  /// สีไล่ระดับแผนที่ตาม Layer 2 Unified Basin Hazard × Terrain Exposure Matrix (Zone A/B/C)
+  /// - เมื่อ Basin Level == 1: ทุกโซนแสดงเฉดเขียวภูมิประเทศสงบ (ไม่มีสีแดง/ส้ม/เหลืองลวงในวันแดดออก)
+  /// - เมื่อ Basin Level 2–5: Zone A เปลี่ยนสีตามระดับภัย 1:1, Zone B ตามหลัง 1 ขั้น, Zone C คงสีเขียวปลอดภัย
+  Color elevationGradientColor(
+    double elevMsl,
+    String amphoeTh, {
+    String? exposureZone,
+    double? relHeightM,
+  }) {
     final ampLv = amphoeAlertLevel(amphoeTh).value;
+    final zone = (exposureZone ?? _inferExposureZoneForElev(elevMsl, amphoeTh))
+        .toUpperCase();
 
-    // โทนสีไล่ระดับต่อเนื่องจากระดับน้ำถึงยอดเขา:
-    // แดงเข้ม (<=0.5ม.) -> แดง (<=2.5ม.) -> ส้ม (<=6ม.) -> เหลือง (<=12ม.) -> เขียวอ่อน (<=30ม.) -> เขียวเข้ม/ฟ้าอมเขียว (>60ม.)
-    if (refWater != null) {
-      final margin = elevMsl - refWater;
-      if (ampLv == 1) {
-        // สถานการณ์ปกติ: ไล่โทนระดับความสูงจากพื้นที่ลุ่มต่ำ (เหลืองอมเขียว/เขียวอ่อน) -> ที่สูง (เขียวเข้ม/ฟ้าอมเขียว)
-        if (margin <= 3.0) return const Color(0xFF9CCC65);
-        if (margin <= 8.0) return const Color(0xFF66BB6A);
-        if (margin <= 20.0) return const Color(0xFF43A047);
-        if (margin <= 60.0) return const Color(0xFF2E7D32);
-        if (margin <= 150.0) return const Color(0xFF1B5E20);
-        return const Color(0xFF0F4C3A);
-      }
-      if (margin <= 0.5) return const Color(0xFFB71C1C);
-      if (margin <= 2.5) return const Color(0xFFE53935);
-      if (margin <= 6.0) return const Color(0xFFEF6C00);
-      if (margin <= 12.0) return const Color(0xFFF9A825);
-      if (margin <= 25.0) return const Color(0xFF9CCC65);
-      if (margin <= 60.0) return const Color(0xFF43A047);
-      if (margin <= 150.0) return const Color(0xFF2E7D32);
+    if (ampLv <= 1) {
+      // สถานการณ์ปกติ: เฉดสีเขียวภูมิประเทศจริง (ลุ่มต่ำสีเขียวอ่อน -> ที่สูงสีเขียวเข้ม)
+      if (zone == 'A') return const Color(0xFF9CCC65);
+      if (zone == 'B') return const Color(0xFF66BB6A);
+      if (elevMsl < 120) return const Color(0xFF43A047);
+      if (elevMsl < 280) return const Color(0xFF2E7D32);
       return const Color(0xFF1B5E20);
     }
 
-    // อำเภอที่ไม่มีสถานีวัดน้ำ (เช่น อ.กาบัง): ไล่สีตามความสูง MSL + ระดับแจ้งเตือนฝน
-    if (ampLv >= 3 && elevMsl < 65) return AlertLevel.fromValue(ampLv).color;
-    if (elevMsl < 45) return ampLv >= 2 ? const Color(0xFFF9A825) : const Color(0xFF81C784);
-    if (elevMsl < 90) return const Color(0xFF4CAF50);
-    if (elevMsl < 180) return const Color(0xFF2E7D32);
+    final overflowDepth = _amphoeOverflowDepthM(amphoeTh);
+    final effectiveLv = AlertEngine.evaluateTerrainExposureLevel(
+      basinLevel: ampLv,
+      exposureZone: zone,
+      overflowDepthM: overflowDepth,
+      relHeightM: relHeightM,
+    );
+
+    if (effectiveLv >= 2) {
+      return AlertLevel.fromValue(effectiveLv).color;
+    }
+
+    // Effective Level == 1 (เช่น Zone C พื้นที่สูง หรือ Zone B ในระดับเฝ้าระวัง) -> เฉดเขียวปลอดภัย
+    if (zone == 'B') return const Color(0xFF66BB6A);
+    if (elevMsl < 120) return const Color(0xFF43A047);
+    if (elevMsl < 280) return const Color(0xFF2E7D32);
     return const Color(0xFF1B5E20);
   }
 
-  /// ประเมินพิกัด GPS หรือหมุดที่ผู้ใช้ปักไว้บนแผนที่แบบ Hyper-Local (อำเภอ, ตำบล, ความสูง ม.รทก., เทียบระดับน้ำ)
+  String _inferExposureZoneForElev(double elevMsl, String amphoeTh) {
+    final bank = _referenceBankMslForAmphoe(amphoeTh);
+    if (bank != null) {
+      if (elevMsl <= bank + 1.5) return 'A';
+      if (elevMsl <= bank + 5.0) return 'B';
+      return 'C';
+    }
+    final floor = _minElevForAmphoe(amphoeTh) ?? 20.0;
+    final rel = elevMsl - floor;
+    if (rel <= 5.0) return 'A';
+    if (rel <= 15.0) return 'B';
+    return 'C';
+  }
+
+  /// ประเมินพิกัด GPS หรือหมุดที่ผู้ใช้ปักไว้บนแผนที่แบบ Hyper-Local (Zone A/B/C × Basin Hazard)
   UserPinAssessment? get userPinAssessment {
     final pin = _pinnedCoords;
     if (pin == null) return null;
     return evaluateCoordinates(pin.lat, pin.lng, isGps: pin.isGps);
   }
 
-  /// ประเมินพิกัดใด ๆ ในจังหวัดยะลาแบบออฟไลน์ (ใช้ร่วมกันทั้งหมุดแผนที่และข้อความ SOS)
+  /// ประเมินพิกัดใด ๆ ในจังหวัดยะลาแบบออฟไลน์ (Layer 2 Unified Matrix + Zone C Advisory)
   UserPinAssessment evaluateCoordinates(
     double lat,
     double lng, {
@@ -362,11 +397,13 @@ class AlertProvider extends ChangeNotifier {
 
     String? matchedTumbon;
     String? matchedTumbonEn;
+    double? matchedTumbonFloor;
     for (final s in _subdistricts) {
       if (matchedAmphoe != null && s.amphoeTh != matchedAmphoe) continue;
       if (SnapshotService.pointInRings(pt, s.rings)) {
         matchedTumbon = s.tumbonTh;
         matchedTumbonEn = s.tumbonEn;
+        matchedTumbonFloor = s.minElevationMsl;
         matchedAmphoe ??= s.amphoeTh;
         break;
       }
@@ -390,9 +427,12 @@ class AlertProvider extends ChangeNotifier {
       }
     }
 
-    // หาสถานีวัดระดับน้ำใกล้ที่สุด
+    // หาสถานีวัดระดับน้ำใกล้ที่สุด (ทั้งหมด + สถานีที่ยืนยันฐานตลิ่งแล้วในอำเภอเดียวกัน)
     Station? nearestSt;
     var nearestDist = double.infinity;
+    Station? nearestVerifiedSameAmp;
+    var nearestVerifiedDist = double.infinity;
+    final amphoeHint = matchedAmphoe;
     for (final st in _stations) {
       if (!st.hasCoordinate) continue;
       final d = _haversineKm(lat, lng, st.lat!, st.lng!);
@@ -400,10 +440,52 @@ class AlertProvider extends ChangeNotifier {
         nearestDist = d;
         nearestSt = st;
       }
+      if (st.hasBank &&
+          (amphoeHint == null || st.amphoeTh == amphoeHint) &&
+          d < nearestVerifiedDist) {
+        nearestVerifiedDist = d;
+        nearestVerifiedSameAmp = st;
+      }
     }
 
     final amphoeForEval = matchedAmphoe ?? nearestSt?.amphoeTh ?? 'เมืองยะลา';
-    final elevEval = elevationFloodLevel(elevMsl, amphoeForEval);
+
+    // จำแนก Zone A / B / C ตาม spec-unified-impact-early-warning-v5.md §3.1
+    String zone = 'A';
+    double? relHeight;
+    if (elevMsl != null) {
+      if (nearestVerifiedSameAmp != null &&
+          nearestVerifiedDist <= 5.0 &&
+          nearestVerifiedSameAmp.criticalLevel != null) {
+        final bank = nearestVerifiedSameAmp.criticalLevel!;
+        relHeight = double.parse((elevMsl - bank).toStringAsFixed(2));
+        if (elevMsl <= bank + 1.5) {
+          zone = 'A';
+        } else if (elevMsl <= bank + 5.0) {
+          zone = 'B';
+        } else {
+          zone = 'C';
+        }
+      } else {
+        final floor =
+            matchedTumbonFloor ?? _minElevForAmphoe(amphoeForEval) ?? elevMsl;
+        relHeight = double.parse((elevMsl - floor).toStringAsFixed(2));
+        if (relHeight <= 5.0) {
+          zone = 'A';
+        } else if (relHeight <= 15.0) {
+          zone = 'B';
+        } else {
+          zone = 'C';
+        }
+      }
+    }
+
+    final elevEval = elevationFloodLevel(
+      elevMsl,
+      amphoeForEval,
+      exposureZone: zone,
+      relHeightM: relHeight,
+    );
 
     return UserPinAssessment(
       lat: lat,
@@ -418,6 +500,8 @@ class AlertProvider extends ChangeNotifier {
       marginMeters: elevEval.marginMeters,
       nearestStationCode: nearestSt?.code,
       nearestStationDistKm: nearestSt != null ? nearestDist : null,
+      exposureZone: elevEval.exposureZone,
+      advisoryNote: elevEval.advisoryNote,
     );
   }
 
@@ -444,7 +528,7 @@ class AlertProvider extends ChangeNotifier {
     return 2 * r * math.asin(math.sqrt(a.clamp(0.0, 1.0)));
   }
 
-  /// ระดับน้ำแม่น้ำอ้างอิงในอำเภอ (เลือกสถานีที่ใกล้ตลิ่งที่สุด)
+  /// ระดับน้ำแม่น้ำอ้างอิงในอำเภอ (เลือกสถานีที่ยืนยันฐานตลิ่งแล้วและใกล้ตลิ่งที่สุด)
   double? referenceWaterMslForAmphoe(String amphoeTh) {
     final matching = _stations
         .where((s) => s.amphoeTh == amphoeTh && s.displayLevel != null && s.hasBank)
@@ -456,9 +540,47 @@ class AlertProvider extends ChangeNotifier {
     return matching.first.displayLevel;
   }
 
-  /// ประเมินระดับสีความเสี่ยงน้ำท่วมถึงจากความสูงจากระดับน้ำทะเล (MSL) เทียบระดับน้ำแม่น้ำ
-  /// ตรงตามสูตรใน Interactive iOS Preview 100%
-  ElevationFloodResult elevationFloodLevel(double? elevMsl, String amphoeTh) {
+  double? _referenceBankMslForAmphoe(String amphoeTh) {
+    final matching = _stations
+        .where((s) => s.amphoeTh == amphoeTh && s.hasBank && s.criticalLevel != null)
+        .toList();
+    if (matching.isEmpty) return null;
+    matching.sort(
+      (a, b) => (a.remainingToBank ?? 99.0).compareTo(b.remainingToBank ?? 99.0),
+    );
+    return matching.first.criticalLevel;
+  }
+
+  double _amphoeOverflowDepthM(String amphoeTh) {
+    var maxOverflow = 0.0;
+    for (final s in _stations) {
+      if (s.amphoeTh != amphoeTh || !s.hasBank) continue;
+      final rem = s.remainingToBank;
+      if (rem != null && rem < 0 && -rem > maxOverflow) {
+        maxOverflow = -rem;
+      }
+    }
+    return maxOverflow;
+  }
+
+  double? _minElevForAmphoe(String amphoeTh) {
+    double? best;
+    for (final v in _villages) {
+      if (v.amphoeTh != amphoeTh || v.elevationMsl == null) continue;
+      if (best == null || v.elevationMsl! < best) {
+        best = v.elevationMsl;
+      }
+    }
+    return best;
+  }
+
+  /// ประเมินระดับผลกระทบเฉพาะจุดตาม Layer 2 Unified Basin Hazard × Terrain Exposure Matrix (Zone A/B/C)
+  ElevationFloodResult elevationFloodLevel(
+    double? elevMsl,
+    String amphoeTh, {
+    String? exposureZone,
+    double? relHeightM,
+  }) {
     final ampLv = amphoeAlertLevel(amphoeTh).value;
     final refWater = referenceWaterMslForAmphoe(amphoeTh);
 
@@ -467,49 +589,54 @@ class AlertProvider extends ChangeNotifier {
         level: ampLv,
         summaryTh: AlertLevel.fromValue(ampLv).labelTh,
         refWaterMsl: refWater,
+        exposureZone: exposureZone ?? 'A',
       );
+    }
+
+    final zone = (exposureZone ?? _inferExposureZoneForElev(elevMsl, amphoeTh))
+        .toUpperCase();
+    final overflowDepth = _amphoeOverflowDepthM(amphoeTh);
+    final effectiveLv = AlertEngine.evaluateTerrainExposureLevel(
+      basinLevel: ampLv,
+      exposureZone: zone,
+      overflowDepthM: overflowDepth,
+      relHeightM: relHeightM,
+    );
+
+    String? advisory;
+    if (zone == 'C' && ampLv >= 3) {
+      final isMountainFlash = AppConfig.flashFloodAmphoes.contains(amphoeTh);
+      if (ampLv >= 5) {
+        advisory = strings.get('zone_c_advisory_lv5');
+      } else if (ampLv >= 4 && isMountainFlash) {
+        advisory = strings.get('zone_c_advisory_flash_lv4');
+      } else if (ampLv >= 4) {
+        advisory = strings.get('zone_c_advisory_lv4');
+      } else {
+        advisory = strings.get('zone_c_advisory_lv3');
+      }
     }
 
     if (refWater != null) {
       final margin = double.parse((elevMsl - refWater).toStringAsFixed(1));
-      var lv = 1;
-      if (margin <= 0.5) {
-        lv = 5;
-      } else if (margin <= 2.5) {
-        lv = 4;
-      } else if (margin <= 6.0) {
-        lv = 3;
-      } else if (margin <= 12.0) {
-        lv = 2;
-      } else {
-        lv = 1;
-      }
-
-      if (ampLv == 1 && lv >= 4) lv = 2;
-      if (ampLv == 2 && lv == 5) lv = 3;
-      if (ampLv >= 5 && margin <= 5.0) {
-        lv = 5;
-      } else if (ampLv >= 4 && margin <= 3.5 && lv < 4) {
-        lv = 4;
-      }
-
       final txt = margin <= 0
           ? 'ต่ำกว่าระดับน้ำ ${margin.abs().toStringAsFixed(1)} ม.'
           : 'สูงกว่าระดับน้ำ +${margin.toStringAsFixed(1)} ม.';
       return ElevationFloodResult(
-        level: lv,
+        level: effectiveLv,
         summaryTh: txt,
         marginMeters: margin,
         refWaterMsl: refWater,
+        exposureZone: zone,
+        advisoryNote: advisory,
       );
     }
 
-    // อำเภอไม่มีสถานีวัดน้ำ (เช่น อ.กาบัง)
-    var lv = ampLv;
-    if (elevMsl >= 120 && lv > 2) lv = lv - 1;
     return ElevationFloodResult(
-      level: lv,
+      level: effectiveLv,
       summaryTh: 'สูง ${elevMsl.toStringAsFixed(0)} ม.รทก.',
+      exposureZone: zone,
+      advisoryNote: advisory,
     );
   }
 
@@ -557,10 +684,8 @@ class AlertProvider extends ChangeNotifier {
     if (store != null) {
       _alerts = store.loadAlerts();
       _settings = store.loadSettings();
-      _sosRequests = store.loadSosRequests();
       _gpsConsentGranted = store.loadGpsConsent();
       _pinnedCoords = store.loadPinnedLocation();
-      _lastCommunityReportAt = store.loadCommunityLastReportAt();
     }
     // โหลดขอบเขตแผนที่ทั้ง 3 ระดับ, ชั้นความสูง DEM และแคชในเครื่องแบบขนานเพื่อให้เปิดหน้าจอได้ทันที
     final results = await Future.wait<dynamic>([
@@ -631,11 +756,9 @@ class AlertProvider extends ChangeNotifier {
       _noticeTh = result.messageTh;
       _snapshot = await snapFuture ?? _snapshot;
 
-      final rain = await _loadRain();
       final newAlerts = _engine.evaluate(
         stations: _stations,
         settings: _settings,
-        rain: rain,
         previous: _alerts,
       );
       if (newAlerts.isNotEmpty) {
@@ -662,14 +785,6 @@ class AlertProvider extends ChangeNotifier {
         await _notifications.showFloodAlert(alert, quiet: _settings.quietMode);
       }
     }
-  }
-
-  Future<RainForecast?> _loadRain() async {
-    if (AppConfig.rainForecastEndpoint.isEmpty) return null;
-    final code = _selectedStationCode ??
-        (_stations.isEmpty ? null : _stations.first.code);
-    if (code == null) return null;
-    return _rainService.current(code);
   }
 
   List<AlertItem> _mergeAlerts(List<AlertItem> existing, List<AlertItem> fresh) {
@@ -732,76 +847,6 @@ class AlertProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addSosRequest(SosRequest request) {
-    _sosRequests = [request, ..._sosRequests];
-    if (_sosRequests.length > AppConfig.maxStoredSosRequests) {
-      _sosRequests.removeRange(
-        AppConfig.maxStoredSosRequests,
-        _sosRequests.length,
-      );
-    }
-    _store?.saveSosRequests(_sosRequests);
-    notifyListeners();
-  }
-
-  void advanceSosStatus(String id) {
-    _sosRequests = _sosRequests.map((request) {
-      if (request.id != id) return request;
-      final next = request.status.next;
-      if (next == null) return request;
-      return request.copyWith(
-        status: next,
-        statusHistory: [...request.statusHistory, next],
-      );
-    }).toList();
-    _store?.saveSosRequests(_sosRequests);
-    notifyListeners();
-  }
-
-  /// บันทึกช่องทางส่งออกจริงของคำขอ SOS (sms / line / clipboard / call)
-  void updateSosDispatchedVia(String id, String channel) {
-    _sosRequests = _sosRequests.map((request) {
-      if (request.id != id) return request;
-      return request.copyWith(dispatchedVia: channel);
-    }).toList();
-    _store?.saveSosRequests(_sosRequests);
-    notifyListeners();
-  }
-
-  /// โหลดรายงานสถานการณ์น้ำจากชุมชน (วิวไม่ระบุตัวตน public_community_reports)
-  Future<void> refreshCommunityReports() async {
-    if (!_communityReports.isConfigured) return;
-    final list = await _communityReports.fetchRecentReports();
-    _recentCommunityReports = list;
-    notifyListeners();
-  }
-
-  /// ส่งรายงานสถานการณ์น้ำชุมชน (Tier C · ไม่เก็บชื่อ/เบอร์โทร · ปัดเศษพิกัด ~110 ม. · ลบอัตโนมัติ 90 วัน)
-  Future<CommunitySubmitResult> submitCommunityReport({
-    required String amphoeTh,
-    required String reportType,
-    required double lat,
-    required double lng,
-    int? waterDepthCm,
-    String? noteTh,
-  }) async {
-    final result = await _communityReports.submitReport(
-      amphoeTh: amphoeTh,
-      reportType: reportType,
-      lat: lat,
-      lng: lng,
-      store: _store,
-      waterDepthCm: waterDepthCm,
-      noteTh: noteTh,
-    );
-    if (result.ok) {
-      _lastCommunityReportAt = DateTime.now();
-      await refreshCommunityReports();
-    }
-    notifyListeners();
-    return result;
-  }
-
   void setSelectedStation(String? code) {
     _selectedStationCode = code;
     notifyListeners();
@@ -816,11 +861,9 @@ class AlertProvider extends ChangeNotifier {
 
   Future<void> deleteAllUserData() async {
     _alerts = const <AlertItem>[];
-    _sosRequests = const <SosRequest>[];
     _settings = const AlertSettings();
     _gpsConsentGranted = false;
     _pinnedCoords = null;
-    _lastCommunityReportAt = null;
     _dataResetVersion++;
     await _store?.deleteAllUserData();
     await _waterService.clearCache();

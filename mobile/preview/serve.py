@@ -43,7 +43,7 @@ def _load_manifest() -> dict:
 
 
 def _build_scenario(scenario_id: str) -> dict:
-    """Apply realistic hydrological replay scenarios using exact Python compute_alert_v2."""
+    """Apply realistic hydrological replay scenarios using exact Python compute_alert_v5."""
     snap = copy.deepcopy(_load_live_snapshot())
     if scenario_id == "live":
         snap["simulation_mode"] = {
@@ -71,40 +71,45 @@ def _build_scenario(scenario_id: str) -> dict:
 
         for s in stations:
             amp = s["amphoe"]
-            dam_sig, dam_spill, lead = P.compute_dam_signal(dam, amp)
+            dam_sig, dam_spill, lead, dam_inflow = P.compute_dam_signal(dam, amp)
             if s["oldcode"] in ("BLGTD01", "BLGTD02", "PAT001"):
                 s["level_msl"] = round((s["bank_m"] or 38.0) - 0.65, 2)
                 s["previous_msl"] = round(s["level_msl"] - 0.34, 2)
-                s["situation_level"] = 3
+                s["situation_level"] = 4
             elif s["oldcode"] in ("FOP045",):
-                s["level_msl"] = round((s["bank_m"] or 25.0) - 1.10, 2)
-                s["previous_msl"] = round(s["level_msl"] - 0.22, 2)
-                s["situation_level"] = 3
+                s["level_msl"] = round((s["level_msl"] or 5.80) + 0.34, 2)
+                s["previous_msl"] = round(s["level_msl"] - 0.34, 2)
+                s["situation_level"] = 4
             elif s["oldcode"] in ("X.40A", "BLGTD03", "PAT002"):
                 s["level_msl"] = round((s["bank_m"] or 16.5) - 1.25, 2)
                 s["previous_msl"] = round(s["level_msl"] - 0.18, 2)
-                s["situation_level"] = 2
+                s["situation_level"] = 3
             s["stale"] = False
             s["remaining_to_bank_m"] = (
                 round(s["bank_m"] - s["level_msl"], 2)
-                if (s["bank_m"] is not None and s["level_msl"] is not None)
+                if (s["bank_m"] is not None and s["level_msl"] is not None and not s.get("datum_unverified"))
                 else None
             )
             s["rain_1h_mm"] = max(s.get("rain_1h_mm") or 0.0, 22.0)
             s["rain_24h_mm"] = max(s.get("rain_24h_mm") or 0.0, 78.0)
             s["forecast_24h_mm"] = max(s.get("forecast_24h_mm") or 0.0, 58.0)
-            s["assessment"] = P.compute_alert_v2(
+            s["assessment"] = P.compute_alert_v5(
                 level_msl=s["level_msl"],
                 previous_msl=s["previous_msl"],
                 bank_m=s["bank_m"],
+                watch_m=s.get("watch_m"),
+                critical_m=s.get("critical_m"),
                 situation_level=s["situation_level"],
                 stale=False,
+                datum_unverified=bool(s.get("datum_unverified", False)),
                 rain_1h_mm=s["rain_1h_mm"],
                 rain_24h_mm=s["rain_24h_mm"],
                 forecast_24h_mm=s["forecast_24h_mm"],
                 dam_signal=dam_sig,
                 dam_spillway_active=dam_spill,
+                dam_inflow_daily_mcm=dam_inflow,
                 is_flash_flood=s["is_flash_flood"],
+                is_urban_basin=(amp in P.URBAN_BASIN_AMPHOES),
                 lead_time_hours=lead,
             )
 
@@ -136,20 +141,25 @@ def _build_scenario(scenario_id: str) -> dict:
                 if (s["bank_m"] is not None and s["level_msl"] is not None)
                 else None
             )
-            dam_sig, dam_spill, lead = P.compute_dam_signal(dam, amp)
-            s["assessment"] = P.compute_alert_v2(
+            dam_sig, dam_spill, lead, dam_inflow = P.compute_dam_signal(dam, amp)
+            s["assessment"] = P.compute_alert_v5(
                 level_msl=s["level_msl"],
                 previous_msl=s["previous_msl"],
                 bank_m=s["bank_m"],
+                watch_m=s.get("watch_m"),
+                critical_m=s.get("critical_m"),
                 situation_level=s["situation_level"],
                 stale=False,
+                datum_unverified=bool(s.get("datum_unverified", False)),
                 rain_1h_mm=s["rain_1h_mm"],
                 rain_24h_mm=s["rain_24h_mm"],
+                api_7d_mm=130.0 if amp in ("บันนังสตา", "ธารโต", "กรงปินัง", "เบตง") else 40.0,
                 forecast_24h_mm=s["forecast_24h_mm"],
                 dam_signal=dam_sig,
                 dam_spillway_active=dam_spill,
-                community_reports_60m=3 if amp in ("บันนังสตา", "ธารโต") else 0,
+                dam_inflow_daily_mcm=dam_inflow,
                 is_flash_flood=s["is_flash_flood"],
+                is_urban_basin=(amp in P.URBAN_BASIN_AMPHOES),
                 lead_time_hours=lead,
             )
 
@@ -181,33 +191,40 @@ def _build_scenario(scenario_id: str) -> dict:
 
         for s in stations:
             amp = s["amphoe"]
-            dam_sig, dam_spill, lead = P.compute_dam_signal(dam, amp)
+            dam_sig, dam_spill, lead, dam_inflow = P.compute_dam_signal(dam, amp)
             if s["bank_m"]:
                 s["level_msl"] = round(s["bank_m"] + 0.45, 2)
                 s["previous_msl"] = round(s["level_msl"] - 0.42, 2)
-            s["situation_level"] = 4
+            s["situation_level"] = 5
             s["stale"] = False
             s["remaining_to_bank_m"] = (
                 round(s["bank_m"] - s["level_msl"], 2)
-                if (s["bank_m"] is not None and s["level_msl"] is not None)
+                if (s["bank_m"] is not None and s["level_msl"] is not None and not s.get("datum_unverified"))
                 else None
             )
             s["rain_1h_mm"] = 62.0
             s["rain_24h_mm"] = 188.0
             s["forecast_24h_mm"] = 118.0
-            s["assessment"] = P.compute_alert_v2(
+            s["assessment"] = P.compute_alert_v5(
                 level_msl=s["level_msl"],
                 previous_msl=s["previous_msl"],
                 bank_m=s["bank_m"],
-                situation_level=4,
+                watch_m=s.get("watch_m"),
+                critical_m=s.get("critical_m"),
+                situation_level=5,
                 stale=False,
+                datum_unverified=bool(s.get("datum_unverified", False)),
                 rain_1h_mm=62.0,
                 rain_24h_mm=188.0,
+                rain_72h_mm=334.0,
+                api_7d_mm=160.0,
+                forecast_6h_mm=38.0,
                 forecast_24h_mm=118.0,
                 dam_signal=dam_sig,
                 dam_spillway_active=dam_spill,
-                community_reports_60m=5,
+                dam_inflow_daily_mcm=dam_inflow,
                 is_flash_flood=s["is_flash_flood"],
+                is_urban_basin=(amp in P.URBAN_BASIN_AMPHOES),
                 lead_time_hours=lead,
             )
 

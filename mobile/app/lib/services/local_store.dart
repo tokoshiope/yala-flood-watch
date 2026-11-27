@@ -1,12 +1,10 @@
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:yala_flood_app/config/app_config.dart';
 import 'package:yala_flood_app/models/alert.dart';
 import 'package:yala_flood_app/models/alert_settings.dart';
-import 'package:yala_flood_app/models/sos_request.dart';
 
 /// อ่าน/เขียนข้อมูลที่เก็บในเครื่องแบบ Local-First พร้อมฟังก์ชันลบข้อมูล PDPA
 class LocalStore {
@@ -55,27 +53,6 @@ class LocalStore {
     );
   }
 
-  // ── คำขอ SOS ───────────────────────────────────────────────────────────
-  List<SosRequest> loadSosRequests() {
-    final raw = _prefs.getString(AppConfig.sosLogPrefsKey);
-    if (raw == null || raw.isEmpty) return const <SosRequest>[];
-    try {
-      final list = jsonDecode(raw);
-      if (list is! List) return const <SosRequest>[];
-      return list
-          .whereType<Map<String, dynamic>>()
-          .map(SosRequest.fromJson)
-          .toList();
-    } on FormatException {
-      return const <SosRequest>[];
-    }
-  }
-
-  Future<void> saveSosRequests(List<SosRequest> requests) async {
-    final payload = jsonEncode(requests.map((r) => r.toJson()).toList());
-    await _prefs.setString(AppConfig.sosLogPrefsKey, payload);
-  }
-
   // ── ความยินยอม PDPA สำหรับ GPS ─────────────────────────────────────────
   bool loadGpsConsent() => _prefs.getBool(AppConfig.gpsConsentPrefsKey) ?? false;
 
@@ -110,33 +87,7 @@ class LocalStore {
     await _prefs.remove(AppConfig.pinnedLocationPrefsKey);
   }
 
-  // ── รหัสสุ่มนิรนามสำหรับรายงานน้ำชุมชน (PDPA: ลบได้ตลอดเวลา) ───────────
-  Future<String> loadOrCreateCommunitySalt() async {
-    final existing = _prefs.getString(AppConfig.communityDeviceSaltKey);
-    if (existing != null && existing.length >= 32) {
-      return existing;
-    }
-    final rng = Random.secure();
-    final bytes = List<int>.generate(24, (_) => rng.nextInt(256));
-    final salt = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
-    await _prefs.setString(AppConfig.communityDeviceSaltKey, salt);
-    return salt;
-  }
-
-  DateTime? loadCommunityLastReportAt() {
-    final raw = _prefs.getString(AppConfig.communityLastReportAtKey);
-    if (raw == null || raw.isEmpty) return null;
-    return DateTime.tryParse(raw);
-  }
-
-  Future<void> saveCommunityLastReportAt(DateTime timestamp) async {
-    await _prefs.setString(
-      AppConfig.communityLastReportAtKey,
-      timestamp.toUtc().toIso8601String(),
-    );
-  }
-
-  /// ลบข้อมูลส่วนบุคคลและประวัติทั้งหมดในเครื่อง (สิทธิเจ้าของข้อมูล PDPA)
+  /// ลบข้อมูลส่วนบุคคลและประวัติทั้งหมดในเครื่อง (สิทธิเจ้าของข้อมูล PDPA — รวมถึงคีย์เดิมจากเวอร์ชันก่อน)
   Future<void> deleteAllUserData() async {
     await _prefs.remove(AppConfig.alertsPrefsKey);
     await _prefs.remove(AppConfig.settingsPrefsKey);

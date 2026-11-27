@@ -36,8 +36,8 @@ void main() {
       expect(station.waterLevelMsl, 13.00);
       expect(station.leftBank, 13.85);
       expect(station.situationLevel, 4);
-      // formula_version = 4: PAT002 watch=12.35, mid=13.10, bank=13.85; 13.00 side way -> เฝ้าระวัง (Lv 2)
-      expect(station.riskLevel, RiskLevel.watch);
+      // formula_version = 5 (DEC-022): PAT002 watch=13.30, bank=13.85; 13.00 ในระดับควบคุมปกติ -> ปกติ (Lv 1)
+      expect(station.riskLevel, RiskLevel.normal);
       expect(station.remainingToBank, closeTo(0.85, 0.001));
       expect(station.hasBank, isTrue);
       expect(station.trend, WaterTrend.steady);

@@ -47,109 +47,151 @@ def _amphoes_registry():
         return yaml.safe_load(f)["amphoes"]
 
 
-# ── Formula v2 Exact Test Vectors (TV2-1 through TV2-9) ─────────────────────
+# ── Formula v5 Core Test Vectors (TV5-1 through TV5-18 · 100% Parity with Dart) ──
 
 @pytest.mark.parametrize(
-    "case_id,kwargs,expected_score,expected_level,expected_push",
+    "case_id,kwargs,expected_level,expected_basis,expected_push",
     [
+        # TV5-1: Dry day below watch -> Lv 1 ปกติ
         (
-            "TV2-1_normal",
-            dict(
-                level_msl=12.05, previous_msl=12.05, bank_m=13.85, h_normal_30d=11.85,
-                situation_level=1, stale=False, rain_1h_mm=6.0, forecast_24h_mm=12.0,
-                dam_signal=0.0, dam_spillway_active=False, community_reports_60m=0,
-                is_flash_flood=False,
-            ),
-            8.0, 1, False,
+            "TV5-1_below_watch_normal",
+            dict(level_msl=14.00, previous_msl=14.00, bank_m=16.50, watch_m=15.50, critical_m=16.50, situation_level=3, stale=False),
+            1, "monitoring", False,
         ),
+        # TV5-2: PAT002 calibrated watch=13.30 — normal controlled pool 12.85 m stays Lv 1 (eliminates dry-day false alarm!)
         (
-            "TV2-2_bank_full",
-            dict(
-                level_msl=13.85, previous_msl=13.85, bank_m=13.85,
-                situation_level=3, stale=False,
-            ),
-            45.0, 3, True,
+            "TV5-2_pat002_controlled_pool_normal",
+            dict(level_msl=12.85, previous_msl=12.85, bank_m=13.85, watch_m=13.30, critical_m=13.85, situation_level=4, stale=False),
+            1, "monitoring", False,
         ),
+        # TV5-3: Watch zone sideway (15.50 <= H < 16.00, dH = +0.02) -> Lv 2 เฝ้าระวัง
         (
-            "TV2-3_max_crisis",
-            dict(
-                level_msl=14.0, previous_msl=13.65, bank_m=13.85,
-                situation_level=4, stale=False, rain_1h_mm=70.0, forecast_24h_mm=140.0,
-                dam_signal=1.0, dam_spillway_active=True, community_reports_60m=6,
-                is_flash_flood=True,
-            ),
-            100.0, 5, True,
+            "TV5-3_watch_sideway",
+            dict(level_msl=15.70, previous_msl=15.68, bank_m=16.50, watch_m=15.50, critical_m=16.50, situation_level=4, stale=False),
+            2, "water_stage", True,
         ),
+        # TV5-4: Watch zone rising rapidly (dH = +0.16, time_to_bank = 5.0h <= 6h) -> Lv 4 proactive!
         (
-            "TV2-4_rain_only_no_push",
-            dict(
-                level_msl=10.0, previous_msl=10.0, bank_m=13.85,
-                situation_level=None, stale=False, rain_1h_mm=54.0, forecast_24h_mm=36.0,
-                is_flash_flood=False,
-            ),
-            23.7, 2, False,
+            "TV5-4_watch_projected_overflow_6h",
+            dict(level_msl=15.70, previous_msl=15.54, bank_m=16.50, watch_m=15.50, critical_m=16.50, situation_level=4, stale=False),
+            4, "water_stage", True,
         ),
+        # TV5-5: Watch zone moderate rise (dH = +0.06, time_to_bank = 13.33h <= 24h) -> Lv 3 proactive!
         (
-            "TV2-5_banglang_spillway_early_warning",
-            dict(
-                level_msl=12.25, previous_msl=12.25, bank_m=13.85,
-                situation_level=1, stale=False, rain_1h_mm=12.0, forecast_24h_mm=24.0,
-                dam_signal=1.0, dam_spillway_active=True, lead_time_hours="6–12 ชม.",
-            ),
-            26.0, 3, True,
+            "TV5-5_watch_projected_overflow_24h",
+            dict(level_msl=15.70, previous_msl=15.64, bank_m=16.50, watch_m=15.50, critical_m=16.50, situation_level=4, stale=False),
+            3, "water_stage", True,
         ),
+        # TV5-6: Mid zone steady (16.00 <= H < 16.25, dH = 0) -> Lv 3 เตือนภัย
         (
-            "TV2-6_kabang_no_water_gauge_extreme_rain",
-            dict(
-                level_msl=None, previous_msl=None, bank_m=None,
-                situation_level=None, stale=False, rain_1h_mm=51.0, forecast_24h_mm=72.0,
-                is_flash_flood=True, has_water_gauge=False,
-            ),
-            26.5, 3, True,
+            "TV5-6_mid_steady",
+            dict(level_msl=16.10, previous_msl=16.10, bank_m=16.50, watch_m=15.50, critical_m=16.50, situation_level=4, stale=False),
+            3, "water_stage", True,
         ),
+        # TV5-7: Mid zone rapid surge (dH = +0.32) -> Lv 4 เตือนภัยสูง
         (
-            "TV2-7_flash_rain_and_community",
-            dict(
-                level_msl=10.0, previous_msl=10.0, bank_m=13.85,
-                situation_level=None, stale=False, rain_1h_mm=45.0, community_reports_60m=3,
-                is_flash_flood=True,
-            ),
-            22.5, 4, True,
+            "TV5-7_mid_rapid_surge",
+            dict(level_msl=16.05, previous_msl=15.73, bank_m=16.50, watch_m=15.50, critical_m=16.50, situation_level=4, stale=False),
+            4, "water_stage", True,
         ),
+        # TV5-8: High zone near bank (16.25 <= H < 16.50) -> Lv 4 เตือนภัยสูง
         (
-            "TV2-8_rapid_rise_bonus",
-            dict(
-                level_msl=12.85, previous_msl=12.50, bank_m=13.85,
-                situation_level=2, stale=False, is_flash_flood=True,
-            ),
-            29.3, 3, True,
+            "TV5-8_high_near_bank",
+            dict(level_msl=16.35, previous_msl=16.35, bank_m=16.50, watch_m=15.50, critical_m=16.50, situation_level=4, stale=False),
+            4, "water_stage", True,
         ),
+        # TV5-9: Bank overflow (H >= crit) -> Lv 5 อันตราย
         (
-            "TV2-9_no_bank_situation_floor",
-            dict(
-                level_msl=100.5, previous_msl=100.5, bank_m=None,
-                situation_level=4, stale=False,
-            ),
-            45.0, 4, True,
+            "TV5-9_bank_overflow",
+            dict(level_msl=16.55, previous_msl=16.40, bank_m=16.50, watch_m=15.50, critical_m=16.50, situation_level=4, stale=False),
+            5, "water_stage", True,
         ),
+        # TV5-10: ThaiWater situation_level == 5 confirms overflow even if gauge below bank -> Lv 5
         (
-            "TV2-10_ieee754_boundary_39_95_to_40_0",
-            dict(
-                level_msl=10.0, previous_msl=10.0, bank_m=13.85,
-                situation_level=None, stale=False,
-                rain_1h_mm=42.0, forecast_24h_mm=42.0,
-                dam_signal=1.0, dam_spillway_active=False,
-                community_reports_60m=5, is_flash_flood=False,
-            ),
-            40.0, 3, True,
+            "TV5-10_agency_overflow_sit5",
+            dict(level_msl=14.00, previous_msl=14.00, bank_m=16.50, watch_m=15.50, critical_m=16.50, situation_level=5, stale=False),
+            5, "agency_overflow", True,
+        ),
+        # TV5-11: FOP045 datum_unverified=True with rapid surge dH=+0.32 -> NOT suppressed by 19.3m gap, Lv 3!
+        (
+            "TV5-11_fop045_datum_unverified_surge",
+            dict(level_msl=6.12, previous_msl=5.80, bank_m=25.128, watch_m=23.20, critical_m=25.128, situation_level=None, stale=False, datum_unverified=True, is_flash_flood=True),
+            3, "water_stage", True,
+        ),
+        # TV5-12: Bang Lang Dam spillway alone (dry river below watch) -> Lv 3 early warning
+        (
+            "TV5-12_dam_spillway_alone_lv3",
+            dict(level_msl=12.00, previous_msl=12.00, bank_m=16.50, watch_m=15.50, critical_m=16.50, situation_level=3, stale=False, dam_signal=1.0, dam_spillway_active=True, dam_inflow_daily_mcm=40.0, lead_time_hours="6–12 ชม."),
+            3, "rain_dam_early_warning", True,
+        ),
+        # TV5-13: Bang Lang Dam Critical Compound (spillway + inflow >= 90 MCM/day) -> Lv 4 proactive!
+        (
+            "TV5-13_dam_critical_compound_lv4",
+            dict(level_msl=12.00, previous_msl=12.00, bank_m=16.50, watch_m=15.50, critical_m=16.50, situation_level=3, stale=False, dam_signal=1.0, dam_spillway_active=True, dam_inflow_daily_mcm=110.0, lead_time_hours="6–12 ชม."),
+            4, "rain_dam_early_warning", True,
+        ),
+        # TV5-14: Bang Lang Dam Elevated (storage >= 75% / D=0.45) -> Lv 2 early watch
+        (
+            "TV5-14_dam_elevated_lv2",
+            dict(level_msl=12.00, previous_msl=12.00, bank_m=16.50, watch_m=15.50, critical_m=16.50, situation_level=3, stale=False, dam_signal=0.45, dam_spillway_active=False, lead_time_hours="6–12 ชม."),
+            2, "rain_dam_early_warning", True,
+        ),
+        # TV5-15: Extreme Urban Pluvial (Nov 2025 benchmark: rain_72h=334, api_7d=150, forecast_6h=35) -> Lv 4 proactive (NEVER Lv 5 without water!)
+        (
+            "TV5-15_extreme_urban_pluvial_lv4",
+            dict(level_msl=13.00, previous_msl=13.00, bank_m=16.50, watch_m=15.50, critical_m=16.50, situation_level=3, stale=False, rain_1h_mm=30.0, rain_24h_mm=160.0, rain_72h_mm=334.0, api_7d_mm=150.0, forecast_6h_mm=35.0, is_urban_basin=True),
+            4, "rain_dam_early_warning", True,
+        ),
+        # TV5-16: Heavy Urban Pluvial (below extreme threshold) -> Lv 3
+        (
+            "TV5-16_heavy_urban_pluvial_lv3",
+            dict(level_msl=13.00, previous_msl=13.00, bank_m=16.50, watch_m=15.50, critical_m=16.50, situation_level=3, stale=False, rain_1h_mm=50.0, rain_24h_mm=145.0, api_7d_mm=95.0, is_urban_basin=True),
+            3, "rain_dam_early_warning", True,
+        ),
+        # TV5-17: Extreme Flash Flood (อ.กาบัง 0 water gauges: rain_24h=220, api_7d=135, rain_1h=35) -> Lv 4 proactive!
+        (
+            "TV5-17_kabang_extreme_flash_lv4",
+            dict(level_msl=None, previous_msl=None, bank_m=None, situation_level=None, stale=False, rain_1h_mm=35.0, rain_24h_mm=220.0, api_7d_mm=135.0, forecast_6h_mm=30.0, is_flash_flood=True, has_water_gauge=False),
+            4, "rain_dam_early_warning", True,
+        ),
+        # TV5-18: Moderate rain without wet soil/water -> Lv 1 monitoring, no false push
+        (
+            "TV5-18_moderate_rain_no_false_alarm",
+            dict(level_msl=12.00, previous_msl=12.00, bank_m=16.50, watch_m=15.50, critical_m=16.50, situation_level=3, stale=False, rain_1h_mm=20.0, rain_24h_mm=45.0, api_7d_mm=30.0, is_urban_basin=True),
+            1, "monitoring", False,
         ),
     ],
 )
-def test_formula_v2_vectors(case_id, kwargs, expected_score, expected_level, expected_push):
-    res = P.compute_alert_v2(**kwargs)
-    assert res["score"] == expected_score, f"{case_id}: expected score {expected_score}, got {res['score']}"
-    assert res["level"] == expected_level, f"{case_id}: expected level {expected_level}, got {res['level']}"
+def test_formula_v5_vectors(case_id, kwargs, expected_level, expected_basis, expected_push):
+    res = P.compute_alert_v5(**kwargs)
+    assert res["formula_version"] == 5
+    assert res["level"] == expected_level, f"{case_id}: expected level {expected_level}, got {res['level']} (flags={res['flags']})"
+    assert res["alert_basis"] == expected_basis, f"{case_id}: expected basis {expected_basis}, got {res['alert_basis']}"
     assert res["should_push"] is expected_push, f"{case_id}: expected push {expected_push}, got {res['should_push']}"
+
+
+def test_layer2_terrain_exposure_matrix_v5():
+    # Basin Lv 1 -> all zones Lv 1 (zero dry-day false alarms!)
+    assert P.evaluate_terrain_exposure_level(1, "A") == 1
+    assert P.evaluate_terrain_exposure_level(1, "B") == 1
+    assert P.evaluate_terrain_exposure_level(1, "C") == 1
+    # Basin Lv 2 -> A:2, B:1, C:1
+    assert P.evaluate_terrain_exposure_level(2, "A") == 2
+    assert P.evaluate_terrain_exposure_level(2, "B") == 1
+    assert P.evaluate_terrain_exposure_level(2, "C") == 1
+    # Basin Lv 3 -> A:3, B:2, C:1
+    assert P.evaluate_terrain_exposure_level(3, "A") == 3
+    assert P.evaluate_terrain_exposure_level(3, "B") == 2
+    assert P.evaluate_terrain_exposure_level(3, "C") == 1
+    # Basin Lv 4 -> A:4, B:3, C:1
+    assert P.evaluate_terrain_exposure_level(4, "A") == 4
+    assert P.evaluate_terrain_exposure_level(4, "B") == 3
+    assert P.evaluate_terrain_exposure_level(4, "C") == 1
+    # Basin Lv 5 -> A:5, B:4 (escalates to 5 only if overflow_depth >= rel_height), C:1
+    assert P.evaluate_terrain_exposure_level(5, "A") == 5
+    assert P.evaluate_terrain_exposure_level(5, "B", overflow_depth_m=0.8, rel_height_m=2.5) == 4
+    assert P.evaluate_terrain_exposure_level(5, "B", overflow_depth_m=2.6, rel_height_m=2.5) == 5
+    assert P.evaluate_terrain_exposure_level(5, "C") == 1
 
 
 # ── Normalization, Registry Fallback, Anomaly & Deduplication ───────────────
@@ -296,7 +338,7 @@ def test_main_graceful_degradation_when_secondary_sources_fail(tmp_path, monkeyp
     assert len(payload["amphoes"]) == 8
     man = json.loads((tmp_path / "manifest.json").read_text(encoding="utf-8"))
     assert man["content_hash"] == payload["content_hash"]
-    assert man["formula_version"] == 4
+    assert man["formula_version"] == 5
 
 
 def test_contacts_registry_has_verified_1784_and_yala_ddpm():
@@ -451,244 +493,6 @@ def test_notify_fcm_topic_parity_cooldown_and_tamper_fail_closed(tmp_path):
     assert N.main(["--snapshot-dir", str(tmp_path), "--dry-run"]) == 1
 
 
-# ── Formula v3 Exact Parity Vectors & Historical 2024/2025 Backtests ────────
-
-@pytest.mark.parametrize(
-    "case_id,kwargs,expected_score,expected_level,expected_push,expected_mech,expected_conf",
-    [
-        (
-            "TV3-1_normal",
-            dict(
-                level_msl=14.2, previous_msl=14.2, bank_m=16.5, watch_m=15.5, critical_m=16.5,
-                situation_level=1, stale=False, rain_1h_mm=3.0, forecast_24h_mm=11.0,
-            ),
-            5.1, 1, False, "monitoring", "high",
-        ),
-        (
-            "TV3-2_nov2025_x40a_overflow_no_sit",
-            dict(
-                level_msl=17.74, previous_msl=17.50, bank_m=16.5, watch_m=15.5, critical_m=16.5,
-                situation_level=None, stale=False, rain_1h_mm=5.0, rain_24h_mm=20.0,
-                is_urban_basin=True,
-            ),
-            40.9, 5, True, "riverine_overflow", "high",
-        ),
-        (
-            "TV3-3_nov2025_urban_3day_333mm_low_dam",
-            dict(
-                level_msl=14.5, previous_msl=14.4, bank_m=16.5, watch_m=15.5, critical_m=16.5,
-                situation_level=None, stale=False, rain_24h_mm=155.0, rain_72h_mm=333.8,
-                api_7d_mm=140.0, forecast_6h_mm=35.0, dam_signal=0.0, is_urban_basin=True,
-            ),
-            45.1, 3, True, "urban_pluvial", "high",
-        ),
-        (
-            "TV3-4_nov2024_x40a_18_97_inflow_131",
-            dict(
-                level_msl=18.97, previous_msl=18.50, bank_m=16.5, watch_m=15.5, critical_m=16.5,
-                situation_level=4, stale=False, rain_24h_mm=180.0, rain_72h_mm=320.0,
-                api_7d_mm=200.0, forecast_24h_mm=120.0, glofas_peak_ratio=3.5,
-                dam_signal=0.75, lead_time_hours="6–12 ชม.",
-            ),
-            89.5, 5, True, "dam_release", "high",
-        ),
-        (
-            "TV3-5_x77_rid8_39_70_critical",
-            dict(
-                level_msl=39.75, previous_msl=39.65, bank_m=40.3, watch_m=38.0, critical_m=39.7,
-                situation_level=None, stale=False, is_flash_flood=True,
-            ),
-            38.0, 4, True, "riverine_overflow", "high",
-        ),
-        (
-            "TV3-6_rain_only_no_push",
-            dict(
-                level_msl=12.0, previous_msl=12.0, bank_m=16.5, watch_m=15.5, critical_m=16.5,
-                situation_level=None, stale=False, rain_1h_mm=40.0, forecast_24h_mm=33.0,
-                is_urban_basin=True,
-            ),
-            18.3, 1, False, "monitoring", "high",
-        ),
-        (
-            "TV3-7_kabang_0gauge_wet_soil_rain",
-            dict(
-                level_msl=None, previous_msl=None, bank_m=None, situation_level=None, stale=False,
-                rain_1h_mm=48.0, api_7d_mm=140.0, forecast_24h_mm=66.0,
-                is_flash_flood=True, has_water_gauge=False,
-            ),
-            32.6, 4, True, "flash_flood", "medium",
-        ),
-        (
-            "TV3-8_banglang_spillway_early_warning",
-            dict(
-                level_msl=14.0, previous_msl=14.0, bank_m=16.5, watch_m=15.5, critical_m=16.5,
-                situation_level=1, stale=False, rain_1h_mm=12.0, forecast_24h_mm=22.0,
-                dam_signal=1.0, dam_spillway_active=True, lead_time_hours="6–12 ชม.",
-            ),
-            16.8, 3, True, "dam_release", "high",
-        ),
-        (
-            "TV3-9_watch_rapid_rise_override",
-            dict(
-                level_msl=15.60, previous_msl=15.40, bank_m=16.5, watch_m=15.5, critical_m=16.5,
-                situation_level=None, stale=False,
-            ),
-            25.7, 3, True, "riverine_overflow", "high",
-        ),
-        (
-            "TV3-10_raman_sensor_gap_confidence",
-            dict(
-                level_msl=17.67, previous_msl=17.50, bank_m=16.5, watch_m=15.0, critical_m=16.5,
-                situation_level=None, stale=False, rain_24h_mm=90.0, rain_sensor_gap=True,
-                is_urban_basin=True,
-            ),
-            51.2, 5, True, "riverine_overflow", "medium",
-        ),
-    ],
-)
-def test_formula_v3_vectors(
-    case_id, kwargs, expected_score, expected_level, expected_push, expected_mech, expected_conf
-):
-    res = P.compute_alert_v3(**kwargs)
-    assert res["formula_version"] == 3
-    assert res["score"] == expected_score, f"{case_id}: expected score {expected_score}, got {res['score']}"
-    assert res["level"] == expected_level, f"{case_id}: expected level {expected_level}, got {res['level']}"
-    assert res["should_push"] is expected_push
-    assert res["flood_mechanism"] == expected_mech
-    assert res["confidence"] == expected_conf
-
-
-@pytest.mark.parametrize(
-    "case_id,kwargs,expected_score,expected_water_lv,expected_level,expected_basis,expected_trend,expected_push",
-    [
-        (
-            "TV4-1_below_watch_sit3_normal_water",
-            dict(
-                level_msl=12.59, previous_msl=12.64, bank_m=17.29, watch_m=15.80, critical_m=17.29,
-                situation_level=3, stale=False, rain_24h_mm=15.0,
-            ),
-            1.8, 1, 1, "monitoring", "sideway", False,
-        ),
-        (
-            "TV4-2_below_watch_sit4_no_false_alarm",
-            dict(
-                level_msl=36.01, previous_msl=36.00, bank_m=38.678, watch_m=36.80, critical_m=38.678,
-                situation_level=4, stale=False, rain_24h_mm=20.0,
-            ),
-            2.4, 1, 1, "monitoring", "sideway", False,
-        ),
-        (
-            "TV4-3_at_watch_sideway_pat002_live",
-            dict(
-                level_msl=12.43, previous_msl=12.43, bank_m=13.85, watch_m=12.35, critical_m=13.85,
-                situation_level=4, stale=False,
-            ),
-            18.8, 2, 2, "water_stage", "sideway", True,
-        ),
-        (
-            "TV4-4_at_watch_rapid_rise_escalates_lv3",
-            dict(
-                level_msl=15.70, previous_msl=15.50, bank_m=16.50, watch_m=15.50, critical_m=16.50,
-                situation_level=None, stale=False,
-            ),
-            25.0, 3, 3, "water_stage", "rising", True,
-        ),
-        (
-            "TV4-5_at_mid_rising_lv3",
-            dict(
-                level_msl=16.05, previous_msl=15.95, bank_m=16.50, watch_m=15.50, critical_m=16.50,
-                situation_level=None, stale=False,
-            ),
-            32.0, 3, 3, "water_stage", "rising", True,
-        ),
-        (
-            "TV4-6_above_mid_near_bank_lv4",
-            dict(
-                level_msl=16.35, previous_msl=16.30, bank_m=16.50, watch_m=15.50, critical_m=16.50,
-                situation_level=None, stale=False,
-            ),
-            44.0, 4, 4, "water_stage", "sideway", True,
-        ),
-        (
-            "TV4-7_over_bank_lv5_null_situation",
-            dict(
-                level_msl=16.52, previous_msl=16.40, bank_m=16.50, watch_m=15.50, critical_m=16.50,
-                situation_level=None, stale=False,
-            ),
-            50.0, 5, 5, "water_stage", "rising", True,
-        ),
-        (
-            "TV4-8_x77_rid8_critical_lv5",
-            dict(
-                level_msl=39.75, previous_msl=39.60, bank_m=40.30, watch_m=38.00, critical_m=39.70,
-                situation_level=None, stale=False,
-            ),
-            50.0, 5, 5, "water_stage", "rising", True,
-        ),
-        (
-            "TV4-9_urban_pluvial_early_warning_capped_lv3",
-            dict(
-                level_msl=14.20, previous_msl=14.15, bank_m=16.50, watch_m=15.50, critical_m=16.50,
-                situation_level=None, stale=False, rain_24h_mm=155.0, rain_72h_mm=333.8,
-                api_7d_mm=120.0, is_urban_basin=True,
-            ),
-            23.3, 1, 3, "rain_dam_early_warning", "sideway", True,
-        ),
-        (
-            "TV4-10_banglang_spillway_early_warning_capped_lv3",
-            dict(
-                level_msl=13.50, previous_msl=13.50, bank_m=16.50, watch_m=15.50, critical_m=16.50,
-                situation_level=3, stale=False, dam_signal=1.0, dam_spillway_active=True,
-                lead_time_hours="6–12 ชม.",
-            ),
-            8.0, 1, 3, "rain_dam_early_warning", "sideway", True,
-        ),
-        (
-            "TV4-11_kabang_zero_gauge_flash_early_warning_capped_lv3",
-            dict(
-                level_msl=None, previous_msl=None, bank_m=None, situation_level=None, stale=False,
-                rain_1h_mm=51.0, api_7d_mm=110.0, forecast_24h_mm=72.0,
-                is_flash_flood=True, has_water_gauge=False,
-            ),
-            26.7, 1, 3, "rain_dam_early_warning", "unknown", True,
-        ),
-        (
-            "TV4-12_thaiwater_sit5_overflow_confirmed_lv5",
-            dict(
-                level_msl=None, previous_msl=None, bank_m=None, situation_level=5, stale=False,
-            ),
-            50.0, 1, 5, "agency_overflow", "unknown", True,
-        ),
-        (
-            "TV4-13_mid_rapid_surge_escalates_lv4",
-            dict(
-                level_msl=16.10, previous_msl=15.75, bank_m=16.50, watch_m=15.50, critical_m=16.50,
-                situation_level=None, stale=False,
-            ),
-            39.0, 4, 4, "water_stage", "rising", True,
-        ),
-        (
-            "TV4-14_unbanked_sit4_watch_fallback_lv2",
-            dict(
-                level_msl=101.0, previous_msl=101.0, bank_m=None, situation_level=4, stale=False,
-            ),
-            17.5, 2, 2, "water_stage", "sideway", True,
-        ),
-    ],
-)
-def test_formula_v4_vectors(
-    case_id, kwargs, expected_score, expected_water_lv, expected_level, expected_basis, expected_trend, expected_push
-):
-    res = P.compute_alert_v4(**kwargs)
-    assert res["formula_version"] == 4
-    assert res["score"] == expected_score, f"{case_id}: expected score {expected_score}, got {res['score']}"
-    assert res["water_stage_level"] == expected_water_lv, f"{case_id}: water_stage_level={res['water_stage_level']}"
-    assert res["level"] == expected_level, f"{case_id}: level={res['level']}"
-    assert res["alert_basis"] == expected_basis, f"{case_id}: alert_basis={res['alert_basis']}"
-    assert res["water_trend"] == expected_trend, f"{case_id}: water_trend={res['water_trend']}"
-    assert res["should_push"] is expected_push, f"{case_id}: should_push={res['should_push']}"
-
-
 def test_normalize_preserves_thaiwater_situation_level_5_and_4_correctly():
     """QA BLOCKER-1 regression: normalize() MUST preserve ThaiWater situation_level=5 (overflow)."""
     fixed = datetime(2026, 11, 27, 8, 0, tzinfo=P.ICT)
@@ -746,10 +550,11 @@ def test_notify_fcm_tags_rain_dam_early_warning_on_amphoe_and_provincial_topics(
 def test_banglang_high_inflow_surge_triggers_early_dam_signal():
     # Nov 2024: storage still 51%, release normal, but inflow surges to 130.98 MCM/day -> D = 0.75!
     dam = {"storage_percent": 51.0, "released_daily_mcm": 8.0, "spilled_mcm": 0.0, "inflow_daily_mcm": 130.98}
-    d_sig, spilled, lead = P.compute_dam_signal(dam, "เมืองยะลา")
+    d_sig, spilled, lead, inflow = P.compute_dam_signal(dam, "เมืองยะลา")
     assert d_sig == 0.75
     assert spilled is False
     assert lead == "6–12 ชม."
+    assert inflow == 130.98
 
 
 def test_station_registry_real_names_and_rid8_thresholds():
@@ -760,23 +565,68 @@ def test_station_registry_real_names_and_rid8_thresholds():
     assert reg["X.40A"]["critical_m"] == 16.50
     assert reg["X.77"]["watch_m"] == 38.00
     assert reg["X.77"]["critical_m"] == 39.70
+    assert reg["PAT002"]["watch_m"] == 13.30
+    assert reg["FOP045"].get("datum_unverified") is True
     for code, item in reg.items():
         assert item.get("short_name_th") and not item["display_name"].endswith(" "), f"Bad name for {code}"
         assert item.get("name_en") and item.get("name_zh") and item.get("name_ms"), f"Missing i18n for {code}"
 
 
-def test_curved_gis_boundaries_and_dem_elevation_assets():
-    # Subdistricts must be high-res curved GADM polygons (not coarse 15-vertex polygons)
-    subs = json.loads((P.REGISTRY_DIR / "yala_subdistricts.geojson").read_text(encoding="utf-8"))
-    verts = [
-        len(f["geometry"]["coordinates"][0])
-        if f["geometry"]["type"] == "Polygon"
-        else sum(len(p[0]) for p in f["geometry"]["coordinates"])
-        for f in subs["features"]
-    ]
-    assert sum(verts) / len(verts) >= 35.0
+def _ring_area(ring):
+    s = 0.0
+    for i in range(len(ring) - 1):
+        s += ring[i][0] * ring[i + 1][1] - ring[i + 1][0] * ring[i][1]
+    return abs(s) / 2.0
 
-    # DEM grid & topographic elevation zones exist and cover all 8 amphoes
+
+def _geom_area(geom):
+    if geom["type"] == "Polygon":
+        return _ring_area(geom["coordinates"][0])
+    return sum(_ring_area(poly[0]) for poly in geom["coordinates"])
+
+
+def test_curved_gis_boundaries_zero_overlap_and_dem_exposure_zones():
+    # Subdistricts must be high-res curved GeoThai DOPA polygons (avg >= 80 vertices)
+    amps = json.loads((P.REGISTRY_DIR / "yala_amphoes.geojson").read_text(encoding="utf-8"))
+    subs = json.loads((P.REGISTRY_DIR / "yala_subdistricts.geojson").read_text(encoding="utf-8"))
+    verts = [len(f["geometry"]["coordinates"][0]) for f in subs["features"]]
+    assert len(subs["features"]) == 58
+    assert sum(verts) / len(verts) >= 80.0
+
+    # Exact 0.00% amphoe vs sum(subdistricts) area conservation (LL-005 regression!)
+    amp_areas = {f["properties"]["amphoe_th"]: _geom_area(f["geometry"]) for f in amps["features"]}
+    sub_areas_by_amp = {}
+    sub_areas_by_key = {}
+    for f in subs["features"]:
+        p = f["properties"]
+        a = _geom_area(f["geometry"])
+        sub_areas_by_amp[p["amphoe_th"]] = sub_areas_by_amp.get(p["amphoe_th"], 0.0) + a
+        sub_areas_by_key[(p["amphoe_th"], p["tumbon_th"])] = a
+    for amp_name, aa in amp_areas.items():
+        err_pct = abs(sub_areas_by_amp[amp_name] - aa) / aa * 100.0
+        assert err_pct < 0.01, f"Amphoe/subdistrict mismatch for {amp_name}: {err_pct:.4f}%"
+
+    # Exact <0.05% tambon vs sum(village_zones) area conservation (LL-006 regression!)
+    vz = json.loads((P.REGISTRY_DIR / "yala_village_zones.geojson").read_text(encoding="utf-8"))
+    assert len(vz["features"]) >= 430
+    vz_areas_by_key = {}
+    for f in vz["features"]:
+        p = f["properties"]
+        k = (p["amphoe_th"], p["tumbon_th"])
+        vz_areas_by_key[k] = vz_areas_by_key.get(k, 0.0) + _geom_area(f["geometry"])
+        assert p.get("exposure_zone") in ("A", "B", "C")
+    for k, sa in sub_areas_by_key.items():
+        if k in vz_areas_by_key:
+            err_pct = abs(vz_areas_by_key[k] - sa) / sa * 100.0
+            assert err_pct < 0.05, f"Tambon/village-zone mismatch for {k}: {err_pct:.4f}%"
+
+    # 449 villages all tagged with exposure_zone A/B/C
+    vils = json.loads((P.REGISTRY_DIR / "yala_villages.json").read_text(encoding="utf-8"))["villages"]
+    assert len(vils) == 449
+    zones = {v.get("exposure_zone") for v in vils}
+    assert zones == {"A", "B", "C"}
+
+    # DEM grid & topographic elevation zones exist, cover all 8 amphoes, and carry A/B/C tags
     dem = json.loads((P.REGISTRY_DIR / "yala_dem_grid.json").read_text(encoding="utf-8"))
     assert dem["province_code"] == "95"
     assert dem["rows"] > 50 and dem["cols"] > 40
@@ -786,9 +636,7 @@ def test_curved_gis_boundaries_and_dem_elevation_assets():
     ez = json.loads((P.REGISTRY_DIR / "yala_elevation_zones.geojson").read_text(encoding="utf-8"))
     assert len(ez["features"]) >= 100
     assert {f["properties"]["amphoe_th"] for f in ez["features"]} == set(_amphoes_registry().keys())
-
-    vz = json.loads((P.REGISTRY_DIR / "yala_village_zones.geojson").read_text(encoding="utf-8"))
-    assert len(vz["features"]) >= 400
+    assert all(f["properties"].get("exposure_zone") in ("A", "B", "C") for f in ez["features"])
 
 
 def test_rain_degraded_outage_triggers_sensor_gap_fallback_in_normalize():
@@ -825,76 +673,30 @@ def test_rain_degraded_outage_triggers_sensor_gap_fallback_in_normalize():
     assert st[0]["assessment"]["level"] >= 3
 
 
-# ── Option C: Tier C Community Reports Ingestion Tests ───────────────────────
+def test_normalize_fop045_datum_unverified_and_pat002_watch_calibration():
+    fixed = datetime(2026, 11, 27, 12, 0, tzinfo=P.ICT)
+    rows = _rows_sample(2, at=fixed)
+    # PAT002 controlled pool at 12.85 m stays Lv 1 normal with watch=13.30 m
+    rows[0]["station"]["tele_station_oldcode"] = "PAT002"
+    rows[0]["station"]["left_bank"] = 13.85
+    rows[0]["waterlevel_msl"] = "12.85"
+    rows[0]["waterlevel_msl_previous"] = "12.84"
+    rows[0]["situation_level"] = 4
+    # FOP045 with datum_unverified=True and rapid rise dH=+0.35 escalates to Lv 3 (not suppressed by 19.3m bank gap)
+    rows[1]["station"]["tele_station_oldcode"] = "FOP045"
+    rows[1]["station"]["left_bank"] = 25.128
+    rows[1]["waterlevel_msl"] = "6.15"
+    rows[1]["waterlevel_msl_previous"] = "5.80"
+    rows[1]["situation_level"] = None
+    rows[1]["geocode"]["amphoe_name"] = {"th": "กรงปินัง"}
 
-def test_fetch_community_reports_returns_empty_when_unconfigured(monkeypatch):
-    monkeypatch.delenv("SUPABASE_URL", raising=False)
-    monkeypatch.delenv("SUPABASE_SERVICE_ROLE_KEY", raising=False)
-    fixed = datetime(2026, 11, 24, 15, 0, tzinfo=P.ICT)
-    assert P.fetch_community_reports_60m(fixed) == {}
-
-
-def test_fetch_community_reports_rejects_non_https():
-    fixed = datetime(2026, 11, 24, 15, 0, tzinfo=P.ICT)
-    with pytest.raises(P.ValidationError):
-        P.fetch_community_reports_60m(
-            fixed,
-            supabase_url="http://insecure.supabase.co",
-            service_key="secret",
-        )
-
-
-def test_fetch_community_reports_filters_trust_score_gte_3(monkeypatch):
-    class _FakeResp:
-        def raise_for_status(self):
-            return None
-
-        def json(self):
-            return [
-                {"amphoe_th": "เมืองยะลา", "trust_score": 4},
-                {"amphoe_th": "เมืองยะลา", "trust_score": 3},
-                {"amphoe_th": "เมืองยะลา", "trust_score": 1},  # unverified -> must be ignored
-                {"amphoe_th": "กาบัง", "trust_score": 5},
-                {"amphoe_th": "กรุงเทพมหานคร", "trust_score": 5},  # non-Yala -> must be ignored
-            ]
-
-    monkeypatch.setattr(P.requests, "get", lambda *a, **kw: _FakeResp())
-    fixed = datetime(2026, 11, 24, 15, 0, tzinfo=P.ICT)
-    counts = P.fetch_community_reports_60m(
-        fixed,
-        supabase_url="https://demo.supabase.co",
-        service_key="srv-key",
-    )
-    assert counts == {"เมืองยะลา": 2, "กาบัง": 1}
-
-
-def test_normalize_and_amphoe_summaries_use_community_reports_never_sole_lv5():
-    fixed = datetime(2026, 11, 24, 15, 0, tzinfo=P.ICT)
-    rows = _rows_sample(1, at=fixed)
-    rows[0]["station"]["tele_station_oldcode"] = "X.40A"
-    rows[0]["waterlevel_msl"] = "11.00"
-    rows[0]["waterlevel_msl_previous"] = "11.00"
-    rows[0]["situation_level"] = 1
-
-    st_without, _ = P.normalize(rows, _registry(), now=fixed)
-    st_with, _ = P.normalize(
-        rows,
-        _registry(),
-        now=fixed,
-        community_reports_by_amphoe={"เมืองยะลา": 5},
-    )
-    assert st_with[0]["assessment"]["score"] > st_without[0]["assessment"]["score"]
-    assert "community_reports" in st_with[0]["assessment"]["reason_codes"]
-    # Guardrail: Tier C community reports alone MUST NEVER trigger Level 5 evacuation
-    assert st_with[0]["assessment"]["level"] < 5
-
-    # Also verify 0-gauge amphoe (อ.กาบัง) incorporates community_reports_by_amphoe
-    _, amphoes_reg, _, _ = P.load_registry()
-    kabang_only = {"กาบัง": amphoes_reg["กาบัง"]}
-    s0 = P.build_amphoe_summaries(kabang_only, [], {}, {}, None, community_reports_by_amphoe={})
-    s5 = P.build_amphoe_summaries(kabang_only, [], {}, {}, None, community_reports_by_amphoe={"กาบัง": 5})
-    assert s5[0]["assessment"]["score"] > s0[0]["assessment"]["score"]
-    assert s5[0]["assessment"]["level"] < 5
+    st, _ = P.normalize(rows, _registry(), now=fixed)
+    by_code = {s["oldcode"]: s for s in st}
+    assert by_code["PAT002"]["assessment"]["level"] == 1
+    assert by_code["FOP045"]["datum_unverified"] is True
+    assert by_code["FOP045"]["remaining_to_bank_m"] is None
+    assert by_code["FOP045"]["assessment"]["level"] == 3
+    assert by_code["FOP045"]["assessment"]["confidence"] == "medium"
 
 
 def test_publish_supabase_rejects_non_https_before_sending_service_key(monkeypatch):
@@ -990,3 +792,71 @@ def test_snapshot_sources_hint_is_10_minutes():
     snap = P.build_snapshot([], contacts, shelters)
     assert snap["sources"]["refresh_interval_hint_minutes"] == 10
     assert "waterlevel_graph" in snap["sources"]["thaiwater_waterlevel_graph"]
+
+
+def test_geojson_zero_self_intersection_and_zero_pairwise_crossings():
+    """LOW-2 permanent regression: every amphoe, tambon, and village-zone polygon ring
+    MUST have 0 self-intersections and 0 pairwise interior edge crossings."""
+    from collections import defaultdict
+
+    def ccw(a, b, c):
+        return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+
+    def strictly_cross(a, b, c, d):
+        if max(a[0], b[0]) <= min(c[0], d[0]) or max(c[0], d[0]) <= min(a[0], b[0]):
+            return False
+        if max(a[1], b[1]) <= min(c[1], d[1]) or max(c[1], d[1]) <= min(a[1], b[1]):
+            return False
+        d1, d2 = ccw(a, b, c), ccw(a, b, d)
+        d3, d4 = ccw(c, d, a), ccw(c, d, b)
+        return ((d1 > 0 and d2 < 0) or (d1 < 0 and d2 > 0)) and (
+            (d3 > 0 and d4 < 0) or (d3 < 0 and d4 > 0)
+        )
+
+    def ring_segs(ring):
+        pts = ring[:-1] if len(ring) > 1 and ring[0] == ring[-1] else ring
+        return [(pts[i], pts[(i + 1) % len(pts)]) for i in range(len(pts))]
+
+    for fname in ("yala_amphoes.geojson", "yala_subdistricts.geojson", "yala_village_zones.geojson"):
+        doc = json.loads((P.REGISTRY_DIR / fname).read_text(encoding="utf-8"))
+        for f in doc["features"]:
+            g = f["geometry"]
+            rings = [g["coordinates"][0]] if g["type"] == "Polygon" else [p[0] for p in g["coordinates"]]
+            for r in rings:
+                pts = r[:-1] if len(r) > 1 and r[0] == r[-1] else r
+                n = len(pts)
+                assert n >= 3, f"{fname} degenerate ring"
+                for i in range(n):
+                    a, b = pts[i], pts[(i + 1) % n]
+                    for j in range(i + 2, n):
+                        if i == 0 and j == n - 1:
+                            continue
+                        assert not strictly_cross(a, b, pts[j], pts[(j + 1) % n]), (
+                            f"Self-intersection in {fname}: {f['properties']}"
+                        )
+
+    # Zero intra-tambon pairwise edge crossings across all 444 village zones
+    vils = json.loads((P.REGISTRY_DIR / "yala_village_zones.geojson").read_text(encoding="utf-8"))["features"]
+    by_tam = defaultdict(list)
+    for f in vils:
+        by_tam[(f["properties"]["amphoe_th"], f["properties"]["tumbon_th"])].append(f)
+    for tk, flist in by_tam.items():
+        seg_lists = []
+        bboxes = []
+        for f in flist:
+            g = f["geometry"]
+            rings = [g["coordinates"][0]] if g["type"] == "Polygon" else [p[0] for p in g["coordinates"]]
+            segs = [s for r in rings for s in ring_segs(r)]
+            seg_lists.append(segs)
+            xs = [p[0] for a, b in segs for p in (a, b)]
+            ys = [p[1] for a, b in segs for p in (a, b)]
+            bboxes.append((min(xs), max(xs), min(ys), max(ys)))
+        for i in range(len(flist)):
+            x1, x2, y1, y2 = bboxes[i]
+            for j in range(i + 1, len(flist)):
+                ox1, ox2, oy1, oy2 = bboxes[j]
+                if x2 <= ox1 or ox2 <= x1 or y2 <= oy1 or oy2 <= y1:
+                    continue
+                for a, b in seg_lists[i]:
+                    for c, d in seg_lists[j]:
+                        assert not strictly_cross(a, b, c, d), f"Village crossing in {tk}"

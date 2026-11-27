@@ -1,5 +1,5 @@
 // ค่าคงที่ทั้งหมดของแอพ "แจ้งเตือนน้ำท่วมยะลา" (Yala Flood Watch)
-// เฉพาะ จ.ยะลา (รหัส 95) · formula_version = 3 · Google Maps Foundation + 4 Languages
+// เฉพาะ จ.ยะลา (รหัส 95) · formula_version = 5 · Google Maps Foundation + 4 Languages · 0% UGC
 library;
 
 class AppConfig {
@@ -10,7 +10,7 @@ class AppConfig {
   static const String appNameEn = 'Yala Flood Watch';
   static const String packageName = 'net.yala.floodapp';
   static const String appVersion = '1.0.1';
-  static const int formulaVersion = 4;
+  static const int formulaVersion = 5;
 
   // ── จังหวัดยะลา ────────────────────────────────────────────────────────
   static const String provinceCode = '95';
@@ -29,49 +29,9 @@ class AppConfig {
     defaultValue: '',
   );
 
-  /// กำหนดค่าผ่าน `--dart-define=YALA_SUPABASE_URL=https://<project>.supabase.co`
-  /// (หากไม่ระบุ จะดึง origin `https://<project>.supabase.co` จาก YALA_SNAPSHOT_CDN_BASE อัตโนมัติ)
-  static const String supabaseUrl = String.fromEnvironment(
-    'YALA_SUPABASE_URL',
-    defaultValue: '',
-  );
-
-  /// Public Supabase anon key สำหรับเรียกเฉพาะ RPC `submit_community_report` (RLS + Rate-Limited) และวิวไม่ระบุตัวตน
-  static const String supabaseAnonKey = String.fromEnvironment(
-    'YALA_SUPABASE_ANON_KEY',
-    defaultValue: '',
-  );
-
-  /// URL ฐานของ Supabase Project (HTTPS เท่านั้น)
-  static String get effectiveSupabaseBaseUrl =>
-      resolveSupabaseBaseUrl(
-        explicitUrl: supabaseUrl,
-        snapshotCdnUrl: snapshotCdnBaseUrl,
-      );
-
-  static String resolveSupabaseBaseUrl({
-    required String explicitUrl,
-    required String snapshotCdnUrl,
-  }) {
-    final direct = explicitUrl.trim().replaceAll(RegExp(r'/+$'), '');
-    if (direct.isNotEmpty) {
-      final parsed = Uri.tryParse(direct);
-      if (parsed != null && parsed.scheme == 'https' && parsed.host.isNotEmpty) {
-        return '${parsed.scheme}://${parsed.authority}';
-      }
-      return '';
-    }
-    final cdn = snapshotCdnUrl.trim();
-    if (cdn.isEmpty) return '';
-    final parsed = Uri.tryParse(cdn);
-    if (parsed != null &&
-        parsed.scheme == 'https' &&
-        parsed.host.isNotEmpty &&
-        parsed.path.contains('/storage/v1/object/public/')) {
-      return '${parsed.scheme}://${parsed.authority}';
-    }
-    return '';
-  }
+  /// เว็บคู่มือสำหรับแชร์/พิมพ์ (เสริมจากคู่มือออฟไลน์ในแอป)
+  static const String webGuideUrl =
+      'https://tokoshiope.github.io/yala-flood-watch/guide.html';
 
   static String get snapshotLatestUrl =>
       snapshotCdnBaseUrl.isEmpty ? '' : '$snapshotCdnBaseUrl/latest.json';
@@ -128,16 +88,17 @@ class AppConfig {
   static const String cacheStationHistoryPrefix = 'yala_flood_hist7d_v1_';
   static const Duration cacheTtl = Duration(minutes: 10);
 
-  // ── เกณฑ์แจ้งเตือน (formula_version = 4 · ระดับน้ำ 5 ขั้น + เตือนฝน/เขื่อนสูงสุด Lv 3) ──
+  // ── เกณฑ์แจ้งเตือน (formula_version = 5 · Unified Impact-Based Early Warning) ──
   static const int defaultWarningLevel = 3;
   static const int defaultDangerLevel = 5;
   static const int maxSituationLevel = 5;
-  static const int rainScoreWarn = 60;
-  static const int rainScoreDanger = 85;
   static const double steadyBandMeters = 0.05;
   static const double risingFastMetersPerHour = 0.30;
   static const Duration hysteresisWindow = Duration(hours: 3);
   static const Duration alertCooldownWindow = Duration(minutes: 30);
+
+  /// สถานีที่ค่าระดับตลิ่ง/ฐานอ้างอิงยังไม่ยืนยัน (รอ พพภ./สสน. ตรวจสอบ) — ไม่ใช้ bank - level กดเตือนภัย
+  static const Set<String> unverifiedDatumStations = {'FOP045'};
 
   static const Set<String> flashFloodAmphoes = {
     'บันนังสตา',
@@ -153,12 +114,12 @@ class AppConfig {
     'ยะหา',
   };
 
-  /// เกณฑ์ระดับเฝ้าระวัง / วิกฤต อ้างอิง สทภ.8 ปี 2568 และ stations.yaml v2
+  /// เกณฑ์ระดับเฝ้าระวัง / วิกฤต อ้างอิง สทภ.8 ปี 2568 และ stations.yaml v3 (DEC-022)
   static const Map<String, double> stationWatchMsl = {
     'X.40A': 15.50,
     'X.77': 38.00,
     'X.273': 15.00,
-    'PAT002': 12.35,
+    'PAT002': 13.30,
     'PAT001': 36.80,
     'BLGTD01': 46.70,
     'BLGTD02': 38.70,
@@ -209,7 +170,6 @@ class AppConfig {
   static const String communityDeviceSaltKey = 'yala_flood_community_salt_v1';
   static const String communityLastReportAtKey = 'yala_flood_community_last_report_v1';
   static const int maxStoredAlerts = 100;
-  static const int maxStoredSosRequests = 50;
 
   // ── Deep link ──────────────────────────────────────────────────────────
   static const String deepLinkScheme = 'yalaflood';
@@ -259,8 +219,6 @@ class AppConfig {
   static const String lifeSafetyDisclaimerTh =
       'แอปนี้เป็นเครื่องมือเฝ้าระวังและแจ้งเตือนล่วงหน้าอิสระ ไม่ใช่ช่องทางกู้ภัยหลักของทางราชการ '
       'หากประสบเหตุวิกฤตกรุณาโทร 1784 (ปภ.), 073-203559 (ปภ.ยะลา) หรือ 1669 ทันที';
-
-  static const String rainForecastEndpoint = '';
 
   // ── Google Maps (Primary Map Foundation — DEC-014) ──────────────────────
   /// Google Maps Road Tiles (รองรับ hl ตามภาษาที่เลือก: th / en / zh-CN / ms)

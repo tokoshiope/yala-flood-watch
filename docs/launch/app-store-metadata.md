@@ -78,45 +78,40 @@ Disclaimer: This is an independent public-interest tool, not an official governm
 
 ---
 
-## 5. App Review Notes (Copy-Paste ลงช่อง App Review Information → Notes — ตอบครบทั้ง 6 ข้อของ Apple Guideline 2.1)
+## 5. App Review Notes (Copy-Paste ลงช่อง App Review Information → Notes — ตอบครบทั้ง 6 ข้อ ≤ 4,000 ตัวอักษร)
 
 ```text
-Thank you for reviewing Yala Flood Warning (แจ้งเตือนน้ำท่วมยะลา). Please find all requested information for Guideline 2.1 below:
+Thank you for reviewing Yala Flood Warning (แจ้งเตือนน้ำท่วมยะลา). Below are all 6 items requested under Guideline 2.1:
 
 1. Physical Device Screen Recording:
-   - Video URL (captured on physical iPhone running latest iOS): [REPLACE WITH YOUR UNLISTED YOUTUBE / ICLOUD / GOOGLE DRIVE VIDEO LINK]
-   - The screen recording starts from launching the app on the iOS Home Screen and demonstrates the complete typical user flow across all 5 tabs:
-     (a) Map tab: Bang Lang Dam status banner, 3-level district/subdistrict/village elevation map, optional GPS location (showing in-app PDPA consent prompt before iOS When-In-Use permission) and map pin elevation comparison.
-     (b) Flood Info tab: iOS-style vertical hourly rain forecast bar chart, 14 water-level stations highlighting remaining distance to bank, tapping a station to view the interactive 7-day historical water-level trend chart (24h/3d/7d), and district overview detailing specific villages and subdistricts to watch.
-     (c) Emergency Contacts tab: life-safety disclaimer and one-tap verified phone, LINE, and Facebook contact links.
-     (d) Shelters tab: district filters, Google Maps routing, and direct call buttons displaying the exact phone number.
-     (e) Settings tab: switching language to English, 1-5 alert level guide, Large Text Mode, alert toggles, and one-tap local data deletion ("Delete All My Data (PDPA)").
-   - Account registration / login / deletion: Not applicable — this app has NO accounts, login, or registration. All local preferences, pins, GPS consent, and cached snapshots can be erased with one tap under Settings -> "Delete All My Data (PDPA)".
-   - User-generated content (UGC): None — all SOS messaging and community reporting features have been completely removed. The app is read-only public telemetry and verified emergency contact links.
-   - Paid content / IAP: None — the app is 100% free forever with zero in-app purchases, zero subscriptions, and zero ads.
+- Video URL (physical iPhone, latest iOS): [PASTE VIDEO LINK HERE]
+- Shows app launch from Home Screen across all 5 tabs: Map (Bang Lang Dam status, district/subdistrict/village elevation map, optional GPS with in-app PDPA consent before iOS When-In-Use prompt, map pin comparison), Flood Info (iOS-style hourly rain bar chart, 14 water stations showing remaining-to-bank distance, interactive 7-day trend chart 24h/3d/7d, village/subdistrict watch lists), Emergency Contacts (disclaimer + phone/LINE/Facebook links), Shelters (district filters, Google Maps routing, direct call buttons with phone numbers), and Settings (English switch, 1-5 alert guide, Large Text Mode, one-tap data wipe).
+- Accounts/Login/Deletion: None (no account or registration). One-tap local reset in Settings -> "Delete All My Data (PDPA)".
+- UGC: None — all SOS messaging and community reporting were removed; read-only public telemetry & emergency directory only.
+- Paid/IAP: None — 100% free forever, zero IAP, zero ads.
 
-2. App Purpose, Target Audience, Problem Solved & Value Provided:
-   - Purpose & Audience: A 100% free civic early flood warning utility built for residents, households, and elderly citizens in Yala Province, Southern Thailand (all 8 districts, 58 subdistricts, and 449 villages).
-   - Problem Solved: Hydrological telemetry in Yala is scattered across multiple agencies (HII, RID, EGAT, DWR) and weather models, making it difficult for citizens to know how close rivers are to overflowing or whether Bang Lang Dam releases threaten their specific village and subdistrict.
-   - Value Provided: Unifies live water-level telemetry (highlighting remaining distance to bank and 7-day trends), Bang Lang Dam reservoir/spillway status, 24-hour hourly rainfall forecasts, terrain elevation flood-risk mapping, evacuation shelter locations, and verified emergency hotlines into a fast, offline-resilient, 4-language (Thai/English/Chinese/Malay) app with elderly Large Text Mode.
+2. Purpose, Audience, Problem & Value:
+- Free civic flood early-warning utility for residents and elderly citizens in Yala Province, Thailand (8 districts, 58 subdistricts, 449 villages).
+- Problem: Hydrological data is split across agencies (HII, RID, EGAT, DWR) and weather models, making it hard to gauge river bank margins or Bang Lang Dam impacts per village.
+- Value: Unifies live water levels (remaining-to-bank & 7-day trends), Bang Lang Dam status, 24h rain forecasts, terrain flood mapping, shelters, and verified hotlines in one offline-resilient, 4-language (TH/EN/ZH/MS) app with Large Text Mode.
 
 3. Setup & Testing Instructions:
-   - No login, demo credentials, or sample files are required. All 5 tabs work immediately upon launch using live + bundled offline data.
-   - To switch interface language to English: tap the 5th tab ("ตั้งค่า" / Settings) -> tap the first dropdown ("ภาษา / Language") -> select "🇬🇧 English".
-   - On the Map tab: tap any district chip to drill down to subdistricts and villages; long-press anywhere inside Yala to drop a test pin and inspect ground elevation vs. river water level (works even when reviewing outside Thailand).
-   - On the Info tab: tap any hour bar in the rain chart to inspect rainfall; tap any water-level station to view its 7-day historical trend chart and switch between 24h / 3d / 7d.
+- No login, demo credentials, or sample files needed. All 5 tabs work immediately with live + bundled offline data.
+- Switch to English: 5th tab ("ตั้งค่า") -> first dropdown ("ภาษา / Language") -> "🇬🇧 English".
+- Map: tap district chips to drill down; long-press inside Yala to test pin elevation comparison from any location.
+- Info: tap any rain bar to inspect; tap any station for the 7-day chart (24h/3d/7d).
 
-4. External Services, Tools, and Platforms Used:
-   - ThaiWater Public API v3 (Hydro-Informatics Institute / HII, Thailand — https://api-v3.thaiwater.net): Public open data for 14 telemetric water-level stations, 7-day historical station graphs (`waterlevel_graph`), 87+ real-time rain gauges, and Bang Lang Dam telemetry.
-   - Open-Meteo Weather Forecast & GloFAS v4 Flood APIs (CC BY 4.0 — https://open-meteo.com): 24-72h hourly rainfall forecasts and 7-day river discharge forecasts.
-   - GitHub Actions & Supabase Storage CDN: Automated open-data snapshot pipeline (running every 10 minutes) publishing signed read-only JSON snapshots for offline resilience and low bandwidth.
-   - Firebase Cloud Messaging (FCM) / APNs: Anonymous district topic push notifications (no accounts, no personal identifiers).
-   - Google Maps tiles & standard external links (`tel:`, Google Maps directions, official agency LINE/Facebook URLs).
+4. External Services & Platforms:
+- ThaiWater Public API v3 (HII — https://api-v3.thaiwater.net): Open data for 14 water stations, 7-day graphs, 87+ rain gauges, Bang Lang Dam.
+- Open-Meteo Weather & GloFAS v4 (CC BY 4.0 — https://open-meteo.com): 24-72h rain & 7-day river discharge forecasts.
+- GitHub Actions + Supabase Storage CDN: Signed read-only JSON snapshots updated every 10 min.
+- Firebase Cloud Messaging (FCM)/APNs: Anonymous district-topic alerts (no accounts/PII).
+- Google Maps tiles & standard external links (tel:, Google Maps, official LINE/Facebook).
 
 5. Regional Differences:
-   - The app functions identically across all App Store regions and countries with no geo-blocking or regional feature differences. All hydrological data and maps are specifically scoped to Yala Province, Thailand (province code 95).
+- Identical across all regions/countries with no geo-blocking. Monitoring data covers Yala Province, Thailand (code 95).
 
-6. Regulated Industry / Protected Third-Party Material Authorization:
-   - This app is an independent public-interest civic project — NOT an official government app and NOT a primary rescue dispatch service. Clear disclaimers appear in-app (Emergency Contacts & Settings tabs) and in our Terms of Use directing users in immediate danger to call official Thai emergency hotlines (1784 DDPM, 073-203559 Yala DDPM, 1669 EMS).
-   - All hydrological data is sourced exclusively from Thailand's publicly open ThaiWater Public API v3 (no key or access restriction) and Open-Meteo (CC BY 4.0) with transparent in-app attribution.
+6. Regulated Industry / Third-Party Material:
+- Independent public-interest civic tool — NOT an official government app or primary rescue channel. Clear in-app disclaimers direct emergencies to call 1784 (DDPM), 073-203559 (Yala DDPM), or 1669 (EMS).
+- Uses only publicly open data (ThaiWater Public API v3 & Open-Meteo CC BY 4.0) with full attribution.
 ```

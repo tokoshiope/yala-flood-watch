@@ -356,7 +356,7 @@ class _BankCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bank = station.criticalLevel ?? station.bankLevel;
+    final bank = station.hasBank ? (station.criticalLevel ?? station.bankLevel) : null;
     final wl = station.displayLevel;
     final remaining = station.remainingToBank;
 
@@ -535,7 +535,9 @@ class _ChartCardState extends State<_ChartCard> {
         ? _inspectedIndex
         : null;
     final inspectedPt = safeInspect != null ? series[safeInspect] : null;
-    final bank = widget.station.criticalLevel ?? widget.station.bankLevel;
+    final bank = widget.station.hasBank
+        ? (widget.station.criticalLevel ?? widget.station.bankLevel)
+        : null;
     final watch = widget.station.watchLevel;
 
     double? minV;
@@ -751,7 +753,7 @@ class _LevelTrendPainter extends CustomPainter {
       return;
     }
 
-    final bank = station.criticalLevel ?? station.bankLevel;
+    final bank = station.hasBank ? (station.criticalLevel ?? station.bankLevel) : null;
     final values = hasHistory
         ? series.map((p) => p.valueMsl).toList()
         : <double>[prev ?? wl!, wl!];

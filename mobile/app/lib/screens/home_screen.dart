@@ -9,6 +9,7 @@ import 'package:yala_flood_app/l10n/app_strings.dart';
 import 'package:yala_flood_app/models/flood_snapshot.dart';
 import 'package:yala_flood_app/models/risk_level.dart';
 import 'package:yala_flood_app/models/station.dart';
+import 'package:yala_flood_app/screens/guide_screen.dart';
 import 'package:yala_flood_app/screens/station_detail_screen.dart';
 import 'package:yala_flood_app/state/alert_provider.dart';
 import 'package:yala_flood_app/widgets/risk_badge.dart';
@@ -290,6 +291,13 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           IconButton(
+            tooltip: strings.get('guide_title'),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const GuideScreen()),
+            ),
+            icon: const Icon(Icons.menu_book_outlined),
+          ),
+          IconButton(
             tooltip: strings.get('refresh_tooltip'),
             onPressed: provider.loading
                 ? null
@@ -461,11 +469,15 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // ชั้นไล่ระดับสีจริงตามความสูงภูมิประเทศจากระดับน้ำทะเล (Copernicus DEM ม.รทก.)
+    // ชั้นไล่ระดับสีจริงตาม Zone A/B/C × Basin Hazard (Copernicus DEM ม.รทก.)
     final elevZones = provider.elevationZonesOf(_drillAmphoe);
     if (_drillTumbon == null && elevZones.isNotEmpty) {
       for (final ez in elevZones) {
-        final gradColor = provider.elevationGradientColor(ez.elevMid, ez.amphoeTh);
+        final gradColor = provider.elevationGradientColor(
+          ez.elevMid,
+          ez.amphoeTh,
+          exposureZone: ez.exposureZone,
+        );
         polygons.add(
           Polygon(
             points: ez.ring,
@@ -480,7 +492,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final areaMarkers = <Marker>[];
 
     if (_drillAmphoe == null) {
-      // ระดับที่ 1: เส้นขอบเว้าโค้งจริงทั้ง 8 อำเภอของ จ.ยะลา (GADM 4.1)
+      // ระดับที่ 1: เส้นขอบเว้าโค้งจริงทั้ง 8 อำเภอของ จ.ยะลา (GeoThai DOPA-aligned)
       for (final boundary in provider.boundaries) {
         final level = provider.amphoeAlertLevel(boundary.amphoeTh);
         final borderColor = level.colorFor(Theme.of(context).brightness);
@@ -587,7 +599,30 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     } else {
-      // ระดับที่ 3: เส้นขอบตำบลเว้าโค้ง + โซนหมู่บ้านเว้าโค้งตามภูมิประเทศจริง + จุดหมู่บ้าน
+      // ระดับที่ 3: โซนหมู่บ้านเว้าโค้งตามภูมิประเทศจริง (0% ซ้อนทับ/เหลื่อม) + ขอบตำบลเว้าโค้งจริงด้านบน
+      final vZones = provider.villageZonesOf(_drillAmphoe!, _drillTumbon!);
+      for (final vz in vZones) {
+        final gradColor = vz.elevationMsl != null
+            ? provider.elevationGradientColor(
+                vz.elevationMsl!,
+                vz.amphoeTh,
+                exposureZone: vz.exposureZone,
+                relHeightM: vz.relHeightM,
+              )
+            : provider.amphoeAlertLevel(vz.amphoeTh).color;
+        for (final ring in vz.rings) {
+          polygons.add(
+            Polygon(
+              points: ring,
+              color: gradColor.withValues(alpha: 0.34),
+              borderColor: isDark ? Colors.white70 : const Color(0xAA0F172A),
+              borderStrokeWidth: 1.1,
+            ),
+          );
+        }
+      }
+
+      // วาดขอบตำบลจริงทับด้านบนด้วยพิกัดเดียวกับขอบนอกของโซนหมู่บ้านเพื่อให้แนวเส้นตรงกัน 100%
       final subs = provider.subdistrictsOf(_drillAmphoe!);
       for (final sub in subs) {
         final isTarget = sub.tumbonTh == _drillTumbon;
@@ -599,30 +634,20 @@ class _HomeScreenState extends State<HomeScreen> {
               borderColor: isTarget
                   ? (isDark ? const Color(0xFF60A5FA) : const Color(0xFF0E5FA6))
                   : Colors.white54,
-              borderStrokeWidth: isTarget ? 2.5 : 1.0,
+              borderStrokeWidth: isTarget ? 2.4 : 1.0,
             ),
           );
         }
       }
 
-      final vZones = provider.villageZonesOf(_drillAmphoe!, _drillTumbon!);
-      for (final vz in vZones) {
-        final gradColor = vz.elevationMsl != null
-            ? provider.elevationGradientColor(vz.elevationMsl!, vz.amphoeTh)
-            : provider.amphoeAlertLevel(vz.amphoeTh).color;
-        polygons.add(
-          Polygon(
-            points: vz.ring,
-            color: gradColor.withValues(alpha: 0.34),
-            borderColor: isDark ? Colors.white70 : const Color(0xAA0F172A),
-            borderStrokeWidth: 1.1,
-          ),
-        );
-      }
-
       final villages = provider.villagesOf(_drillAmphoe!, _drillTumbon!);
       for (final v in villages) {
-        final elev = provider.elevationFloodLevel(v.elevationMsl, v.amphoeTh);
+        final elev = provider.elevationFloodLevel(
+          v.elevationMsl,
+          v.amphoeTh,
+          exposureZone: v.exposureZone,
+          relHeightM: v.relHeightM,
+        );
         final lv = AlertLevel.fromValue(elev.level);
         areaMarkers.add(
           Marker(
@@ -848,6 +873,23 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Text(
                     '${strings.get('ref_river_level')}: ${elev.refWaterMsl!.toStringAsFixed(2)} ${strings.get('unit_msl')}',
                     style: Theme.of(sheetContext).textTheme.bodySmall,
+                  ),
+                ),
+              if (elev.advisoryNote != null && elev.advisoryNote!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF59E0B).withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFF59E0B)),
+                    ),
+                    child: Text(
+                      elev.advisoryNote!,
+                      style: const TextStyle(fontSize: 12.5, height: 1.4),
+                    ),
                   ),
                 ),
             ],
@@ -1123,6 +1165,23 @@ class _UserPinCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 10.5,
                     color: isDark ? Colors.white70 : const Color(0xFF475569),
+                  ),
+                ),
+              if (assessment.advisoryNote != null &&
+                  assessment.advisoryNote!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    assessment.advisoryNote!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? const Color(0xFFFCD34D)
+                          : const Color(0xFFB45309),
+                    ),
                   ),
                 ),
             ],
@@ -1416,7 +1475,12 @@ class _DrillListStrip extends StatelessWidget {
       separatorBuilder: (_, _) => const SizedBox(width: 6),
       itemBuilder: (_, i) {
         final v = villages[i];
-        final elev = provider.elevationFloodLevel(v.elevationMsl, v.amphoeTh);
+        final elev = provider.elevationFloodLevel(
+          v.elevationMsl,
+          v.amphoeTh,
+          exposureZone: v.exposureZone,
+          relHeightM: v.relHeightM,
+        );
         final lv = AlertLevel.fromValue(elev.level);
         return ActionChip(
           avatar: CircleAvatar(backgroundColor: lv.color, radius: 6),
