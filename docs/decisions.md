@@ -199,8 +199,8 @@
 - **เหตุผล:** แก้ปัญหาจุดบอดเชิงอุทกวิทยาและขอบเขตแผนที่จากเวอร์ชันก่อน สร้างความน่าเชื่อถือระดับหน่วยงานทางการ พร้อมให้ประชาชนใช้งานคู่มืออพยพได้แม้ไร้สัญญาณอินเทอร์เน็ต และทำให้โค้ดเบสลีน ปลอดภัย ตรวจสอบย้อนกลับได้ทุกตัวเลข
 - **กระทบ:** `AGENTS.md`, `docs/{lessons-learned.md,data-provenance.md,decisions.md,tasks.md,qa/audit-2026-11-27-v9-formula-v5.md}`, `backend/{pipeline.py,notify_fcm.py,registry/*,tests/test_pipeline.py,output/*}`, `mobile/app/{pubspec.yaml,assets/geo/*,assets/snapshots/*,lib/**,test/**}`, `web/{guide.html,index.html}`, `mobile/preview/serve.py`, `tools/dashboard/index.html`, `.github/workflows/data-pipeline.yml`
 
-## DEC-023 — P0–P2 Startup Production & UX Overhaul (CDN-First, CARTO Offline-Cached Basemap, Push Tap Nav, Onboarding + Family Multi-Pin, 1-Tap LINE Share Card, Offline Voice Briefing & Backtest 2567–2568)
-- **วันที่:** 2026-11-27 · **สถานะ:** `IMPLEMENTED & TESTED LOCALLY ON MACBOOK SIMULATOR (Independent QA v10 PASS · Pre-Gate 3)`
+## DEC-023 — P0–P2 Startup Production & UX Overhaul (CDN-First, CARTO Offline-Cached Basemap, Push Tap Nav, Onboarding + Family Multi-Pin, 1-Tap LINE Share Card, Offline Voice Briefing & Backtest 2567–2568 · Apple-First)
+- **วันที่:** 2026-11-27 / Gate 3 Released 2026-11-28 · **สถานะ:** ✅ `ACCEPTED & UPLOADED TO TESTFLIGHT 1.0.1 (Build 11) · Independent QA v10 PASS · Android Deferred`
 - **การตัดสินใจ:**
   1. **P0.1 CDN-First Mobile Architecture:** `FloodSnapshot` แปลงสถานี 14 แห่ง (`Station.fromSnapshotJson`) และศูนย์พักพิง OTA (`Shelter.fromJson`) โดยตรงจาก `latest.json` บน Supabase CDN เป็นแหล่งหลัก ลดภาระ Thundering Herd ต่อ ThaiWater API และ Fallback เป็น Direct API / Bundled Cache โดยไม่ค้างหน้า Error ว่างเปล่า
   2. **P0.2 Compliant Offline-Caching Basemap:** แทนที่ `mt1.google.com` ด้วยแผนที่ฐาน CARTO Voyager (Light) / Dark Matter (Dark) อ้างอิง OpenStreetMap ที่ถูก ToS 100% พร้อม `CachingTileProvider` แคชลงดิสก์จำกัด 500 ไทล์ (ตรวจ magic bytes + atomic write + async eviction + fallback ออฟไลน์) และลงทะเบียน `NSPrivacyAccessedAPICategoryFileTimestamp` (`C617.1`) ใน `PrivacyInfo.xcprivacy`
