@@ -860,3 +860,48 @@ def test_geojson_zero_self_intersection_and_zero_pairwise_crossings():
                 for a, b in seg_lists[i]:
                     for c, d in seg_lists[j]:
                         assert not strictly_cross(a, b, c, d), f"Village crossing in {tk}"
+
+
+# ── P0–P2 Ops Hardening, Durable FCM State & Historical Backtest Tests ──
+
+
+def test_ops_signal_enforces_https_only():
+    # Plain HTTP URLs must be rejected silently (never leak secrets or make plaintext ops calls)
+    assert P._send_ops_signal(
+        ok=True,
+        summary="test",
+        heartbeat_url="http://insecure.example.com/ping",
+        alert_webhook_url="",
+    ) is False
+    assert P._send_ops_signal(
+        ok=False,
+        summary="fail",
+        heartbeat_url="http://insecure.example.com/ping",
+        alert_webhook_url="http://insecure.example.com/hook",
+    ) is False
+
+
+def test_notify_fcm_supabase_state_enforces_https():
+    import notify_fcm as NF
+
+    assert NF.load_state_from_supabase(
+        supabase_url="http://insecure.example.com",
+        service_key="secret",
+    ) is None
+    assert NF.save_state_to_supabase(
+        {"yala_flood_all": {"level": 3, "sent_at": 1000}},
+        supabase_url="http://insecure.example.com",
+        service_key="secret",
+    ) is False
+
+
+def test_historical_backtest_2567_2568_passes_with_zero_false_alarms():
+    import backtest_yala_2567_2568 as BT
+
+    report = BT.run_backtest()
+    assert report["all_passed"] is True
+    assert report["pod"] == 1.0
+    assert report["far"] == 0.0
+    assert report["csi"] == 1.0
+    assert report["total"] >= 9
+

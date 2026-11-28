@@ -45,6 +45,7 @@
 | `yala_villages.json` | 449 Villages / Communities | DOPA Thailand Administrative Divisions (`open-admin-data`) + Open-Meteo Copernicus DEM GLO-90 MSL + Zone A/B/C exposure classification | Open Data + CC BY 4.0 | Strictly inside Yala bbox (`lat 5.5–7.2`, `lon 100.5–101.9`) |
 | `yala_village_zones.geojson` | 444 Village territorial zones (468 rings) inside all 58 tambons | Exact planar half-edge curved Voronoi partition of each GeoThai curved tambon around DOPA village coordinates (6-decimal precision) | Derived (exact vector) | `100.00000%` exact alignment to curved tambon boundary, `0` self-intersections, `0` pairwise crossings, zero stair-steps |
 | `yala_dem_grid.json` & `yala_elevation_zones.geojson` | 1,607 DEM cells across Yala (clipped strictly to Yala boundaries) | Copernicus DEM GLO-90 via Open-Meteo Elevation API | CC BY 4.0 | Tagged with `exposure_zone` (`A`/`B`/`C`) for Unified Matrix map coloring |
+| **Basemap Road/Dark Tiles (`CachingTileProvider`)** | Yala Province Light (CARTO Voyager) & Dark (CARTO Dark Matter) tiles | CARTO Basemaps / OpenStreetMap (`https://a.basemaps.cartocdn.com/...`) | CC BY 3.0 / ODbL (`© OpenStreetMap contributors · © CARTO`) | Replaces undocumented `mt1.google.com` scraping; bounded 500-tile local disk cache with offline graceful fallback |
 
 ---
 

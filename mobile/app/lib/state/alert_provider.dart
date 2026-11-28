@@ -9,8 +9,12 @@ import 'package:yala_flood_app/models/alert.dart';
 import 'package:yala_flood_app/models/alert_settings.dart';
 import 'package:yala_flood_app/models/flood_snapshot.dart';
 import 'package:yala_flood_app/models/risk_level.dart';
+import 'package:yala_flood_app/models/saved_place.dart';
+import 'package:yala_flood_app/models/shelter.dart';
 import 'package:yala_flood_app/models/station.dart';
+import 'package:yala_flood_app/screens/shelters_screen.dart' show kYalaShelters;
 import 'package:yala_flood_app/services/alert_engine.dart';
+import 'package:yala_flood_app/services/caching_tile_provider.dart';
 import 'package:yala_flood_app/services/local_store.dart';
 import 'package:yala_flood_app/services/notification_service.dart';
 import 'package:yala_flood_app/services/snapshot_service.dart';
@@ -49,6 +53,8 @@ class AlertProvider extends ChangeNotifier {
   List<ElevationBandZone> _elevationZones = const <ElevationBandZone>[];
   DemElevationGrid? _demGrid;
   ({double lat, double lng, bool isGps})? _pinnedCoords;
+  List<SavedPlace> _savedPlaces = const <SavedPlace>[];
+  bool _onboardingDone = false;
   bool _gpsConsentGranted = false;
   int _dataResetVersion = 0;
   final Map<String, List<WaterLevelPoint>> _stationHistory7d =
@@ -90,8 +96,70 @@ class AlertProvider extends ChangeNotifier {
   List<VillageZoneBoundary> get villageZones => _villageZones;
   List<ElevationBandZone> get elevationZones => _elevationZones;
   DemElevationGrid? get demGrid => _demGrid;
+  List<SavedPlace> get savedPlaces => _savedPlaces;
+  bool get onboardingDone => _onboardingDone;
   bool get gpsConsentGranted => _gpsConsentGranted;
   int get dataResetVersion => _dataResetVersion;
+
+  /// ศูนย์พักพิงแบบ Dynamic OTA (อ่านจาก Snapshot ล่าสุดก่อนเสมอ แล้วค่อย fallback เป็นรายการออฟไลน์ในแอป)
+  List<Shelter> get shelters {
+    final ota = _snapshot?.shelters;
+    if (ota != null && ota.isNotEmpty) return ota;
+    return kYalaShelters;
+  }
+
+  bool get hasOtaShelters => (_snapshot?.shelters.isNotEmpty ?? false);
+
+  /// จุดอ้างอิงของผู้ใช้ (หมุดปัจจุบัน หรือสถานที่หลักใน Family Watchlist) สำหรับเรียงศูนย์พักพิงใกล้ที่สุด
+  LatLng? get referenceUserPoint {
+    final pin = _pinnedCoords;
+    if (pin != null) return LatLng(pin.lat, pin.lng);
+    for (final p in _savedPlaces) {
+      if (p.isPrimary) return p.point;
+    }
+    return _savedPlaces.isNotEmpty ? _savedPlaces.first.point : null;
+  }
+
+  double? distanceKmFromUser(double lat, double lng) {
+    final ref = referenceUserPoint;
+    if (ref == null) return null;
+    return _haversineKm(ref.latitude, ref.longitude, lat, lng);
+  }
+
+  /// ชุดอำเภอทั้งหมดที่กำลังติดตามสำหรับ Multi-Topic Push (อำเภอหลัก + จุดครอบครัว)
+  Set<String> get watchedAmphoes {
+    final out = <String>{};
+    if (_settings.selectedAmphoeTh != null && _settings.selectedAmphoeTh!.isNotEmpty) {
+      out.add(_settings.selectedAmphoeTh!);
+    }
+    for (final p in _savedPlaces) {
+      if (p.amphoeTh.isNotEmpty) out.add(p.amphoeTh);
+    }
+    return out;
+  }
+
+  /// ตรวจสถานะจุดครอบครัวแต่ละจุดด้วย Layer 2 Unified Matrix (Zone A/B/C × Basin Hazard)
+  UserPinAssessment assessSavedPlace(SavedPlace place) =>
+      evaluateCoordinates(place.lat, place.lng, isGps: place.isGps);
+
+  /// หาศูนย์กลางของอำเภอจากขอบเขต GeoJSON (ใช้ตอนสร้างสถานที่ครอบครัวจากการเลือกอำเภอ)
+  LatLng amphoeCenter(String amphoeTh) {
+    for (final b in _boundaries) {
+      if (b.amphoeTh == amphoeTh) return b.centroid;
+    }
+    const fallbackCenters = <String, LatLng>{
+      'เมืองยะลา': LatLng(6.5415, 101.2812),
+      'รามัน': LatLng(6.4792, 101.4254),
+      'ยะหา': LatLng(6.4767, 101.1398),
+      'กรงปินัง': LatLng(6.4167, 101.2833),
+      'เบตง': LatLng(5.7743, 101.0723),
+      'บันนังสตา': LatLng(6.2620, 101.2680),
+      'ธารโต': LatLng(6.1525, 101.0809),
+      'กาบัง': LatLng(6.4590, 101.0230),
+    };
+    return fallbackCenters[amphoeTh] ??
+        const LatLng(AppConfig.defaultLat, AppConfig.defaultLng);
+  }
   bool get loading => _loading;
   bool get initialized => _initialized;
   String? get errorTh => _errorTh;
@@ -517,6 +585,111 @@ class AlertProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<bool> addSavedPlace({
+    required String label,
+    required String amphoeTh,
+    String? tumbonTh,
+    double? lat,
+    double? lng,
+    bool isGps = false,
+    bool makePrimary = false,
+  }) async {
+    final cleanLabel = label.trim();
+    if (cleanLabel.isEmpty || amphoeTh.trim().isEmpty) return false;
+    if (_savedPlaces.length >= SavedPlace.maxSavedPlaces) return false;
+    final center = amphoeCenter(amphoeTh);
+    final effLat = lat ?? center.latitude;
+    final effLng = lng ?? center.longitude;
+    if (effLat < 5.5 || effLat > 7.2 || effLng < 100.5 || effLng > 101.9) {
+      return false;
+    }
+    final isFirst = _savedPlaces.isEmpty || makePrimary;
+    final next = <SavedPlace>[
+      for (final p in _savedPlaces)
+        isFirst ? p.copyWith(isPrimary: false) : p,
+      SavedPlace(
+        id: 'pl_${DateTime.now().microsecondsSinceEpoch}',
+        label: cleanLabel,
+        amphoeTh: amphoeTh.trim(),
+        tumbonTh: tumbonTh,
+        lat: effLat,
+        lng: effLng,
+        isGps: isGps,
+        isPrimary: isFirst,
+      ),
+    ];
+    _savedPlaces = next;
+    await _store?.saveSavedPlaces(next);
+    await _syncNotificationTopics();
+    notifyListeners();
+    return true;
+  }
+
+  Future<void> removeSavedPlace(String id) async {
+    final next = _savedPlaces.where((p) => p.id != id).toList();
+    if (next.isNotEmpty && !next.any((p) => p.isPrimary)) {
+      next[0] = next[0].copyWith(isPrimary: true);
+    }
+    _savedPlaces = next;
+    await _store?.saveSavedPlaces(next);
+    await _syncNotificationTopics();
+    notifyListeners();
+  }
+
+  Future<void> setPrimaryPlace(String id) async {
+    _savedPlaces = [
+      for (final p in _savedPlaces) p.copyWith(isPrimary: p.id == id),
+    ];
+    await _store?.saveSavedPlaces(_savedPlaces);
+    notifyListeners();
+  }
+
+  /// จบ First-Time Onboarding: บันทึกภาษา + อำเภอหลัก + สร้างจุด "บ้านของฉัน" และซิงค์ Push ทันที
+  Future<void> completeOnboarding({
+    required String languageCode,
+    String? homeAmphoeTh,
+    String? homeLabel,
+  }) async {
+    _onboardingDone = true;
+    await _store?.saveOnboardingDone(true);
+
+    final nextSettings = homeAmphoeTh == null || homeAmphoeTh.isEmpty
+        ? _settings.copyWith(languageCode: languageCode).clearAmphoe()
+        : _settings.copyWith(
+            languageCode: languageCode,
+            selectedAmphoeTh: homeAmphoeTh,
+            clearTumbon: true,
+          );
+    _settings = nextSettings;
+    await _store?.saveSettings(nextSettings);
+
+    if (homeAmphoeTh != null && homeAmphoeTh.isNotEmpty && _savedPlaces.isEmpty) {
+      final label = (homeLabel ?? AppStrings(languageCode).get('place_preset_home')).trim();
+      final center = amphoeCenter(homeAmphoeTh);
+      _savedPlaces = [
+        SavedPlace(
+          id: 'pl_home',
+          label: label.isEmpty ? 'บ้านของฉัน' : label,
+          amphoeTh: homeAmphoeTh,
+          lat: center.latitude,
+          lng: center.longitude,
+          isPrimary: true,
+        ),
+      ];
+      await _store?.saveSavedPlaces(_savedPlaces);
+    }
+    await _syncNotificationTopics();
+    notifyListeners();
+  }
+
+  Future<void> _syncNotificationTopics() async {
+    await _notifications.syncTopicSubscription(
+      pushEnabled: _settings.pushEnabled,
+      selectedAmphoeTh: _settings.selectedAmphoeTh,
+      extraAmphoes: _savedPlaces.map((p) => p.amphoeTh),
+    );
+  }
+
   static double _haversineKm(double lat1, double lon1, double lat2, double lon2) {
     const r = 6371.0;
     final p1 = lat1 * math.pi / 180.0;
@@ -686,8 +859,10 @@ class AlertProvider extends ChangeNotifier {
       _settings = store.loadSettings();
       _gpsConsentGranted = store.loadGpsConsent();
       _pinnedCoords = store.loadPinnedLocation();
+      _savedPlaces = store.loadSavedPlaces();
+      _onboardingDone = store.loadOnboardingDone();
     }
-    // โหลดขอบเขตแผนที่ทั้ง 3 ระดับ, ชั้นความสูง DEM และแคชในเครื่องแบบขนานเพื่อให้เปิดหน้าจอได้ทันที
+    // โหลดขอบเขตแผนที่ทั้ง 3 ระดับ, ชั้นความสูง DEM และแคชในเครื่องแบบขนาน (GeoJSON parse บน Background Isolate)
     final results = await Future.wait<dynamic>([
       _snapshotService.loadYalaBoundaries(),
       _snapshotService.loadYalaSubdistricts(),
@@ -704,13 +879,16 @@ class AlertProvider extends ChangeNotifier {
     _elevationZones = results[4] as List<ElevationBandZone>;
     _demGrid = results[5] as DemElevationGrid?;
     _snapshot = results[6] as FloodSnapshot?;
+    // เติมสถานีจากแคช/Bundled Snapshot ทันทีเพื่อให้แผนที่ขึ้นครบตั้งแต่วินาทีแรกแม้เน็ตช้า
+    if (_stations.isEmpty && (_snapshot?.stations.isNotEmpty ?? false)) {
+      _stations = _snapshot!.stations;
+      _lastUpdated ??= _snapshot!.generatedAt;
+      _source = WaterSource.cache;
+    }
     _initialized = true;
     notifyListeners();
 
-    await _notifications.syncTopicSubscription(
-      pushEnabled: _settings.pushEnabled,
-      selectedAmphoeTh: _settings.selectedAmphoeTh,
-    );
+    await _syncNotificationTopics();
     await refresh();
   }
 
@@ -725,6 +903,10 @@ class AlertProvider extends ChangeNotifier {
     }
   }
 
+  /// โหลดข้อมูลแบบ CDN-First (ลดภาระ Thundering Herd ต่อ ThaiWater API):
+  /// 1) ดึง Snapshot ที่ตรวจ SHA-256 แล้วจาก Supabase CDN ก่อน (ได้ครบทั้ง 14 สถานี + 8 อำเภอ + เขื่อน + ศูนย์พักพิง)
+  /// 2) หาก CDN ยังไม่ตั้งค่า / ล่ม / เก่าเกิน 45 นาที จึง fallback ยิง ThaiWater API ตรง
+  /// 3) หากเน็ตล่มทั้งหมด จะคงสถานีจากแคช/Bundled Snapshot พร้อมแบนเนอร์ออฟไลน์ ไม่ค้างหน้า Error ว่างเปล่า
   Future<void> refresh({bool force = false}) async {
     if (_loading) return;
     _loading = true;
@@ -748,13 +930,44 @@ class AlertProvider extends ChangeNotifier {
         _elevationZones = await _snapshotService.loadElevationZones();
       }
       _demGrid ??= await _snapshotService.loadDemGrid();
-      final snapFuture = _snapshotService.loadSnapshot();
-      final result = await _waterService.fetch(forceRefresh: force);
-      _stations = result.stations;
-      _lastUpdated = result.updatedAt;
-      _source = result.source;
-      _noticeTh = result.messageTh;
-      _snapshot = await snapFuture ?? _snapshot;
+
+      // Step 1: CDN-First verified snapshot
+      final remoteSnap = await _snapshotService.fetchRemoteSnapshot();
+      if (remoteSnap != null &&
+          remoteSnap.stations.isNotEmpty &&
+          remoteSnap.isFresh(maxAge: const Duration(minutes: 45))) {
+        _snapshot = remoteSnap;
+        _stations = remoteSnap.stations;
+        _lastUpdated = remoteSnap.generatedAt ?? DateTime.now();
+        _source = WaterSource.network;
+        _noticeTh = null;
+      } else {
+        // Step 2: Direct ThaiWater API fallback (when CDN unconfigured, unavailable, or stale)
+        if (remoteSnap != null) {
+          _snapshot = remoteSnap;
+        } else {
+          _snapshot ??= await _snapshotService.loadCachedOrBundledSnapshot();
+        }
+        try {
+          final result = await _waterService.fetch(forceRefresh: force);
+          _stations = result.stations;
+          _lastUpdated = result.updatedAt;
+          _source = result.source;
+          _noticeTh = result.messageTh;
+        } on ThaiWaterException catch (error) {
+          // Step 3: Resilient Offline Fallback — never drop valid cached/bundled stations
+          final fallbackStations = _snapshot?.stations ?? const <Station>[];
+          if (_stations.isNotEmpty || fallbackStations.isNotEmpty) {
+            if (_stations.isEmpty) _stations = fallbackStations;
+            _lastUpdated ??= _snapshot?.generatedAt;
+            _source = WaterSource.cache;
+            _noticeTh = 'ไม่มีสัญญาณเน็ต กำลังแสดงข้อมูลล่าสุดที่บันทึกไว้';
+          } else {
+            rethrow;
+          }
+          debugPrint('direct ThaiWater fallback failed, using snapshot cache: $error');
+        }
+      }
 
       final newAlerts = _engine.evaluate(
         stations: _stations,
@@ -804,10 +1017,7 @@ class AlertProvider extends ChangeNotifier {
     _settings = next;
     notifyListeners();
     _store?.saveSettings(next);
-    _notifications.syncTopicSubscription(
-      pushEnabled: next.pushEnabled,
-      selectedAmphoeTh: next.selectedAmphoeTh,
-    );
+    _syncNotificationTopics();
     final newAlerts = _engine.evaluate(
       stations: _stations,
       settings: _settings,
@@ -856,6 +1066,7 @@ class AlertProvider extends ChangeNotifier {
     _stationHistory7d.clear();
     await _waterService.clearCache();
     await _snapshotService.clearSnapshotCache();
+    await CachingTileProvider.clearDiskCache();
     notifyListeners();
   }
 
@@ -864,14 +1075,20 @@ class AlertProvider extends ChangeNotifier {
     _settings = const AlertSettings();
     _gpsConsentGranted = false;
     _pinnedCoords = null;
+    _savedPlaces = const <SavedPlace>[];
+    _onboardingDone = false;
+    _stationHistory7d.clear();
     _dataResetVersion++;
+    // Unsubscribe all active FCM topics BEFORE clearing local storage so PDPA wipe
+    // never re-subscribes or re-writes topic keys into SharedPreferences.
+    await _notifications.syncTopics(
+      pushEnabled: false,
+      topics: const <String>{},
+    );
     await _store?.deleteAllUserData();
     await _waterService.clearCache();
     await _snapshotService.clearSnapshotCache();
-    await _notifications.syncTopicSubscription(
-      pushEnabled: _settings.pushEnabled,
-      selectedAmphoeTh: _settings.selectedAmphoeTh,
-    );
+    await CachingTileProvider.clearDiskCache();
     notifyListeners();
   }
 

@@ -537,7 +537,9 @@ void main() {
         AppConfig.googleMapsDirectionsUrl(6.5415, 101.2812),
         'https://www.google.com/maps/dir/?api=1&destination=6.5415,101.2812&travelmode=driving',
       );
-      expect(AppConfig.googleMapsTileUrl('zh'), contains('hl=zh-CN'));
+      expect(AppConfig.mapTileUrl(isDark: false), contains('basemaps.cartocdn.com'));
+      expect(AppConfig.mapTileUrl(isDark: true), contains('dark_all'));
+      expect(AppConfig.mapTileUrl(isDark: false), isNot(contains('mt1.google.com')));
       final s = const AlertSettings().copyWith(languageCode: 'ms');
       expect(AlertSettings.fromJson(s.toJson()).languageCode, 'ms');
       expect(const AppStrings('th').get('tab_shelters'), 'ศูนย์พักพิง');

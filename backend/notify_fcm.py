@@ -92,6 +92,65 @@ def verify_snapshot_integrity(snapshot_dir: Path) -> dict[str, Any]:
     return payload
 
 
+def load_state_from_supabase(
+    *,
+    supabase_url: str | None = None,
+    service_key: str | None = None,
+    bucket: str = "snapshots",
+    object_path: str = "state/fcm_state.json",
+) -> dict[str, Any] | None:
+    """Load durable FCM cooldown state from Supabase Storage (avoids GitHub cache 7-day eviction)."""
+    base = (supabase_url or os.environ.get("SUPABASE_URL", "")).strip().rstrip("/")
+    key = (service_key or os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")).strip()
+    if not base.startswith("https://") or not key:
+        return None
+    url = f"{base}/storage/v1/object/{bucket}/{object_path.lstrip('/')}"
+    try:
+        resp = requests.get(
+            url,
+            headers={"Authorization": f"Bearer {key}", "apikey": key},
+            timeout=10,
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            return data if isinstance(data, dict) else None
+    except Exception:
+        return None
+    return None
+
+
+def save_state_to_supabase(
+    state: dict[str, Any],
+    *,
+    supabase_url: str | None = None,
+    service_key: str | None = None,
+    bucket: str = "snapshots",
+    object_path: str = "state/fcm_state.json",
+) -> bool:
+    """Persist durable FCM cooldown state to Supabase Storage (best-effort, HTTPS-only)."""
+    base = (supabase_url or os.environ.get("SUPABASE_URL", "")).strip().rstrip("/")
+    key = (service_key or os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")).strip()
+    if not base.startswith("https://") or not key:
+        return False
+    url = f"{base}/storage/v1/object/{bucket}/{object_path.lstrip('/')}"
+    try:
+        resp = requests.post(
+            url,
+            headers={
+                "Authorization": f"Bearer {key}",
+                "apikey": key,
+                "Content-Type": "application/json; charset=utf-8",
+                "Cache-Control": "no-store",
+                "x-upsert": "true",
+            },
+            data=json.dumps(state, ensure_ascii=False, indent=2).encode("utf-8"),
+            timeout=10,
+        )
+        return resp.status_code in (200, 201)
+    except Exception:
+        return False
+
+
 def load_state(state_path: Path | None) -> dict[str, Any]:
     if state_path is None or not state_path.is_file():
         return {}
@@ -372,7 +431,8 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         snapshot = verify_snapshot_integrity(snapshot_dir)
-        state = load_state(state_path)
+        remote_state = None if args.dry_run else load_state_from_supabase()
+        state = remote_state if remote_state is not None else load_state(state_path)
         messages = build_fcm_messages(snapshot, state, now_ts=now_ts)
         sent = dispatch_messages(
             messages,
@@ -382,6 +442,7 @@ def main(argv: list[str] | None = None) -> int:
         if not args.dry_run:
             next_state = reconcile_state(snapshot, state, messages if sent else [], now_ts)
             save_state(state_path, next_state)
+            save_state_to_supabase(next_state)
         mode = "FCM_DRY_RUN_OK" if args.dry_run else "FCM_SENT_OK"
         print(f"{mode} count={len(sent)} topics={sent}")
         return 0

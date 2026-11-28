@@ -24,6 +24,9 @@ jobs:
       - name: Hermetic Unit, Formula v5 & GeoJSON Topology Tests
         run: pytest -q backend/tests
       - name: Run Multi-Source Pipeline (fail-closed)
+        env:
+          OPS_HEARTBEAT_URL: ${{ secrets.OPS_HEARTBEAT_URL }}
+          OPS_ALERT_WEBHOOK_URL: ${{ secrets.OPS_ALERT_WEBHOOK_URL }}
         run: python backend/pipeline.py --sync-mobile-asset
       - name: Verify Snapshot Bundle (Dry-Run)
         run: python backend/publish_supabase.py --snapshot-dir backend/output --dry-run
@@ -64,6 +67,8 @@ jobs:
         if: steps.config.outputs.has_firebase == 'true'
         env:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: python backend/notify_fcm.py --snapshot-dir backend/output --state-file backend/output/fcm_state.json
       - name: Upload snapshot artifacts
         if: success()

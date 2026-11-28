@@ -1,4 +1,4 @@
-# App Store Connect Metadata & Review Submission Kit (`v1.0.1 Build 8`)
+# App Store Connect Metadata & Review Submission Kit (`v1.0.1 Build 11`)
 
 เอกสารคัดลอกวาง (Copy-Paste Ready) สำหรับส่งแอป **แจ้งเตือนน้ำท่วมยะลา (Yala Flood Warning)** ขึ้น Apple App Store พร้อมคำตอบครบทั้ง 6 ข้อตาม **Guideline 2.1 - Information Needed**
 
@@ -13,7 +13,7 @@
 | **App Name (English)** | `Yala Flood Warning` |
 | **Subtitle (English, ≤30 chars)** | `Early Flood Alerts for Yala` |
 | **Bundle ID** | `net.yala.floodapp` |
-| **Version / Build** | `1.0.1` (Build `8`) |
+| **Version / Build** | `1.0.1` (Build `11`) |
 | **Primary Category** | `Weather` (สภาพอากาศ) |
 | **Secondary Category** | `Utilities` (เครื่องมือ) |
 | **Pricing** | **Free (฿0 / $0)** — Zero In-App Purchases, Zero Ads |
@@ -85,7 +85,7 @@ Thank you for reviewing Yala Flood Warning (แจ้งเตือนน้ำ
 
 1. Physical Device Screen Recording:
 - Video URL (physical iPhone, latest iOS): [PASTE VIDEO LINK HERE]
-- Shows app launch from Home Screen across all 5 tabs: Map (Bang Lang Dam status, district/subdistrict/village elevation map, optional GPS with in-app PDPA consent before iOS When-In-Use prompt, map pin comparison), Flood Info (iOS-style hourly rain bar chart, 14 water stations showing remaining-to-bank distance, interactive 7-day trend chart 24h/3d/7d, village/subdistrict watch lists), Emergency Contacts (disclaimer + phone/LINE/Facebook links), Shelters (district filters, Google Maps routing, direct call buttons with phone numbers), and Settings (English switch, 1-5 alert guide, Large Text Mode, one-tap data wipe).
+- Shows app launch from Home Screen across all 5 tabs: Map (Bang Lang Dam status, quick 15s home-district setup, local-only Home & Family Watchlist up to 5 pins with offline voice briefing & 1-tap LINE/clipboard share card, 3-level district/subdistrict/village elevation map on CARTO/OSM tiles with offline caching, optional GPS with in-app PDPA consent before iOS When-In-Use prompt, and map pin comparison), Flood Info (iOS-style hourly rain bar chart with % probability, 14 water stations showing remaining-to-bank distance, interactive 7-day trend chart 24h/3d/7d, village/subdistrict watch lists), Emergency Contacts (disclaimer + phone/LINE/Facebook links), Shelters (dynamic OTA shelter list sorted nearest to user's pin, district filters, Google Maps routing, direct call buttons with phone numbers), and Settings (4-language switch, offline Evacuation Guide, 1-5 alert guide, Large Text Mode, one-tap data wipe).
 - Accounts/Login/Deletion: None (no account or registration). One-tap local reset in Settings -> "Delete All My Data (PDPA)".
 - UGC: None — all SOS messaging and community reporting were removed; read-only public telemetry & emergency directory only.
 - Paid/IAP: None — 100% free forever, zero IAP, zero ads.
@@ -93,20 +93,20 @@ Thank you for reviewing Yala Flood Warning (แจ้งเตือนน้ำ
 2. Purpose, Audience, Problem & Value:
 - Free civic flood early-warning utility for residents and elderly citizens in Yala Province, Thailand (8 districts, 58 subdistricts, 449 villages).
 - Problem: Hydrological data is split across agencies (HII, RID, EGAT, DWR) and weather models, making it hard to gauge river bank margins or Bang Lang Dam impacts per village.
-- Value: Unifies live water levels (remaining-to-bank & 7-day trends), Bang Lang Dam status, 24h rain forecasts, terrain flood mapping, shelters, and verified hotlines in one offline-resilient, 4-language (TH/EN/ZH/MS) app with Large Text Mode.
+- Value: Unifies live water levels (remaining-to-bank & 7-day trends), Bang Lang Dam status, 24h rain forecasts, terrain flood mapping, multi-pin family watch, offline voice briefings, shelters, and verified hotlines in one offline-resilient, 4-language (TH/EN/ZH/MS) app with Large Text Mode.
 
 3. Setup & Testing Instructions:
-- No login, demo credentials, or sample files needed. All 5 tabs work immediately with live + bundled offline data.
-- Switch to English: 5th tab ("ตั้งค่า") -> first dropdown ("ภาษา / Language") -> "🇬🇧 English".
-- Map: tap district chips to drill down; long-press inside Yala to test pin elevation comparison from any location.
+- No login, demo credentials, or sample files needed. All 5 tabs work immediately with CDN-first live + bundled offline data.
+- Switch to English: tap the top 15s setup banner or 5th tab ("ตั้งค่า") -> first dropdown ("ภาษา / Language") -> "🇬🇧 English".
+- Map: tap district chips to drill down; tap "+ Add" to test Family Watchlist, offline voice briefing, and 1-tap Share Card; long-press inside Yala to test pin elevation comparison.
 - Info: tap any rain bar to inspect; tap any station for the 7-day chart (24h/3d/7d).
 
 4. External Services & Platforms:
 - ThaiWater Public API v3 (HII — https://api-v3.thaiwater.net): Open data for 14 water stations, 7-day graphs, 87+ rain gauges, Bang Lang Dam.
 - Open-Meteo Weather & GloFAS v4 (CC BY 4.0 — https://open-meteo.com): 24-72h rain & 7-day river discharge forecasts.
-- GitHub Actions + Supabase Storage CDN: Signed read-only JSON snapshots updated every 10 min.
+- GitHub Actions + Supabase Storage CDN: Signed read-only JSON snapshots updated every 10 min (CDN-first client fetch).
 - Firebase Cloud Messaging (FCM)/APNs: Anonymous district-topic alerts (no accounts/PII).
-- Google Maps tiles & standard external links (tel:, Google Maps, official LINE/Facebook).
+- CARTO / OpenStreetMap public basemap tiles (ODbL / CC BY 3.0) with bounded local disk caching, plus standard external links (tel:, Google Maps Directions URL, official LINE/Facebook).
 
 5. Regional Differences:
 - Identical across all regions/countries with no geo-blocking. Monitoring data covers Yala Province, Thailand (code 95).

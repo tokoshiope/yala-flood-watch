@@ -268,6 +268,31 @@ class SettingsScreen extends StatelessWidget {
             onChanged: (value) =>
                 provider.updateSettings(settings.copyWith(pushEnabled: value)),
           ),
+          Container(
+            margin: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.info_outline, size: 16, color: cs.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    strings.get('push_clarity_note'),
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: cs.onSurfaceVariant,
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           SwitchListTile(
             secondary: const Icon(Icons.text_fields),
             title: Text(strings.get('large_text_toggle')),

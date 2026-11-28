@@ -33,12 +33,15 @@ Future<void> main() async {
   );
 
   // เตรียมแจ้งเตือนในเครื่องทันที ส่วน Push (Firebase/APNs) เริ่มแบบไม่บล็อกการเปิดหน้าจอแรก
-  final savedSettings = LocalStore(preferences).loadSettings();
+  final localStore = LocalStore(preferences);
+  final savedSettings = localStore.loadSettings();
+  final savedPlaces = localStore.loadSavedPlaces();
   await NotificationService.instance.initialize();
   unawaited(
     NotificationService.instance.initializePush(
       pushEnabled: savedSettings.pushEnabled,
       selectedAmphoeTh: savedSettings.selectedAmphoeTh,
+      extraAmphoes: savedPlaces.map((p) => p.amphoeTh),
       preferences: preferences,
     ),
   );
@@ -66,6 +69,37 @@ class _YalaFloodAppState extends State<YalaFloodApp>
     // โหลดแคชในเครื่องก่อน แล้วค่อยดึงค่าใหม่จากเน็ต
     widget.provider.hydrate();
     _deepLinkService.start(_handleDeepLink);
+    // ลงทะเบียนตัวนำทางหลังเฟรมแรก mount เพื่อให้ navigatorKey พร้อมรับ Cold-Start Push Tap
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        NotificationService.instance
+            .registerNavigationHandler(_handleNotificationNavigation);
+      }
+    });
+  }
+
+  void _handleNotificationNavigation(String route, String? arg) {
+    final navigator = navigatorKey.currentState;
+    if (navigator == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final retryNav = navigatorKey.currentState;
+        if (retryNav == null) return;
+        if (route == '/station' && arg != null && arg.isNotEmpty) {
+          widget.provider.setSelectedStation(arg);
+          retryNav.pushNamed('/station', arguments: arg);
+        } else {
+          retryNav.pushNamed(route);
+        }
+      });
+      return;
+    }
+    if (route == '/station' && arg != null && arg.isNotEmpty) {
+      widget.provider.setSelectedStation(arg);
+      navigator.pushNamed('/station', arguments: arg);
+    } else {
+      navigator.pushNamed(route);
+    }
   }
 
   @override
@@ -77,6 +111,7 @@ class _YalaFloodAppState extends State<YalaFloodApp>
 
   @override
   void dispose() {
+    NotificationService.instance.onNavigateRoute = null;
     WidgetsBinding.instance.removeObserver(this);
     _deepLinkService.dispose();
     super.dispose();

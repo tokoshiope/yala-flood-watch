@@ -143,14 +143,30 @@ class SheltersScreen extends StatefulWidget {
 class _SheltersScreenState extends State<SheltersScreen> {
   String? _amphoe;
 
-  List<String> get _amphoes {
-    final set = kYalaShelters.map((s) => s.amphoeTh).toSet().toList()..sort();
+  List<String> _amphoesFrom(List<Shelter> all) {
+    final set = all.map((s) => s.amphoeTh).toSet().toList()..sort();
     return set;
   }
 
-  List<Shelter> get _filtered {
-    if (_amphoe == null) return kYalaShelters;
-    return kYalaShelters.where((s) => s.amphoeTh == _amphoe).toList();
+  List<({Shelter shelter, double? distKm})> _filteredSorted(
+    AlertProvider provider,
+  ) {
+    final all = provider.shelters;
+    final list = _amphoe == null
+        ? all
+        : all.where((s) => s.amphoeTh == _amphoe).toList();
+    final withDist = [
+      for (final s in list)
+        (shelter: s, distKm: provider.distanceKmFromUser(s.lat, s.lng)),
+    ];
+    if (provider.referenceUserPoint != null) {
+      withDist.sort((a, b) {
+        final da = a.distKm ?? 9999.0;
+        final db = b.distKm ?? 9999.0;
+        return da.compareTo(db);
+      });
+    }
+    return withDist;
   }
 
   Future<void> _openGoogleMaps(Shelter shelter, AppStrings strings) async {
@@ -180,9 +196,14 @@ class _SheltersScreenState extends State<SheltersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final strings = context.watch<AlertProvider>().strings;
+    final provider = context.watch<AlertProvider>();
+    final strings = provider.strings;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cs = Theme.of(context).colorScheme;
+    final allShelters = provider.shelters;
+    final amphoes = _amphoesFrom(allShelters);
+    final items = _filteredSorted(provider);
+    final hasRefPoint = provider.referenceUserPoint != null;
 
     return Scaffold(
       appBar: AppBar(
@@ -205,23 +226,71 @@ class _SheltersScreenState extends State<SheltersScreen> {
             width: double.infinity,
             color: isDark ? const Color(0xFF0F2942) : const Color(0xFFE3F2FD),
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.info_outline,
-                  size: 16,
-                  color: isDark ? const Color(0xFF90CAF9) : const Color(0xFF0E5FA6),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    strings.get('shelters_call_notice'),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark ? const Color(0xFFE3F2FD) : const Color(0xFF0B2545),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: isDark ? const Color(0xFF90CAF9) : const Color(0xFF0E5FA6),
                     ),
-                  ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        strings.get('shelters_call_notice'),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? const Color(0xFFE3F2FD) : const Color(0xFF0B2545),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+                if (hasRefPoint || provider.hasOtaShelters) ...[
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: [
+                      if (hasRefPoint)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: cs.primary.withValues(alpha: 0.14),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '📍 ${strings.get('shelters_nearest_badge')}',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: cs.primary,
+                            ),
+                          ),
+                        ),
+                      if (provider.hasOtaShelters)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2E7D32).withValues(alpha: 0.14),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '✓ ${strings.get('shelters_ota_badge')}',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: isDark
+                                  ? const Color(0xFF81C784)
+                                  : const Color(0xFF1B5E20),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -239,7 +308,7 @@ class _SheltersScreenState extends State<SheltersScreen> {
                     onSelected: (_) => setState(() => _amphoe = null),
                   ),
                 ),
-                for (final amphoe in _amphoes)
+                for (final amphoe in amphoes)
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ChoiceChip(
@@ -254,10 +323,12 @@ class _SheltersScreenState extends State<SheltersScreen> {
           Expanded(
             child: ListView.separated(
               padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
-              itemCount: _filtered.length,
+              itemCount: items.length,
               separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
-                final shelter = _filtered[index];
+                final entry = items[index];
+                final shelter = entry.shelter;
+                final distKm = entry.distKm;
                 final displayName = strings.shelterName(shelter.nameTh);
                 final displayAddress =
                     strings.shelterAddress(shelter.nameTh, shelter.addressTh);
@@ -270,13 +341,41 @@ class _SheltersScreenState extends State<SheltersScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          displayName,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 15,
-                            color: cs.onSurface,
-                          ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                displayName,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  color: cs.onSurface,
+                                ),
+                              ),
+                            ),
+                            if (distKm != null) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 7,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: cs.primaryContainer,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  strings.distanceKmLabel(distKm),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                    color: cs.onPrimaryContainer,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                         const SizedBox(height: 4),
                         Text(

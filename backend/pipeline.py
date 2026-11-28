@@ -1567,6 +1567,48 @@ def content_hash(body: dict) -> str:
     return hashlib.sha256(canon.encode("utf-8")).hexdigest()
 
 
+def _send_ops_signal(
+    *,
+    ok: bool,
+    summary: str,
+    heartbeat_url: str | None = None,
+    alert_webhook_url: str | None = None,
+) -> bool:
+    """Best-effort, non-fatal HTTPS ops dead-man's-switch heartbeat or fail-closed alert webhook."""
+    hb = (heartbeat_url if heartbeat_url is not None else os.environ.get("OPS_HEARTBEAT_URL", "")).strip()
+    wh = (alert_webhook_url if alert_webhook_url is not None else os.environ.get("OPS_ALERT_WEBHOOK_URL", "")).strip()
+    if ok:
+        if not hb.startswith("https://"):
+            return False
+        try:
+            requests.get(hb, headers={"User-Agent": USER_AGENT}, timeout=8)
+            return True
+        except Exception:
+            return False
+
+    # Failure path: isolate heartbeat /fail and alert webhook so a timeout in one never blocks the other
+    sent = False
+    if hb.startswith("https://"):
+        try:
+            fail_url = hb.rstrip("/") + "/fail"
+            requests.post(fail_url, data=summary.encode("utf-8"), headers={"User-Agent": USER_AGENT}, timeout=8)
+            sent = True
+        except Exception:
+            pass
+    if wh.startswith("https://"):
+        try:
+            requests.post(
+                wh,
+                json={"text": f"[Yala Flood Watch] {summary}", "content": f"[Yala Flood Watch] {summary}"},
+                headers={"User-Agent": USER_AGENT, "Content-Type": "application/json"},
+                timeout=8,
+            )
+            sent = True
+        except Exception:
+            pass
+    return sent
+
+
 def _atomic_write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + f".{os.getpid()}.tmp")
@@ -1740,22 +1782,43 @@ def run_pipeline(sync_mobile_asset: bool = False, now: datetime | None = None) -
         manifest_text = json.dumps(manifest, ensure_ascii=False, indent=2)
         _atomic_write(OUT_DIR / "manifest.json", manifest_text)
 
+        # Compact split history artifact (for thin-client 7d history fetching alongside latest.json)
+        history_bundle = {
+            "generated_at": generated_at,
+            "content_hash": digest,
+            "stations": {
+                s["oldcode"]: s.get("history_7d", [])
+                for s in stations
+                if s.get("oldcode") and s.get("history_7d")
+            },
+        }
+        _atomic_write(
+            OUT_DIR / "history_7d.json",
+            json.dumps(history_bundle, ensure_ascii=False, separators=(",", ":")),
+        )
+
         if sync_mobile_asset:
             _atomic_write(MOBILE_ASSET_DIR / "latest.json", payload_text)
             _atomic_write(MOBILE_ASSET_DIR / "manifest.json", manifest_text)
 
         max_lv = max((a["assessment"]["level"] for a in amphoe_summaries), default=1)
-        print(
+        ok_summary = (
             f"OK v{FORMULA_VERSION} stations={len(stations)} rain_gauges={len(rain_gauges)} "
             f"amphoes={len(amphoe_summaries)} max_level={max_lv} "
             f"degraded={len(degraded)} hash={digest[:12]}"
         )
+        print(ok_summary)
+        _send_ops_signal(ok=True, summary=ok_summary)
         return 0, payload
     except ValidationError as e:
-        print(f"PIPELINE_FAIL_CLOSED: {e}", file=sys.stderr)
+        err_msg = f"PIPELINE_FAIL_CLOSED: {e}"
+        print(err_msg, file=sys.stderr)
+        _send_ops_signal(ok=False, summary=err_msg)
         return 1, None
     except Exception as e:
-        print(f"PIPELINE_FAIL_CLOSED: unexpected error: {e!r}", file=sys.stderr)
+        err_msg = f"PIPELINE_FAIL_CLOSED: unexpected error: {e!r}"
+        print(err_msg, file=sys.stderr)
+        _send_ops_signal(ok=False, summary=err_msg)
         return 1, None
 
 

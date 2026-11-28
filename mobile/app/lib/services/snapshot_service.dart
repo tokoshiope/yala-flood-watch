@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
@@ -7,23 +8,75 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:yala_flood_app/config/app_config.dart';
 import 'package:yala_flood_app/models/flood_snapshot.dart';
+import 'package:yala_flood_app/services/disk_cache_stub.dart'
+    if (dart.library.io) 'package:yala_flood_app/services/disk_cache_io.dart' as disk;
 
-/// Phase 2 Cloud Bridge: โหลด Snapshot รวม 5 ฐานข้อมูลจาก CDN (พร้อมตรวจ manifest.json content_hash แบบ Fail-Closed)
-/// เก็บแคชในเครื่อง (AppConfig.cacheSnapshotKey) พร้อม Fallback ไปยัง Bundled Offline Asset + โหลดขอบเขต GeoJSON
+/// Phase 2+ Cloud Bridge (CDN-First + Disk Cache + Isolate Parsing):
+/// - โหลด Snapshot รวม 5 ฐานข้อมูล (รวมสถานี 14 แห่ง + ศูนย์พักพิง OTA) จาก Supabase CDN พร้อมตรวจ manifest.json SHA-256 แบบ Fail-Closed
+/// - เก็บแคชลงไฟล์ดิสก์แทน SharedPreferences/NSUserDefaults เพื่อลดแรมตอนเปิดแอป (รองรับ Web & fallback สำหรับ unit tests)
+/// - Parse ไฟล์ GeoJSON/DEM ขนาดใหญ่บน Background Isolate (`compute`) ลดอาการกระตุกบน Main Thread
 class SnapshotService {
   SnapshotService({
     http.Client? client,
     SharedPreferences? preferences,
     String? cdnBaseUrlOverride,
+    Object? diskCacheFile,
+    bool useDiskCache = true,
   })  : _client = client ?? http.Client(),
         // ignore: prefer_initializing_formals
         _preferences = preferences,
         // ignore: prefer_initializing_formals
-        _cdnBaseUrlOverride = cdnBaseUrlOverride;
+        _cdnBaseUrlOverride = cdnBaseUrlOverride,
+        // ignore: prefer_initializing_formals
+        _diskCacheFile = diskCacheFile,
+        // ignore: prefer_initializing_formals
+        _useDiskCache = useDiskCache;
+
+  static const String _defaultCacheFileName = 'yala_flood_snapshot_v2.json';
 
   final http.Client _client;
   final SharedPreferences? _preferences;
   final String? _cdnBaseUrlOverride;
+  final Object? _diskCacheFile;
+  final bool _useDiskCache;
+
+  bool get hasCdnConfigured {
+    final latestUri = Uri.tryParse(_latestUrl);
+    final manifestUri = Uri.tryParse(_manifestUrl);
+    return latestUri != null &&
+        manifestUri != null &&
+        latestUri.scheme == 'https' &&
+        manifestUri.scheme == 'https';
+  }
+
+  Future<String?> _readCachedRaw() async {
+    if (_useDiskCache && !kIsWeb) {
+      final fromDisk = await disk.readSnapshotFile(
+        _diskCacheFile,
+        _defaultCacheFileName,
+      );
+      if (fromDisk != null && fromDisk.isNotEmpty) return fromDisk;
+    }
+    return _preferences?.getString(AppConfig.cacheSnapshotKey);
+  }
+
+  Future<void> _writeCachedRaw(String snapText) async {
+    var wroteDisk = false;
+    if (_useDiskCache && !kIsWeb) {
+      wroteDisk = await disk.writeSnapshotFile(
+        _diskCacheFile,
+        _defaultCacheFileName,
+        snapText,
+      );
+      if (wroteDisk) {
+        // Free legacy NSUserDefaults bloat once safely written to disk
+        await _preferences?.remove(AppConfig.cacheSnapshotKey);
+      }
+    }
+    if (!wroteDisk) {
+      await _preferences?.setString(AppConfig.cacheSnapshotKey, snapText);
+    }
+  }
 
   String get _normalizedBaseUrl {
     final base = (_cdnBaseUrlOverride ?? AppConfig.snapshotCdnBaseUrl).trim();
@@ -82,9 +135,9 @@ class SnapshotService {
     return true;
   }
 
-  /// โหลดเฉพาะ Snapshot ในเครื่อง (Cache หรือ Bundled Asset) ทันทีโดยไม่รอเน็ต
+  /// โหลดเฉพาะ Snapshot ในเครื่อง (Disk Cache / Legacy Prefs / Bundled Asset) ทันทีโดยไม่รอเน็ต
   Future<FloodSnapshot?> loadCachedOrBundledSnapshot() async {
-    final cachedRaw = _preferences?.getString(AppConfig.cacheSnapshotKey);
+    final cachedRaw = await _readCachedRaw();
     if (cachedRaw != null && cachedRaw.isNotEmpty) {
       try {
         final decoded = jsonDecode(cachedRaw);
@@ -114,63 +167,70 @@ class SnapshotService {
     return null;
   }
 
-  Future<FloodSnapshot?> loadSnapshot() async {
-    // 1. ถ้าตั้งค่า Supabase Storage CDN URL (HTTPS เท่านั้น) ให้ดึง manifest.json + latest.json พร้อมกันแบบขนาน + Fail-Closed
+  /// ดึงเฉพาะ Snapshot ล่าสุดจาก Supabase CDN แบบ Fail-Closed (คืน null หากไม่ตั้งค่าหรือล้มเหลว/แฮชไม่ตรง)
+  Future<FloodSnapshot?> fetchRemoteSnapshot() async {
     final latestUrl = _latestUrl;
     final manifestUrl = _manifestUrl;
-    if (latestUrl.isNotEmpty && manifestUrl.isNotEmpty) {
-      final manifestUri = Uri.tryParse(manifestUrl);
-      final latestUri = Uri.tryParse(latestUrl);
-      if (manifestUri != null &&
-          latestUri != null &&
-          manifestUri.scheme == 'https' &&
-          latestUri.scheme == 'https') {
-        try {
-          const headers = {'accept': 'application/json'};
-          final responses = await Future.wait<http.Response>([
-            _client
-                .get(manifestUri, headers: headers)
-                .timeout(AppConfig.networkTimeout),
-            _client
-                .get(latestUri, headers: headers)
-                .timeout(AppConfig.networkTimeout),
-          ]);
-          final manResp = responses[0];
-          final snapResp = responses[1];
-          if (manResp.statusCode == 200 && snapResp.statusCode == 200) {
-            final manText = utf8.decode(manResp.bodyBytes);
-            final snapText = utf8.decode(snapResp.bodyBytes);
-            final manDecoded = jsonDecode(manText);
-            final snapDecoded = jsonDecode(snapText);
-            if (manDecoded is Map<String, dynamic> &&
-                snapDecoded is Map<String, dynamic>) {
-              final expectedHash = manDecoded['content_hash']?.toString() ?? '';
-              if (isValidYalaSnapshot(
-                snapDecoded,
-                expectedManifestHash: expectedHash,
-              )) {
-                await _preferences?.setString(
-                  AppConfig.cacheSnapshotKey,
-                  snapText,
-                );
-                return FloodSnapshot.fromJson(
-                  snapDecoded,
-                  sourceLabel: 'Supabase CDN (5 Sources)',
-                );
-              }
-            }
+    if (latestUrl.isEmpty || manifestUrl.isEmpty) return null;
+    final manifestUri = Uri.tryParse(manifestUrl);
+    final latestUri = Uri.tryParse(latestUrl);
+    if (manifestUri == null ||
+        latestUri == null ||
+        manifestUri.scheme != 'https' ||
+        latestUri.scheme != 'https') {
+      return null;
+    }
+    try {
+      const headers = {'accept': 'application/json'};
+      final responses = await Future.wait<http.Response>([
+        _client
+            .get(manifestUri, headers: headers)
+            .timeout(AppConfig.networkTimeout),
+        _client
+            .get(latestUri, headers: headers)
+            .timeout(AppConfig.networkTimeout),
+      ]);
+      final manResp = responses[0];
+      final snapResp = responses[1];
+      if (manResp.statusCode == 200 && snapResp.statusCode == 200) {
+        final manText = utf8.decode(manResp.bodyBytes);
+        final snapText = utf8.decode(snapResp.bodyBytes);
+        final manDecoded = jsonDecode(manText);
+        final snapDecoded = jsonDecode(snapText);
+        if (manDecoded is Map<String, dynamic> &&
+            snapDecoded is Map<String, dynamic>) {
+          final expectedHash = manDecoded['content_hash']?.toString() ?? '';
+          if (isValidYalaSnapshot(
+            snapDecoded,
+            expectedManifestHash: expectedHash,
+          )) {
+            await _writeCachedRaw(snapText);
+            return FloodSnapshot.fromJson(
+              snapDecoded,
+              sourceLabel: 'Supabase CDN (5 Sources)',
+            );
           }
-        } catch (_) {
-          // Fail-closed: do not overwrite valid cached/bundled snapshot with corrupt CDN payload
         }
       }
+    } catch (_) {
+      // Fail-closed: do not overwrite valid cached/bundled snapshot with corrupt CDN payload
     }
+    return null;
+  }
+
+  Future<FloodSnapshot?> loadSnapshot() async {
+    // 1. พยายามดึงจาก Supabase CDN ก่อนแบบ Fail-Closed
+    final remote = await fetchRemoteSnapshot();
+    if (remote != null) return remote;
 
     // 2. Fallback ไปยัง Snapshot ที่แคชไว้ในเครื่องหรือ Bundled Asset (Offline Resilience)
     return loadCachedOrBundledSnapshot();
   }
 
   Future<void> clearSnapshotCache() async {
+    if (_useDiskCache && !kIsWeb) {
+      await disk.deleteSnapshotFile(_diskCacheFile, _defaultCacheFileName);
+    }
     await _preferences?.remove(AppConfig.cacheSnapshotKey);
   }
 
@@ -178,11 +238,11 @@ class SnapshotService {
     _client.close();
   }
 
-  /// โหลดขอบเขต GeoJSON จริงของทั้ง 8 อำเภอ จ.ยะลา เพื่อระบายสีระดับแจ้งเตือนบนแผนที่
+  /// โหลดขอบเขต GeoJSON จริงของทั้ง 8 อำเภอ จ.ยะลา (parse บน Background Isolate ลด Main-Thread jank)
   Future<List<AmphoeBoundary>> loadYalaBoundaries() async {
     try {
       final raw = await rootBundle.loadString(AppConfig.bundledGeoJsonAsset);
-      return parseGeoJsonBoundaries(raw);
+      return await compute(parseGeoJsonBoundaries, raw);
     } on Exception {
       return const <AmphoeBoundary>[];
     }
@@ -192,7 +252,7 @@ class SnapshotService {
   Future<List<SubdistrictBoundary>> loadYalaSubdistricts() async {
     try {
       final raw = await rootBundle.loadString(AppConfig.bundledSubdistrictsAsset);
-      return parseGeoJsonSubdistricts(raw);
+      return await compute(parseGeoJsonSubdistricts, raw);
     } on Exception {
       return const <SubdistrictBoundary>[];
     }
@@ -202,7 +262,7 @@ class SnapshotService {
   Future<List<VillagePoint>> loadYalaVillages() async {
     try {
       final raw = await rootBundle.loadString(AppConfig.bundledVillagesAsset);
-      return parseVillagesJson(raw);
+      return await compute(parseVillagesJson, raw);
     } on Exception {
       return const <VillagePoint>[];
     }
@@ -212,7 +272,7 @@ class SnapshotService {
   Future<List<ElevationBandZone>> loadElevationZones() async {
     try {
       final raw = await rootBundle.loadString(AppConfig.bundledElevationZonesAsset);
-      return parseElevationZones(raw);
+      return await compute(parseElevationZones, raw);
     } on Exception {
       return const <ElevationBandZone>[];
     }
@@ -222,7 +282,7 @@ class SnapshotService {
   Future<List<VillageZoneBoundary>> loadVillageZones() async {
     try {
       final raw = await rootBundle.loadString(AppConfig.bundledVillageZonesAsset);
-      return parseVillageZones(raw);
+      return await compute(parseVillageZones, raw);
     } on Exception {
       return const <VillageZoneBoundary>[];
     }
@@ -232,7 +292,7 @@ class SnapshotService {
   Future<DemElevationGrid?> loadDemGrid() async {
     try {
       final raw = await rootBundle.loadString(AppConfig.bundledDemGridAsset);
-      return parseDemGrid(raw);
+      return await compute(parseDemGrid, raw);
     } on Exception {
       return null;
     }

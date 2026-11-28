@@ -1,5 +1,5 @@
 // ค่าคงที่ทั้งหมดของแอพ "แจ้งเตือนน้ำท่วมยะลา" (Yala Flood Watch)
-// เฉพาะ จ.ยะลา (รหัส 95) · formula_version = 5 · Google Maps Foundation + 4 Languages · 0% UGC
+// เฉพาะ จ.ยะลา (รหัส 95) · formula_version = 5 · CARTO/OSM Compliant Tiles + 4 Languages · 0% UGC
 library;
 
 class AppConfig {
@@ -166,7 +166,10 @@ class AppConfig {
   static const String sosLogPrefsKey = 'yala_flood_sos_log_v1';
   static const String gpsConsentPrefsKey = 'yala_flood_gps_consent_v1';
   static const String subscribedTopicPrefsKey = 'yala_flood_subscribed_topic_v1';
+  static const String subscribedTopicsPrefsKey = 'yala_flood_subscribed_topics_v2';
   static const String pinnedLocationPrefsKey = 'yala_flood_pinned_location_v1';
+  static const String savedPlacesPrefsKey = 'yala_flood_saved_places_v1';
+  static const String onboardingDonePrefsKey = 'yala_flood_onboarding_done_v1';
   static const String communityDeviceSaltKey = 'yala_flood_community_salt_v1';
   static const String communityLastReportAtKey = 'yala_flood_community_last_report_v1';
   static const int maxStoredAlerts = 100;
@@ -220,16 +223,21 @@ class AppConfig {
       'แอปนี้เป็นเครื่องมือเฝ้าระวังและแจ้งเตือนล่วงหน้าอิสระ ไม่ใช่ช่องทางกู้ภัยหลักของทางราชการ '
       'หากประสบเหตุวิกฤตกรุณาโทร 1784 (ปภ.), 073-203559 (ปภ.ยะลา) หรือ 1669 ทันที';
 
-  // ── Google Maps (Primary Map Foundation — DEC-014) ──────────────────────
-  /// Google Maps Road Tiles (รองรับ hl ตามภาษาที่เลือก: th / en / zh-CN / ms)
-  static String googleMapsTileUrl(String langCode) {
-    final hl = langCode == 'zh' ? 'zh-CN' : langCode;
-    return 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=$hl';
-  }
+  // ── Compliant Open Basemap Tiles (CARTO OSM Light/Dark + Offline Disk Cache) ──
+  /// แผนที่ฐาน CARTO Voyager (Light) / Dark Matter (Dark) อ้างอิง OpenStreetMap ถูกกฎหมาย 100%
+  /// แทนที่การดึง tile จาก mt1.google.com โดยตรง และรองรับ Offline Disk Caching
+  static const String cartoLightTileUrl =
+      'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png';
+  static const String cartoDarkTileUrl =
+      'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png';
 
-  static const String googleMapsAttribution = 'Map data © Google · Yala 8 Districts';
+  static String mapTileUrl({required bool isDark}) =>
+      isDark ? cartoDarkTileUrl : cartoLightTileUrl;
 
-  /// Google Maps Turn-by-Turn Navigation URL (Free Unlimited SKU)
+  static const String mapTileAttribution =
+      '© OpenStreetMap contributors · © CARTO · Yala 8 Districts';
+
+  /// Google Maps Turn-by-Turn Navigation URL (Free Unlimited Universal Link)
   static String googleMapsDirectionsUrl(double lat, double lng) =>
       'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving';
 

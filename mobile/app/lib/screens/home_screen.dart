@@ -8,11 +8,15 @@ import 'package:yala_flood_app/config/app_config.dart';
 import 'package:yala_flood_app/l10n/app_strings.dart';
 import 'package:yala_flood_app/models/flood_snapshot.dart';
 import 'package:yala_flood_app/models/risk_level.dart';
+import 'package:yala_flood_app/models/saved_place.dart';
 import 'package:yala_flood_app/models/station.dart';
 import 'package:yala_flood_app/screens/guide_screen.dart';
 import 'package:yala_flood_app/screens/station_detail_screen.dart';
+import 'package:yala_flood_app/services/caching_tile_provider.dart';
 import 'package:yala_flood_app/state/alert_provider.dart';
+import 'package:yala_flood_app/widgets/family_watch_strip.dart';
 import 'package:yala_flood_app/widgets/risk_badge.dart';
+import 'package:yala_flood_app/widgets/share_status_sheet.dart';
 import 'package:yala_flood_app/widgets/station_marker.dart';
 
 /// แถบที่ 1 "แผนที่":
@@ -30,11 +34,16 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final MapController _mapController = MapController();
+  final CachingTileProvider _tileProvider = CachingTileProvider();
   String? _selectedCode;
   String? _drillAmphoe;
   String? _drillTumbon;
   bool _pinDropMode = false;
   bool _locatingGps = false;
+
+  // Memoized map polygons so unrelated notifyListeners() calls don't reallocate 400+ polygons
+  String? _cachedPolyKey;
+  List<Polygon> _cachedPolygons = const <Polygon>[];
 
   static final LatLngBounds _yalaBounds = LatLngBounds(
     const LatLng(5.55, 100.78),
@@ -51,6 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _mapController.dispose();
+    _tileProvider.dispose();
     super.dispose();
   }
 
@@ -291,6 +301,23 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           IconButton(
+            tooltip: strings.get('share_status_btn'),
+            onPressed: () {
+              final targetAmp = _drillAmphoe ??
+                  provider.settings.selectedAmphoeTh ??
+                  'เมืองยะลา';
+              final lv = provider.amphoeAlertLevel(targetAmp).value;
+              showShareStatusSheet(
+                context,
+                provider: provider,
+                placeLabel: strings.amphoe(targetAmp),
+                amphoeTh: targetAmp,
+                level: lv,
+              );
+            },
+            icon: const Icon(Icons.share_outlined),
+          ),
+          IconButton(
             tooltip: strings.get('guide_title'),
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (_) => const GuideScreen()),
@@ -340,6 +367,16 @@ class _HomeScreenState extends State<HomeScreen> {
         if (provider.isOffline || provider.noticeTh != null)
           _OfflineBanner(strings: strings, messageTh: provider.noticeTh),
         if (dam != null) _BangLangDamCard(dam: dam, strings: strings),
+        FamilyWatchStrip(
+          provider: provider,
+          onFocusPoint: (pt, amphoeTh) {
+            setState(() {
+              _drillAmphoe = amphoeTh;
+              _drillTumbon = null;
+            });
+            _mapController.move(pt, 12.0);
+          },
+        ),
         _DrillBreadcrumbBar(
           drillAmphoe: _drillAmphoe,
           drillTumbon: _drillTumbon,
@@ -444,18 +481,24 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildMap(BuildContext context, AlertProvider provider) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final strings = provider.strings;
-    final lang = provider.settings.languageCode;
-
-    final pillBg = isDark ? const Color(0xF00F172A) : const Color(0xF5FFFFFF);
-    final pillFg = isDark ? Colors.white : const Color(0xFF0F172A);
+  List<Polygon> _buildMemoizedPolygons(
+    AlertProvider provider,
+    bool isDark,
+  ) {
+    final stSig = provider.stations
+        .map((s) => '${s.code}:${s.riskLevel.severity}:${s.displayLevel?.toStringAsFixed(2) ?? ''}')
+        .join(',');
+    final polyKey = '${_drillAmphoe ?? ''}|${_drillTumbon ?? ''}|'
+        '${isDark ? 1 : 0}|${provider.snapshot?.contentHash ?? ''}|'
+        '${provider.boundaries.length}|${provider.subdistricts.length}|'
+        '${provider.elevationZones.length}|${provider.villageZones.length}|$stSig';
+    if (_cachedPolyKey == polyKey) {
+      return _cachedPolygons;
+    }
 
     final maskHoles = <List<LatLng>>[
       for (final b in provider.boundaries) ...b.rings,
     ];
-
     final polygons = <Polygon>[];
     if (maskHoles.isNotEmpty) {
       polygons.add(
@@ -469,7 +512,6 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // ชั้นไล่ระดับสีจริงตาม Zone A/B/C × Basin Hazard (Copernicus DEM ม.รทก.)
     final elevZones = provider.elevationZonesOf(_drillAmphoe);
     if (_drillTumbon == null && elevZones.isNotEmpty) {
       for (final ez in elevZones) {
@@ -489,13 +531,9 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
 
-    final areaMarkers = <Marker>[];
-
     if (_drillAmphoe == null) {
-      // ระดับที่ 1: เส้นขอบเว้าโค้งจริงทั้ง 8 อำเภอของ จ.ยะลา (GeoThai DOPA-aligned)
       for (final boundary in provider.boundaries) {
         final level = provider.amphoeAlertLevel(boundary.amphoeTh);
-        final borderColor = level.colorFor(Theme.of(context).brightness);
         for (final ring in boundary.rings) {
           polygons.add(
             Polygon(
@@ -508,6 +546,87 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         }
+      }
+    } else if (_drillTumbon == null) {
+      final subs = provider.subdistrictsOf(_drillAmphoe!);
+      for (final sub in subs) {
+        final elev = provider.elevationFloodLevel(
+          sub.minElevationMsl ?? sub.elevationMsl,
+          sub.amphoeTh,
+        );
+        final lv = AlertLevel.fromValue(elev.level);
+        for (final ring in sub.rings) {
+          polygons.add(
+            Polygon(
+              points: ring,
+              color: elevZones.isEmpty
+                  ? lv.color.withValues(alpha: 0.42)
+                  : lv.color.withValues(alpha: 0.12),
+              borderColor: isDark ? Colors.white : const Color(0xFF1E293B),
+              borderStrokeWidth: 1.5,
+            ),
+          );
+        }
+      }
+    } else {
+      final vZones = provider.villageZonesOf(_drillAmphoe!, _drillTumbon!);
+      for (final vz in vZones) {
+        final gradColor = vz.elevationMsl != null
+            ? provider.elevationGradientColor(
+                vz.elevationMsl!,
+                vz.amphoeTh,
+                exposureZone: vz.exposureZone,
+                relHeightM: vz.relHeightM,
+              )
+            : provider.amphoeAlertLevel(vz.amphoeTh).color;
+        for (final ring in vz.rings) {
+          polygons.add(
+            Polygon(
+              points: ring,
+              color: gradColor.withValues(alpha: 0.34),
+              borderColor: isDark ? Colors.white70 : const Color(0xAA0F172A),
+              borderStrokeWidth: 1.1,
+            ),
+          );
+        }
+      }
+      final subs = provider.subdistrictsOf(_drillAmphoe!);
+      for (final sub in subs) {
+        final isTarget = sub.tumbonTh == _drillTumbon;
+        for (final ring in sub.rings) {
+          polygons.add(
+            Polygon(
+              points: ring,
+              color: isTarget ? Colors.transparent : const Color(0x401E293B),
+              borderColor: isTarget
+                  ? (isDark ? const Color(0xFF60A5FA) : const Color(0xFF0E5FA6))
+                  : Colors.white54,
+              borderStrokeWidth: isTarget ? 2.4 : 1.0,
+            ),
+          );
+        }
+      }
+    }
+
+    _cachedPolyKey = polyKey;
+    _cachedPolygons = polygons;
+    return polygons;
+  }
+
+  Widget _buildMap(BuildContext context, AlertProvider provider) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final strings = provider.strings;
+
+    final pillBg = isDark ? const Color(0xF00F172A) : const Color(0xF5FFFFFF);
+    final pillFg = isDark ? Colors.white : const Color(0xFF0F172A);
+
+    final polygons = _buildMemoizedPolygons(provider, isDark);
+    final areaMarkers = <Marker>[];
+
+    if (_drillAmphoe == null) {
+      for (final boundary in provider.boundaries) {
+        final level = provider.amphoeAlertLevel(boundary.amphoeTh);
+        final borderColor = level.colorFor(Theme.of(context).brightness);
         areaMarkers.add(
           Marker(
             point: boundary.centroid,
@@ -543,7 +662,6 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     } else if (_drillTumbon == null) {
-      // ระดับที่ 2: เส้นขอบตำบลเว้าโค้งจริงในอำเภอที่เลือก + ชั้นไล่ระดับสีความสูง DEM
       final subs = provider.subdistrictsOf(_drillAmphoe!);
       for (final sub in subs) {
         final elev = provider.elevationFloodLevel(
@@ -552,18 +670,6 @@ class _HomeScreenState extends State<HomeScreen> {
         );
         final lv = AlertLevel.fromValue(elev.level);
         final borderColor = lv.colorFor(Theme.of(context).brightness);
-        for (final ring in sub.rings) {
-          polygons.add(
-            Polygon(
-              points: ring,
-              color: elevZones.isEmpty
-                  ? lv.color.withValues(alpha: 0.42)
-                  : lv.color.withValues(alpha: 0.12),
-              borderColor: isDark ? Colors.white : const Color(0xFF1E293B),
-              borderStrokeWidth: 1.5,
-            ),
-          );
-        }
         areaMarkers.add(
           Marker(
             point: sub.centroid,
@@ -599,47 +705,6 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     } else {
-      // ระดับที่ 3: โซนหมู่บ้านเว้าโค้งตามภูมิประเทศจริง (0% ซ้อนทับ/เหลื่อม) + ขอบตำบลเว้าโค้งจริงด้านบน
-      final vZones = provider.villageZonesOf(_drillAmphoe!, _drillTumbon!);
-      for (final vz in vZones) {
-        final gradColor = vz.elevationMsl != null
-            ? provider.elevationGradientColor(
-                vz.elevationMsl!,
-                vz.amphoeTh,
-                exposureZone: vz.exposureZone,
-                relHeightM: vz.relHeightM,
-              )
-            : provider.amphoeAlertLevel(vz.amphoeTh).color;
-        for (final ring in vz.rings) {
-          polygons.add(
-            Polygon(
-              points: ring,
-              color: gradColor.withValues(alpha: 0.34),
-              borderColor: isDark ? Colors.white70 : const Color(0xAA0F172A),
-              borderStrokeWidth: 1.1,
-            ),
-          );
-        }
-      }
-
-      // วาดขอบตำบลจริงทับด้านบนด้วยพิกัดเดียวกับขอบนอกของโซนหมู่บ้านเพื่อให้แนวเส้นตรงกัน 100%
-      final subs = provider.subdistrictsOf(_drillAmphoe!);
-      for (final sub in subs) {
-        final isTarget = sub.tumbonTh == _drillTumbon;
-        for (final ring in sub.rings) {
-          polygons.add(
-            Polygon(
-              points: ring,
-              color: isTarget ? Colors.transparent : const Color(0x401E293B),
-              borderColor: isTarget
-                  ? (isDark ? const Color(0xFF60A5FA) : const Color(0xFF0E5FA6))
-                  : Colors.white54,
-              borderStrokeWidth: isTarget ? 2.4 : 1.0,
-            ),
-          );
-        }
-      }
-
       final villages = provider.villagesOf(_drillAmphoe!, _drillTumbon!);
       for (final v in villages) {
         final elev = provider.elevationFloodLevel(
@@ -793,7 +858,8 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       children: [
         TileLayer(
-          urlTemplate: AppConfig.googleMapsTileUrl(lang),
+          urlTemplate: AppConfig.mapTileUrl(isDark: isDark),
+          tileProvider: _tileProvider,
           userAgentPackageName: AppConfig.packageName,
           maxZoom: 18,
         ),
@@ -804,7 +870,7 @@ class _HomeScreenState extends State<HomeScreen> {
         RichAttributionWidget(
           attributions: [
             TextSourceAttribution(
-              AppConfig.googleMapsAttribution,
+              AppConfig.mapTileAttribution,
               onTap: () {},
             ),
           ],
@@ -1184,6 +1250,60 @@ class _UserPinCard extends StatelessWidget {
                     ),
                   ),
                 ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  if (provider.savedPlaces.length < SavedPlace.maxSavedPlaces &&
+                      assessment.amphoeTh != null)
+                    ActionChip(
+                      visualDensity: VisualDensity.compact,
+                      avatar: const Icon(Icons.bookmark_add_outlined, size: 14),
+                      label: Text(
+                        strings.get('family_save_pin_btn'),
+                        style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700),
+                      ),
+                      onPressed: () {
+                        final label = assessment.tumbonTh != null
+                            ? strings.tumbonName(
+                                assessment.tumbonTh!,
+                                assessment.tumbonEn,
+                              )
+                            : strings.amphoe(assessment.amphoeTh!);
+                        provider.addSavedPlace(
+                          label: label,
+                          amphoeTh: assessment.amphoeTh!,
+                          tumbonTh: assessment.tumbonTh,
+                          lat: assessment.lat,
+                          lng: assessment.lng,
+                          isGps: assessment.isGps,
+                        );
+                      },
+                    ),
+                  ActionChip(
+                    visualDensity: VisualDensity.compact,
+                    avatar: const Icon(Icons.share_outlined, size: 14),
+                    label: Text(
+                      strings.get('share_status_btn'),
+                      style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700),
+                    ),
+                    onPressed: () => showShareStatusSheet(
+                      context,
+                      provider: provider,
+                      placeLabel: assessment.tumbonTh != null
+                          ? strings.tumbonName(
+                              assessment.tumbonTh!,
+                              assessment.tumbonEn,
+                            )
+                          : strings.amphoe(assessment.amphoeTh ?? 'เมืองยะลา'),
+                      amphoeTh: assessment.amphoeTh ?? 'เมืองยะลา',
+                      level: assessment.level,
+                      exposureZone: assessment.exposureZone,
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),

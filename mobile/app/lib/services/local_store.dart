@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yala_flood_app/config/app_config.dart';
 import 'package:yala_flood_app/models/alert.dart';
 import 'package:yala_flood_app/models/alert_settings.dart';
+import 'package:yala_flood_app/models/saved_place.dart';
 
 /// อ่าน/เขียนข้อมูลที่เก็บในเครื่องแบบ Local-First พร้อมฟังก์ชันลบข้อมูล PDPA
 class LocalStore {
@@ -87,6 +88,41 @@ class LocalStore {
     await _prefs.remove(AppConfig.pinnedLocationPrefsKey);
   }
 
+  // ── รายการสถานที่ครอบครัว (Multi-Pin สูงสุด 5 จุด · Local-First) ─────────
+  List<SavedPlace> loadSavedPlaces() {
+    final raw = _prefs.getString(AppConfig.savedPlacesPrefsKey);
+    if (raw == null || raw.isEmpty) return const <SavedPlace>[];
+    try {
+      final list = jsonDecode(raw);
+      if (list is! List) return const <SavedPlace>[];
+      final out = <SavedPlace>[];
+      for (final item in list) {
+        if (item is Map) {
+          final parsed = SavedPlace.fromJson(item.cast<String, dynamic>());
+          if (parsed != null) out.add(parsed);
+        }
+      }
+      return out.take(SavedPlace.maxSavedPlaces).toList();
+    } on FormatException {
+      return const <SavedPlace>[];
+    }
+  }
+
+  Future<void> saveSavedPlaces(List<SavedPlace> places) async {
+    final trimmed = places.take(SavedPlace.maxSavedPlaces).toList();
+    await _prefs.setString(
+      AppConfig.savedPlacesPrefsKey,
+      jsonEncode(trimmed.map((p) => p.toJson()).toList()),
+    );
+  }
+
+  // ── สถานะ First-Time Onboarding ──────────────────────────────────────────
+  bool loadOnboardingDone() => _prefs.getBool(AppConfig.onboardingDonePrefsKey) ?? false;
+
+  Future<void> saveOnboardingDone(bool done) async {
+    await _prefs.setBool(AppConfig.onboardingDonePrefsKey, done);
+  }
+
   /// ลบข้อมูลส่วนบุคคลและประวัติทั้งหมดในเครื่อง (สิทธิเจ้าของข้อมูล PDPA — รวมถึงคีย์เดิมจากเวอร์ชันก่อน)
   Future<void> deleteAllUserData() async {
     await _prefs.remove(AppConfig.alertsPrefsKey);
@@ -94,7 +130,10 @@ class LocalStore {
     await _prefs.remove(AppConfig.sosLogPrefsKey);
     await _prefs.remove(AppConfig.gpsConsentPrefsKey);
     await _prefs.remove(AppConfig.subscribedTopicPrefsKey);
+    await _prefs.remove(AppConfig.subscribedTopicsPrefsKey);
     await _prefs.remove(AppConfig.pinnedLocationPrefsKey);
+    await _prefs.remove(AppConfig.savedPlacesPrefsKey);
+    await _prefs.remove(AppConfig.onboardingDonePrefsKey);
     await _prefs.remove(AppConfig.communityDeviceSaltKey);
     await _prefs.remove(AppConfig.communityLastReportAtKey);
   }

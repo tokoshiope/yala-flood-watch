@@ -188,6 +188,46 @@ class Station {
     );
   }
 
+  /// แปลง JSON หนึ่ง record จาก CDN Snapshot (`latest.json` → `stations[]`) เป็น [Station]
+  /// ทำให้แอปทำงานแบบ CDN-First โดยไม่ต้องยิง ThaiWater API ตรงจากมือถือทุกเครื่อง
+  factory Station.fromSnapshotJson(Map<String, dynamic> json) {
+    final agencyShort = _asStr(json['agency']);
+    final bankM = _asDouble(json['bank_m']);
+    final code = _asStr(json['oldcode']);
+    final levelMsl = _asDouble(json['level_msl']);
+    final remaining = _asDouble(json['remaining_to_bank_m']);
+    return Station(
+      id: _asInt(json['id']) ?? 0,
+      stationId: _asInt(json['tele_station_id']),
+      code: code,
+      nameTh: _asStr(json['name']).isNotEmpty
+          ? _asStr(json['name'])
+          : _asStr(json['short_name']),
+      nameEn: _asStr(json['name_en']),
+      lat: _asDouble(json['lat']),
+      lng: _asDouble(json['lon']),
+      waterLevelMsl: levelMsl,
+      waterLevelMslPrev: _asDouble(json['previous_msl']),
+      leftBank: bankM,
+      rightBank: bankM,
+      minBank: bankM,
+      situationLevel: _asInt(json['situation_level']),
+      storagePercent: _asDouble(json['storage_percent']),
+      diffWlBank: remaining,
+      amphoeTh: _asStr(json['amphoe']),
+      tumbonTh: _asStr(json['tumbon']),
+      agencyShortTh: agencyShort,
+      riverName: _asStr(json['river']),
+      datetime: _asStr(json['observed_at']),
+      stationType: _asStr(json['station_type']).isEmpty
+          ? 'tele_waterlevel'
+          : _asStr(json['station_type']),
+      updateIntervalMinutes:
+          _asInt(json['update_interval_minutes']) ??
+          inferUpdateIntervalMinutes(agencyShort),
+    );
+  }
+
   /// เกณฑ์วิกฤต/เส้นตลิ่งอ้างอิง (คืน null หากฐานตลิ่งยังไม่ยืนยัน เช่น FOP045 เพื่อป้องกันแสดงค่าหลอกบน UI)
   double? get criticalLevel {
     if (isDatumUnverified) return null;

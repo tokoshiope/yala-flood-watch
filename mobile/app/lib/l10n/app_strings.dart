@@ -885,6 +885,223 @@ class AppStrings {
       'zh': '该监测站预警记录',
       'ms': 'Sejarah Amaran Stesen Ini',
     },
+    // ── P0–P2: First-Time Onboarding, Family Watchlist, Share Card, Voice Briefing, OTA Shelters ──
+    'onboarding_banner_title': {
+      'th': 'ตั้งค่าพื้นที่บ้านคุณใน 15 วินาที',
+      'en': 'Set up your home area in 15s',
+      'zh': '15秒设置您的家庭预警区域',
+      'ms': 'Tetapkan kawasan rumah anda (15 saat)',
+    },
+    'onboarding_banner_sub': {
+      'th': 'เลือกอำเภอที่พักอาศัยเพื่อรับแจ้งเตือนตั้งแต่ระดับเฝ้าระวัง และดูสถานะบ้านคุณทันที',
+      'en': 'Choose your district to receive early Watch alerts and view instant home status.',
+      'zh': '选择您所在的县，即可提前接收关注级预警并查看实时状态。',
+      'ms': 'Pilih daerah anda untuk terima amaran awal & status rumah serta-merta.',
+    },
+    'onboarding_start_btn': {
+      'th': 'เลือกอำเภอของฉัน',
+      'en': 'Choose My District',
+      'zh': '选择我的县',
+      'ms': 'Pilih Daerah Saya',
+    },
+    'onboarding_skip_btn': {
+      'th': 'ข้ามไว้ก่อน',
+      'en': 'Skip',
+      'zh': '跳过',
+      'ms': 'Langkau',
+    },
+    'onboarding_sheet_title': {
+      'th': 'ยินดีต้อนรับสู่แจ้งเตือนน้ำท่วมยะลา',
+      'en': 'Welcome to Yala Flood Watch',
+      'zh': '欢迎使用也拉府洪水预警',
+      'ms': 'Selamat Datang ke Amaran Banjir Yala',
+    },
+    'onboarding_step_lang': {
+      'th': '1. เลือกภาษาที่ต้องการใช้งาน',
+      'en': '1. Choose your language',
+      'zh': '1. 选择显示语言',
+      'ms': '1. Pilih bahasa pilihan anda',
+    },
+    'onboarding_step_amphoe': {
+      'th': '2. บ้านของคุณอยู่อำเภอไหน?',
+      'en': '2. Which district is your home in?',
+      'zh': '2. 您的住所在哪个县？',
+      'ms': '2. Di daerah manakah rumah anda?',
+    },
+    'onboarding_done_btn': {
+      'th': 'เริ่มติดตามสถานการณ์',
+      'en': 'Start Monitoring',
+      'zh': '开始监测',
+      'ms': 'Mula Pemantauan',
+    },
+    'family_watch_title': {
+      'th': 'พื้นที่บ้านและครอบครัว',
+      'en': 'Home & Family Watch',
+      'zh': '家庭关注地点',
+      'ms': 'Pantauan Rumah & Keluarga',
+    },
+    'family_add_btn': {
+      'th': 'เพิ่มจุด',
+      'en': 'Add',
+      'zh': '添加',
+      'ms': 'Tambah',
+    },
+    'family_add_dialog_title': {
+      'th': 'เพิ่มจุดเฝ้าระวังครอบครัว',
+      'en': 'Add Family Watch Place',
+      'zh': '添加家庭关注地点',
+      'ms': 'Tambah Lokasi Keluarga',
+    },
+    'family_label_hint': {
+      'th': 'ชื่อจุด (เช่น บ้านพ่อแม่, โรงเรียนลูก)',
+      'en': 'Place name (e.g. Parents, School)',
+      'zh': '地点名称（如父母家、学校）',
+      'ms': 'Nama tempat (cth. Rumah Ibu Bapa)',
+    },
+    'family_save_btn': {
+      'th': 'บันทึกจุดเฝ้าระวัง',
+      'en': 'Save Place',
+      'zh': '保存地点',
+      'ms': 'Simpan Lokasi',
+    },
+    'family_limit_note': {
+      'th': 'บันทึกได้สูงสุด 5 จุด (เก็บในเครื่องเท่านั้น)',
+      'en': 'Up to 5 places (stored locally only)',
+      'zh': '最多5个地点（仅存本地）',
+      'ms': 'Sehingga 5 lokasi (disimpan dalam peranti)',
+    },
+    'family_save_pin_btn': {
+      'th': 'บันทึกเป็นจุดครอบครัว',
+      'en': 'Save to Family Watch',
+      'zh': '保存为家庭地点',
+      'ms': 'Simpan ke Keluarga',
+    },
+    'place_preset_home': {
+      'th': 'บ้านของฉัน',
+      'en': 'My Home',
+      'zh': '我的家',
+      'ms': 'Rumah Saya',
+    },
+    'place_preset_parents': {
+      'th': 'บ้านพ่อแม่',
+      'en': 'Parents Home',
+      'zh': '父母家',
+      'ms': 'Rumah Ibu Bapa',
+    },
+    'place_preset_school': {
+      'th': 'โรงเรียน / ที่ทำงาน',
+      'en': 'School / Work',
+      'zh': '学校 / 单位',
+      'ms': 'Sekolah / Tempat Kerja',
+    },
+    'share_status_btn': {
+      'th': 'แชร์สถานะ',
+      'en': 'Share',
+      'zh': '分享状态',
+      'ms': 'Kongsi',
+    },
+    'share_sheet_title': {
+      'th': 'แชร์รายงานสถานการณ์น้ำยะลา',
+      'en': 'Share Yala Flood Status',
+      'zh': '分享也拉府水情快报',
+      'ms': 'Kongsi Laporan Banjir Yala',
+    },
+    'share_line_btn': {
+      'th': 'แชร์เข้า LINE',
+      'en': 'Share to LINE',
+      'zh': '分享到 LINE',
+      'ms': 'Kongsi ke LINE',
+    },
+    'share_copy_btn': {
+      'th': 'คัดลอกข้อความสรุป',
+      'en': 'Copy Summary',
+      'zh': '复制摘要文字',
+      'ms': 'Salin Ringkasan',
+    },
+    'share_copied_snack': {
+      'th': 'คัดลอกรายงานสถานการณ์น้ำเรียบร้อยแล้ว',
+      'en': 'Flood status summary copied to clipboard.',
+      'zh': '已复制水情摘要。',
+      'ms': 'Ringkasan status banjir telah disalin.',
+    },
+    'voice_listen_btn': {
+      'th': 'ฟังประกาศเสียง',
+      'en': 'Listen',
+      'zh': '语音播报',
+      'ms': 'Dengar Audio',
+    },
+    'voice_stop_btn': {
+      'th': 'หยุดเสียง',
+      'en': 'Stop',
+      'zh': '停止',
+      'ms': 'Henti',
+    },
+    'voice_unavailable_snack': {
+      'th': 'อุปกรณ์นี้ไม่รองรับเสียงประกาศออฟไลน์',
+      'en': 'Offline voice briefing is unavailable on this device.',
+      'zh': '当前设备不支持离线语音播报。',
+      'ms': 'Audio luar talian tidak tersedia pada peranti ini.',
+    },
+    'shelters_nearest_badge': {
+      'th': 'เรียงจากใกล้จุดของคุณที่สุด',
+      'en': 'Sorted nearest to your pin',
+      'zh': '按距您最近排序',
+      'ms': 'Disusun terdekat dari lokasi anda',
+    },
+    'shelters_ota_badge': {
+      'th': 'อัปเดตศูนย์พักพิงล่าสุดจากระบบกลาง',
+      'en': 'Synced with latest central registry',
+      'zh': '已同步最新避难中心名录',
+      'ms': 'Disegerak dengan daftar terkini',
+    },
+    'push_clarity_note': {
+      'th': 'หมายเหตุ: ระดับเตือนที่ตั้งเองและปุ่มปิดเสียงใช้กับการแจ้งเตือนภายในแอป ส่วนข้อความ Push รายอำเภอจากเซิร์ฟเวอร์จะส่งเมื่อระดับภัยตั้งแต่ระดับ 2 (เฝ้าระวัง) ขึ้นไปตามอำเภอและจุดครอบครัวที่คุณติดตาม',
+      'en': 'Note: Custom thresholds and mute apply to in-app local alerts. Server Push notifications trigger at Level 2+ for all districts in your Home & Family Watchlist.',
+      'zh': '提示：自定义阈值和静音适用于应用内提醒；服务器推送将针对您关注的所有家庭县区在2级及以上时触发。',
+      'ms': 'Nota: Ambang tersuai & senyap terpakai untuk amaran dalam aplikasi. Notifikasi Push pelayan dihantar pada Tahap 2+ bagi semua daerah dalam senarai keluarga anda.',
+    },
+    'exposure_zone_label': {
+      'th': 'โซนภูมิประเทศ',
+      'en': 'Terrain Zone',
+      'zh': '地形风险区',
+      'ms': 'Zon Rupa Bumi',
+    },
+    'zone_short_prefix': {
+      'th': 'โซน',
+      'en': 'Zone',
+      'zh': '区',
+      'ms': 'Zon',
+    },
+    'share_level_prefix': {
+      'th': 'ระดับ',
+      'en': 'Level',
+      'zh': '等级',
+      'ms': 'Tahap',
+    },
+    'share_lead_time_label': {
+      'th': 'คาดการณ์เวลามวลน้ำ',
+      'en': 'Est. Arrival Window',
+      'zh': '预计到达时间',
+      'ms': 'Anggaran Masa Tiba',
+    },
+    'share_emergency_line': {
+      'th': '📞 ปภ. 1784 | ปภ.ยะลา 073-203559 | สพฉ. 1669',
+      'en': '📞 DDPM 1784 | Yala DDPM 073-203559 | EMS 1669',
+      'zh': '📞 防灾热线 1784 | 也拉防灾 073-203559 | 急救 1669',
+      'ms': '📞 DDPM 1784 | DDPM Yala 073-203559 | Kecemasan 1669',
+    },
+    'remove_place_title': {
+      'th': 'ลบจุดเฝ้าระวังนี้?',
+      'en': 'Remove this watch place?',
+      'zh': '移除此关注地点？',
+      'ms': 'Padam lokasi pantauan ini?',
+    },
+    'remove_place_confirm': {
+      'th': 'ลบจุด',
+      'en': 'Remove',
+      'zh': '移除',
+      'ms': 'Padam',
+    },
   };
 
   // ── 8 Amphoes ──────────────────────────────────────────────────────────
@@ -1481,6 +1698,78 @@ class AppStrings {
       'zh' => '每小时更新',
       'ms' => 'Kemas kini setiap jam',
       _ => 'อัปเดตทุก 1 ชม.',
+    };
+  }
+
+  /// ระยะทางถึงศูนย์พักพิง (4 ภาษา)
+  String distanceKmLabel(double km) {
+    final s = km < 10 ? km.toStringAsFixed(1) : km.toStringAsFixed(0);
+    return switch (lang) {
+      'en' => '$s km away',
+      'zh' => '距离约 $s 公里',
+      'ms' => '$s km dari lokasi anda',
+      _ => 'ห่าง $s กม.',
+    };
+  }
+
+  /// แปลงป้ายเวลาน้ำเดินทาง (เช่น `6–12 ชม.`) ให้ตรงตามภาษาที่เลือกครบทั้ง 4 ภาษา
+  String formatLeadTime(String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return '';
+    return switch (lang) {
+      'en' => trimmed.replaceAll('ชม.', 'hrs').replaceAll('ชั่วโมง', 'hours'),
+      'zh' => trimmed.replaceAll('ชม.', '小时').replaceAll('ชั่วโมง', '小时'),
+      'ms' => trimmed.replaceAll('ชม.', 'jam').replaceAll('ชั่วโมง', 'jam'),
+      _ => trimmed,
+    };
+  }
+
+  /// ข้อความโซนภูมิประเทศสั้น (4 ภาษา เช่น `โซน A` / `Zone A` / `A区` / `Zon A`)
+  String zoneBadgeText(String zoneCode) {
+    final z = zoneCode.toUpperCase();
+    return switch (lang) {
+      'zh' => '$z区',
+      'en' => 'Zone $z',
+      'ms' => 'Zon $z',
+      _ => 'โซน $z',
+    };
+  }
+
+  /// ข้อความประกาศเสียงออฟไลน์ (ภาษาราชการกระชับ อ่านเข้าใจง่ายสำหรับผู้สูงอายุ ครบ 4 ภาษา)
+  String voiceBriefingText({
+    required String placeLabel,
+    required String amphoeTh,
+    required int level,
+    double? damPercent,
+    String? leadTime,
+  }) {
+    final amp = amphoe(amphoeTh);
+    final lvLabel = alertLevelLabel(level);
+    final action = alertLevelAction(level);
+    final damPart = damPercent != null
+        ? switch (lang) {
+            'en' => ' Bang Lang Dam is at ${damPercent.toStringAsFixed(0)} percent.',
+            'zh' => ' 邦朗水坝蓄水量为百分之${damPercent.toStringAsFixed(0)}。',
+            'ms' => ' Empangan Bang Lang pada paras ${damPercent.toStringAsFixed(0)} peratus.',
+            _ => ' เขื่อนบางลางมีน้ำ ${damPercent.toStringAsFixed(0)} เปอร์เซ็นต์',
+          }
+        : '';
+    final locLead = (leadTime != null && leadTime.isNotEmpty)
+        ? formatLeadTime(leadTime)
+        : '';
+    final leadPart = locLead.isNotEmpty
+        ? switch (lang) {
+            'en' => ' Estimated arrival window $locLead.',
+            'zh' => ' 预计水波到达时间 $locLead。',
+            'ms' => ' Anggaran masa ketibaan air $locLead.',
+            _ => ' คาดว่ามวลน้ำเดินทางถึงภายใน $locLead',
+          }
+        : '';
+    return switch (lang) {
+      'en' => 'Yala Flood Watch update for $placeLabel, $amp. Status: Level $level, $lvLabel.$damPart$leadPart $action',
+      'zh' => '也拉府洪水预警播报：$placeLabel，$amp，当前等级第$level级，$lvLabel。$damPart$leadPart$action',
+      'ms' => 'Laporan Amaran Banjir Yala bagi $placeLabel, $amp. Tahap $level, $lvLabel.$damPart$leadPart $action',
+      _ => 'รายงานสถานการณ์น้ำยะลา สำหรับ$placeLabel อำเภอ$amp ขณะนี้อยู่ในระดับ $level $lvLabel$damPart$leadPart คำแนะนำ: $action',
     };
   }
 

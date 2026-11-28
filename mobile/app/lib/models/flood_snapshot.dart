@@ -1,5 +1,6 @@
 import 'package:latlong2/latlong.dart';
 
+import 'package:yala_flood_app/models/shelter.dart';
 import 'package:yala_flood_app/models/station.dart';
 
 /// หมู่บ้านและตำบลพื้นที่เฝ้าระวังสำคัญในอำเภอ (เทียบความสูงจริง Copernicus DEM กับระดับน้ำแม่น้ำ)
@@ -173,6 +174,9 @@ class FloodSnapshot {
     required this.amphoes,
     required this.rainGaugeCount,
     this.bangLangDam,
+    this.stations = const <Station>[],
+    this.shelters = const <Shelter>[],
+    this.sheltersNoticeTh,
     this.stationHistory7dByCode = const <String, List<WaterLevelPoint>>{},
     this.stationTeleIdByCode = const <String, int>{},
     this.sourceLabel = 'Bundled 5-Source Snapshot',
@@ -184,9 +188,21 @@ class FloodSnapshot {
   final List<AmphoeForecastSummary> amphoes;
   final int rainGaugeCount;
   final BangLangDamStatus? bangLangDam;
+  final List<Station> stations;
+  final List<Shelter> shelters;
+  final String? sheltersNoticeTh;
   final Map<String, List<WaterLevelPoint>> stationHistory7dByCode;
   final Map<String, int> stationTeleIdByCode;
   final String sourceLabel;
+
+  DateTime? get generatedAt => DateTime.tryParse(generatedAtIso);
+
+  bool isFresh({Duration maxAge = const Duration(minutes: 45), DateTime? now}) {
+    final ts = generatedAt;
+    if (ts == null) return false;
+    final ref = now ?? DateTime.now();
+    return ref.difference(ts).abs() <= maxAge;
+  }
 
   AmphoeForecastSummary? byAmphoe(String amphoeTh) {
     for (final a in amphoes) {
@@ -201,15 +217,19 @@ class FloodSnapshot {
   }) {
     final rawAmps = (json['amphoes'] as List?) ?? const [];
     final rawStations = (json['stations'] as List?) ?? const [];
+    final rawShelters = (json['shelters'] as List?) ?? const [];
+    final parsedStations = <Station>[];
     final histMap = <String, List<WaterLevelPoint>>{};
     final teleIdMap = <String, int>{};
     for (final item in rawStations) {
       if (item is! Map) continue;
-      final oc = item['oldcode']?.toString().trim() ?? '';
+      final castItem = item.cast<String, dynamic>();
+      final oc = castItem['oldcode']?.toString().trim() ?? '';
       if (oc.isEmpty) continue;
-      final tid = item['tele_station_id'];
+      parsedStations.add(Station.fromSnapshotJson(castItem));
+      final tid = castItem['tele_station_id'];
       if (tid is num) teleIdMap[oc] = tid.toInt();
-      final rawHist = item['history_7d'];
+      final rawHist = castItem['history_7d'];
       if (rawHist is List && rawHist.isNotEmpty) {
         final pts = <WaterLevelPoint>[];
         for (final pt in rawHist) {
@@ -224,6 +244,16 @@ class FloodSnapshot {
         if (pts.isNotEmpty) histMap[oc] = pts;
       }
     }
+    parsedStations.sort((a, b) => b.riskLevel.severity.compareTo(a.riskLevel.severity));
+
+    final parsedShelters = <Shelter>[];
+    for (final s in rawShelters) {
+      if (s is Map) {
+        final parsed = Shelter.fromJson(s.cast<String, dynamic>());
+        if (parsed != null) parsedShelters.add(parsed);
+      }
+    }
+
     final damJson = json['banglang_dam'];
     final rainSum = (json['rain_gauges_summary'] as Map?)?.cast<String, dynamic>() ?? const {};
     return FloodSnapshot(
@@ -238,6 +268,9 @@ class FloodSnapshot {
       bangLangDam: damJson is Map
           ? BangLangDamStatus.fromJson(damJson.cast<String, dynamic>())
           : null,
+      stations: parsedStations,
+      shelters: parsedShelters,
+      sheltersNoticeTh: json['shelters_notice_th']?.toString(),
       stationHistory7dByCode: histMap,
       stationTeleIdByCode: teleIdMap,
       sourceLabel: sourceLabel,
